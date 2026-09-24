@@ -31,8 +31,8 @@ function mockFetch(handler: (url: URL) => Response | Promise<Response>) {
   return { fn, calls };
 }
 
-function client(fetchFn: typeof fetch, now = 1658384314791, credentials: typeof DOC_CREDS | undefined = DOC_CREDS) {
-  return new BybitClient({ credentials, baseUrl: BASE, fetchFn, now: () => now });
+function client(fetchFn: typeof fetch, now = 1658384314791) {
+  return new BybitClient({ credentials: DOC_CREDS, baseUrl: BASE, fetchFn, now: () => now });
 }
 
 async function rejection(p: Promise<unknown>): Promise<AppError> {
@@ -71,7 +71,7 @@ describe('BybitClient signed GET', () => {
 
   it('without credentials fails with APP_KEY_MISSING and sends nothing', async () => {
     const { fn, calls } = mockFetch(() => jsonResponse(QUERY_API));
-    const err = await rejection(client(fn, 0, undefined).getPrivate('/v5/user/query-api'));
+    const err = await rejection(new BybitClient({ baseUrl: BASE, fetchFn: fn }).getPrivate('/v5/user/query-api'));
     expect(err.code).toBe('APP_KEY_MISSING');
     expect(calls).toHaveLength(0);
   });
@@ -199,5 +199,16 @@ describe('BybitClient never leaks key or secret in errors (D-10)', () => {
     const text = [err.message, err.userMessage, JSON.stringify(err.details ?? null), String(err.cause), err.stack].join('\n');
     expect(text).not.toContain(LEAK_CREDS.apiKey);
     expect(text).not.toContain(LEAK_CREDS.apiSecret);
+  });
+});
+
+describe('review fixes: fetch errors never carry the key (D-10)', () => {
+  it('invalid header value error mentioning the key is not kept as cause', async () => {
+    // Node fetch message shape for a bad header value, reproduced on Node 24 by the reviewer.
+    const { fn } = mockFetch(() => Promise.reject(new TypeError(`Headers.append: "${LEAK_CREDS.apiKey}" is an invalid header value.`)));
+    const c = new BybitClient({ credentials: LEAK_CREDS, baseUrl: BASE, fetchFn: fn, now: () => 0 });
+    const err = await rejection(c.getPrivate('/v5/account/info'));
+    const text = [err.message, JSON.stringify(err.details ?? null), String(err.cause), (err.cause as Error | undefined)?.stack].join('\n');
+    expect(text).not.toContain(LEAK_CREDS.apiKey);
   });
 });

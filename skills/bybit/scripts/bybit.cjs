@@ -1192,7 +1192,7 @@ var require_command = __commonJS({
   "node_modules/commander/lib/command.js"(exports2) {
     var EventEmitter = require("node:events").EventEmitter;
     var childProcess = require("node:child_process");
-    var path = require("node:path");
+    var path2 = require("node:path");
     var fs = require("node:fs");
     var process2 = require("node:process");
     var { Argument: Argument2, humanReadableArgName } = require_argument();
@@ -2205,9 +2205,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
         let launchWithNode = false;
         const sourceExt = [".js", ".ts", ".tsx", ".mjs", ".cjs"];
         function findFile(baseDir, baseName) {
-          const localBin = path.resolve(baseDir, baseName);
+          const localBin = path2.resolve(baseDir, baseName);
           if (fs.existsSync(localBin)) return localBin;
-          if (sourceExt.includes(path.extname(baseName))) return void 0;
+          if (sourceExt.includes(path2.extname(baseName))) return void 0;
           const foundExt = sourceExt.find(
             (ext) => fs.existsSync(`${localBin}${ext}`)
           );
@@ -2225,17 +2225,17 @@ Expecting one of '${allowedValues.join("', '")}'`);
           } catch {
             resolvedScriptPath = this._scriptPath;
           }
-          executableDir = path.resolve(
-            path.dirname(resolvedScriptPath),
+          executableDir = path2.resolve(
+            path2.dirname(resolvedScriptPath),
             executableDir
           );
         }
         if (executableDir) {
           let localFile = findFile(executableDir, executableFile);
           if (!localFile && !subcommand._executableFile && this._scriptPath) {
-            const legacyName = path.basename(
+            const legacyName = path2.basename(
               this._scriptPath,
-              path.extname(this._scriptPath)
+              path2.extname(this._scriptPath)
             );
             if (legacyName !== this._name) {
               localFile = findFile(
@@ -2246,7 +2246,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
           }
           executableFile = localFile || executableFile;
         }
-        launchWithNode = sourceExt.includes(path.extname(executableFile));
+        launchWithNode = sourceExt.includes(path2.extname(executableFile));
         let proc;
         if (process2.platform !== "win32") {
           if (launchWithNode) {
@@ -3161,7 +3161,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @return {Command}
        */
       nameFromFilename(filename) {
-        this._name = path.basename(filename, path.extname(filename));
+        this._name = path2.basename(filename, path2.extname(filename));
         return this;
       }
       /**
@@ -3175,9 +3175,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @param {string} [path]
        * @return {(string|null|Command)}
        */
-      executableDir(path2) {
-        if (path2 === void 0) return this._executableDir;
-        this._executableDir = path2;
+      executableDir(path3) {
+        if (path3 === void 0) return this._executableDir;
+        this._executableDir = path3;
         return this;
       }
       /**
@@ -3455,6 +3455,395 @@ var require_commander = __commonJS({
   }
 });
 
+// node_modules/dotenv/dist/index.cjs
+var require_dist = __commonJS({
+  "node_modules/dotenv/dist/index.cjs"(exports2, module2) {
+    var I = (e, o) => () => {
+      try {
+        return o || e((o = { exports: {} }).exports, o), o.exports;
+      } catch (t) {
+        throw o = 0, t;
+      }
+    };
+    var S = I((xe, U) => {
+      function G(e) {
+        return typeof e == "string" ? !["false", "0", "no", "off", ""].includes(e.toLowerCase()) : !!e;
+      }
+      function X(e = process.env) {
+        let o = {};
+        for (let t of ["ENCODING", "PATH", "QUIET", "DEBUG", "OVERRIDE", "FAST"]) {
+          let n = e[`DOTENV_${t}`] != null ? e[`DOTENV_${t}`] : e[`DOTENV_CONFIG_${t}`];
+          n != null && (o[t.toLowerCase()] = t === "ENCODING" || t === "PATH" ? n : G(n));
+        }
+        return o;
+      }
+      U.exports = { parseBoolean: G, optionsFromEnv: X };
+    });
+    var N = I((ye, x) => {
+      var Y = require("fs"), j = require("path"), z = require("os"), { URL: Z, fileURLToPath: ee } = require("url"), { parseBoolean: k, optionsFromEnv: B } = S(), te = /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/mg, b = new Uint8Array(256);
+      for (let e = 48; e <= 57; e++) b[e] = 1;
+      for (let e = 65; e <= 90; e++) b[e] = 1;
+      for (let e = 97; e <= 122; e++) b[e] = 1;
+      b[45] = 1;
+      b[46] = 1;
+      b[95] = 1;
+      function re(e) {
+        let o = {}, t = e.toString();
+        t = t.replace(/\r\n?/mg, `
+`);
+        let n;
+        for (; (n = te.exec(t)) != null; ) {
+          let r = n[1], s = n[2] || "";
+          s = s.trim();
+          let i = s[0];
+          s = s.replace(/^(['"`])([\s\S]*)\1$/mg, "$2"), i === '"' && (s = s.replace(/\\n/g, `
+`), s = s.replace(/\\r/g, "\r")), o[r] = s;
+        }
+        return o;
+      }
+      function w(e) {
+        return e <= 32 ? e === 32 || e >= 9 && e <= 13 : e >= 160 && (e === 160 || e === 5760 || e >= 8192 && e <= 8202 || e === 8232 || e === 8233 || e === 8239 || e === 8287 || e === 12288 || e === 65279);
+      }
+      function O(e) {
+        return e === 10 || e === 8232 || e === 8233;
+      }
+      function oe(e) {
+        let o = {}, t = typeof e == "string" ? e : e.toString();
+        t.indexOf("\r") !== -1 && (t = t.replace(/\r\n?/g, `
+`));
+        let n = t.length, r = 0;
+        for (; r < n; ) {
+          let s = t.charCodeAt(r);
+          for (; r < n && w(s); ) r++, s = t.charCodeAt(r);
+          if (r >= n) break;
+          if (s === 35) {
+            for (; r < n && !O(t.charCodeAt(r)); ) r++;
+            continue;
+          }
+          let i = -1;
+          if (s === 101 && r + 6 < n && t.charCodeAt(r + 1) === 120 && t.charCodeAt(r + 2) === 112 && t.charCodeAt(r + 3) === 111 && t.charCodeAt(r + 4) === 114 && t.charCodeAt(r + 5) === 116) {
+            let C = t.charCodeAt(r + 6);
+            if (w(C)) {
+              let d = r + 7;
+              for (; d < n && w(t.charCodeAt(d)); ) d++;
+              b[t.charCodeAt(d)] && (i = r + 6, r = d);
+            } else s = t.charCodeAt(r);
+          }
+          let l = r, u = 0;
+          for (; r < n && (u = t.charCodeAt(r), b[u]); ) r++;
+          if (r === l) {
+            for (; r < n && !O(t.charCodeAt(r)); ) r++;
+            continue;
+          }
+          let p = t.slice(l, r), f = r;
+          if (r >= n && (u = 0), w(u)) do
+            r++, u = r < n ? t.charCodeAt(r) : 0;
+          while (w(u));
+          if (u === 61) r++;
+          else if (u === 58 && r === f && r + 1 < n && w(t.charCodeAt(r + 1))) r += 2;
+          else {
+            for (r = i === -1 ? f : i; r < n && !O(t.charCodeAt(r)); ) r++;
+            continue;
+          }
+          let c = r, a = r;
+          for (; a < n && w(t.charCodeAt(a)); ) a++;
+          let g = t.charCodeAt(a), h, y = false;
+          if (g === 39 || g === 34 || g === 96) {
+            let C = t[a], d = t.indexOf(C, a + 1), m = -1, v = -1;
+            for (; d !== -1; ) {
+              let q = t.charCodeAt(d - 1) === 92, A = d + 1;
+              for (; A < n && !O(t.charCodeAt(A)) && w(t.charCodeAt(A)); ) A++;
+              if ((A === n || O(t.charCodeAt(A)) || t.charCodeAt(A) === 35) && (m = d, v = A), !q) break;
+              d = t.indexOf(C, d + 1);
+            }
+            if (m !== -1) {
+              if (h = t.slice(a + 1, m), r = v, t.charCodeAt(r) === 35) for (; r < n && !O(t.charCodeAt(r)); ) r++;
+              y = true;
+            }
+          }
+          if (!y) {
+            let C = t.indexOf(`
+`, c);
+            C === -1 && (C = n);
+            let d = t.indexOf("#", c);
+            (d === -1 || d > C) && (d = C);
+            let m = c, v = d;
+            for (; m < v && w(t.charCodeAt(m)); ) m++;
+            for (; v > m && w(t.charCodeAt(v - 1)); ) v--;
+            let q = t.charCodeAt(m);
+            if (v - m >= 2 && (q === 39 || q === 34 || q === 96) && t.charCodeAt(v - 1) === q ? h = t.slice(m + 1, v - 1) : h = t.slice(m, v), r = d, d < C) for (; r < n && !O(t.charCodeAt(r)); ) r++;
+          }
+          g === 34 && (y || a < r) && h.indexOf("\\") !== -1 && (h = h.replace(/\\n/g, `
+`).replace(/\\r/g, "\r")), o[p] = h;
+        }
+        return o;
+      }
+      function ne(e, o) {
+        return o && k(o.fast) ? oe(e) : re(e);
+      }
+      function T(e) {
+        console.log(`\u2506 ${e}`);
+      }
+      function se(e) {
+        console.error(`\u25C7 ${e}`);
+      }
+      function V(e) {
+        return e[0] === "~" ? j.join(z.homedir(), e.slice(1)) : e;
+      }
+      function ie(e = {}) {
+        return { ...B(), ...e };
+      }
+      function ce(e) {
+        e = ie(e);
+        let o = j.resolve(process.cwd(), ".env"), t = "utf8", n = process.env;
+        e && e.processEnv != null && (n = e.processEnv);
+        let r = k(e && e.debug);
+        e && e.encoding ? t = e.encoding : r && T("no encoding is specified (UTF-8 is used by default)");
+        let s = [o];
+        if (e && e.path) if (!Array.isArray(e.path)) s = [V(e.path)];
+        else {
+          s = [];
+          for (let c of e.path) s.push(V(c));
+        }
+        let i, l = {}, u = { fast: e.fast };
+        for (let c of s) try {
+          let a = E.parse(Y.readFileSync(c, { encoding: t }), u);
+          E.populate(l, a, e);
+        } catch (a) {
+          r && T(`failed to load ${c} ${a.message}`), i = a;
+        }
+        let p = E.populate(n, l, e), f = k(Object.prototype.hasOwnProperty.call(e, "quiet") ? e.quiet : B(n).quiet);
+        if (r || !f) {
+          let c = Object.keys(p).length, a = [];
+          for (let g of s) try {
+            let h = j.relative(process.cwd(), g instanceof Z ? ee(g) : g);
+            a.push(h);
+          } catch (h) {
+            r && T(`failed to load ${g} ${h.message}`), i = h;
+          }
+          se(`injected env (${c}) from ${a.join(",")}`);
+        }
+        return i ? { parsed: l, error: i } : { parsed: l };
+      }
+      function ae(e) {
+        return E.configDotenv(e);
+      }
+      function le(e, o, t = {}) {
+        let n = !!(t && t.debug), r = !!(t && t.override), s = {};
+        if (e === null || typeof e != "object" || o === null || typeof o != "object") {
+          let i = new Error("OBJECT_REQUIRED: Please check the processEnv argument being passed to populate");
+          throw i.code = "OBJECT_REQUIRED", i;
+        }
+        for (let i of Object.keys(o)) Object.prototype.hasOwnProperty.call(e, i) ? (r === true && (e[i] = o[i], s[i] = o[i]), n && T(r === true ? `"${i}" is already defined and WAS overwritten` : `"${i}" is already defined and was NOT overwritten`)) : (e[i] = o[i], s[i] = o[i]);
+        return s;
+      }
+      var E = { configDotenv: ce, config: ae, parse: ne, populate: le };
+      x.exports.configDotenv = E.configDotenv;
+      x.exports.config = E.config;
+      x.exports.parse = E.parse;
+      x.exports.populate = E.populate;
+      x.exports = E;
+    });
+    var M = I((Te, W) => {
+      var _ = require("child_process"), fe = require("fs"), L = require("path");
+      function ue(e) {
+        let o = ['"'], t = 0;
+        for (let n of e) {
+          if (n === "\\") {
+            t++;
+            continue;
+          }
+          n === '"' ? o.push("\\".repeat(t * 2 + 1), '"') : o.push("\\".repeat(t), n), t = 0;
+        }
+        return o.push("\\".repeat(t * 2), '"'), o.join("");
+      }
+      function H(e, o = 1) {
+        for (let t = 0; t < o; t++) {
+          let n = [];
+          for (let r of e) {
+            let s = r.charCodeAt(0), i = s >= 48 && s <= 57 || s >= 65 && s <= 90 || s >= 97 && s <= 122, l = "\\/:._-".includes(r);
+            !i && !l && s < 128 && n.push("^"), n.push(r);
+          }
+          e = n.join("");
+        }
+        return e;
+      }
+      function P(e, o) {
+        let t = Object.keys(e).reverse().find((n) => n.toUpperCase() === o);
+        return t === void 0 ? void 0 : e[t];
+      }
+      function de(e, o, t) {
+        let n = (P(o, "PATHEXT") || ".COM;.EXE;.BAT;.CMD").split(";").filter(Boolean), s = n.some((l) => e.toLowerCase().endsWith(l.toLowerCase())) ? ["", ...n] : [...n, ""], i = /[\\/]/.test(e) ? [t] : [t, ...(P(o, "PATH") || "").split(";")];
+        for (let l of i) for (let u of s) {
+          let p = L.resolve(t, l.replace(/^"|"$/g, ""), e + u);
+          try {
+            if (fe.statSync(p).isFile()) return p;
+          } catch {
+          }
+        }
+      }
+      function pe(e, o, t) {
+        if (process.platform !== "win32") return _.spawn(e, o, t);
+        let n = t.env || process.env, r = de(e, n, t.cwd || process.cwd());
+        if (r && /\.(?:exe|com)$/i.test(r)) return _.spawn(r, o, t);
+        let s = /\.(?:bat|cmd)$/i.test(r || e), i = [H(L.normalize(r || e))];
+        for (let u of o) i.push(H(ue(u), s ? 2 : 1));
+        let l = i.join(" ");
+        return _.spawn(P(n, "COMSPEC") || "cmd.exe", ["/d", "/v:off", "/s", "/c", `"${l}"`], { ...t, windowsVerbatimArguments: true });
+      }
+      W.exports = pe;
+    });
+    var K = I(($e, F) => {
+      var he = require("fs"), ge = require("os"), Q = require("path"), me = require("child_process"), ve = M(), R = N(), { optionsFromEnv: Ce } = S();
+      function $() {
+        console.log(["Usage: dotenv run [--help] [-q|--quiet] [--debug] [--override] [--fast] [-f|--file <paths>] [--] <command> [args...]", "", "Run a command with environment variables from a .env file.", "Place dotenv options before the command; all following arguments go to the command.", "", "Options:", "  -f, --file <paths>  .env paths, comma-separated or repeated (default: .env)", "  -q, --quiet suppress the injected env message", "  --debug     enable debug logging", "  --override  override existing environment variables", "  --fast      use the faster character-scanner parser", "", "Environment variables (DOTENV_CONFIG_* names remain as fallbacks):", "  DOTENV_PATH, DOTENV_ENCODING, DOTENV_QUIET,", "  DOTENV_DEBUG, DOTENV_OVERRIDE,", "  DOTENV_FAST"].join(`
+`));
+      }
+      function we(e) {
+        let o = [], t = false, n, r, s, i, l = -1;
+        for (let p = 0; p < e.length; p++) {
+          let f = e[p];
+          if (f === "--") {
+            l = p + 1;
+            break;
+          }
+          if (f === "--help" || f === "-h") return { help: true };
+          if (f === "--quiet" || f === "-q") {
+            n = true;
+            continue;
+          }
+          if (f === "--debug") {
+            r = true;
+            continue;
+          }
+          if (f === "--override") {
+            s = true;
+            continue;
+          }
+          if (f === "--fast") {
+            i = true;
+            continue;
+          }
+          if (f === "-f" || f === "--file" || f.startsWith("-f=") || f.startsWith("--file=")) {
+            let c = f.indexOf("="), a = c === -1 ? f : f.slice(0, c), g = c === -1 ? e[++p] : f.slice(c + 1);
+            if (!g || g === "--") return { error: `${a} requires a path` };
+            let h = g.split(",").map((y) => y.trim()).filter(Boolean);
+            if (h.length === 0) return { error: `${a} requires a path` };
+            o.push(...h), t = true;
+            continue;
+          }
+          if (f.startsWith("-")) return { error: `unknown option: ${f}` };
+          l = p;
+          break;
+        }
+        let u = l === -1 ? [] : e.slice(l);
+        return { paths: o, pathSet: t, quiet: n, debug: r, override: s, fast: i, command: u };
+      }
+      function Ee(e) {
+        return e[0] === "~" ? Q.join(ge.homedir(), e.slice(1)) : e;
+      }
+      function Ae(e) {
+        let o = Ce(), t = { encoding: o.encoding || "utf8", quiet: o.quiet === true, debug: o.debug === true, override: o.override === true, fast: o.fast === true, paths: [".env"], defaultPath: true };
+        return o.path != null && (t.paths = [o.path], t.defaultPath = false), e.pathSet && (t.paths = e.paths, t.defaultPath = false), e.quiet != null && (t.quiet = e.quiet), e.debug != null && (t.debug = e.debug), e.override != null && (t.override = e.override), e.fast != null && (t.fast = e.fast), t;
+      }
+      function be(e) {
+        let o = {}, t = [], n = { override: e.override, debug: e.debug };
+        for (let s of e.paths) {
+          let i = Q.resolve(process.cwd(), Ee(s));
+          try {
+            let l = R.parse(he.readFileSync(i, { encoding: e.encoding }), { fast: e.fast });
+            R.populate(o, l, n), t.push(s);
+          } catch (l) {
+            if (e.debug && console.log(`\u2506 failed to load ${s} ${l.message}`), !(e.defaultPath && l.code === "ENOENT")) throw l;
+          }
+        }
+        return { injected: R.populate(process.env, o, n), loadedPaths: t };
+      }
+      function J(e) {
+        let o = e[0];
+        if (o === "--help" || o === "-h") {
+          $();
+          return;
+        }
+        if (o !== "run") {
+          $(), process.exitCode = 1;
+          return;
+        }
+        let t = we(e.slice(1));
+        if (t.help) {
+          $();
+          return;
+        }
+        if (t.error) {
+          console.error(`dotenv: ${t.error}`), $(), process.exitCode = 1;
+          return;
+        }
+        if (t.command.length === 0) {
+          $(), process.exitCode = 1;
+          return;
+        }
+        let n = Ae(t);
+        try {
+          let c = be(n);
+          if (!n.quiet) {
+            let a = `\u25C7 injected env (${Object.keys(c.injected).length})`;
+            c.loadedPaths.length > 0 && (a += ` from ${c.loadedPaths.join(", ")}`), console.error(a);
+          }
+        } catch (c) {
+          console.error(`dotenv: ${c.message}`), process.exitCode = 1;
+          return;
+        }
+        let r = !!process.stdin.isTTY, s = process.platform !== "win32" && !r, i = ve(t.command[0], t.command.slice(1), { stdio: "inherit", detached: s }), l = /* @__PURE__ */ new Map(), u = 0;
+        function p(c) {
+          if (!(!i.pid || i.exitCode !== null || i.signalCode !== null)) {
+            if (process.platform === "win32") {
+              me.spawnSync("taskkill", ["/pid", String(i.pid), "/T", "/F"], { stdio: "ignore" });
+              return;
+            }
+            try {
+              process.kill(s ? -i.pid : i.pid, c);
+            } catch (a) {
+              if (a.code !== "ESRCH") throw a;
+            }
+          }
+        }
+        function f() {
+          for (let [c, a] of l) process.removeListener(c, a);
+        }
+        for (let c of ["SIGINT", "SIGTERM", "SIGHUP", "SIGQUIT"]) {
+          let a = () => {
+            if (c === "SIGINT") {
+              if (u++, r && process.platform !== "win32" && u === 1) return;
+              if (u > 1) {
+                p(u === 2 ? "SIGTERM" : "SIGKILL");
+                return;
+              }
+            }
+            p(c);
+          };
+          l.set(c, a), process.on(c, a);
+        }
+        i.on("error", function(c) {
+          f(), console.error(`dotenv: ${c.message}`), process.exitCode = 1;
+        }), i.on("exit", function(c, a) {
+          f(), typeof c == "number" ? process.exit(c) : (setInterval(() => {
+          }, 1e3), process.kill(process.pid, a));
+        });
+      }
+      F.exports = J;
+      require.main === F && J(process.argv.slice(2));
+    });
+    var D = N();
+    var Oe = K();
+    module2.exports = D;
+    module2.exports.config = D.config;
+    module2.exports.configDotenv = D.configDotenv;
+    module2.exports.parse = D.parse;
+    module2.exports.populate = D.populate;
+    require.main === module2 && Oe(process.argv.slice(2));
+  }
+});
+
 // node_modules/commander/esm.mjs
 var import_index = __toESM(require_commander(), 1);
 var {
@@ -3472,13 +3861,430 @@ var {
   Help
 } = import_index.default;
 
+// src/config/config.ts
+var import_dotenv = __toESM(require_dist(), 1);
+var import_node_os = __toESM(require("node:os"), 1);
+var import_node_path = __toESM(require("node:path"), 1);
+
+// src/api/errors.ts
+var AppError = class extends Error {
+  code;
+  userMessage;
+  details;
+  constructor(params) {
+    super(`${params.code}: ${params.userMessage}`, { cause: params.cause });
+    this.name = "AppError";
+    this.code = params.code;
+    this.userMessage = params.userMessage;
+    this.details = params.details;
+  }
+};
+
+// src/config/config.ts
+var ENV_PATH = import_node_path.default.join(import_node_os.default.homedir(), ".config", "bybit", ".env");
+var DEFAULT_BASE_URL = "https://api.bybit.com";
+var ALLOWED_BASE_URLS = [
+  "https://api.bybit.com",
+  "https://api.bytick.com",
+  "https://api.bybit.tr",
+  "https://api.bybit.kz",
+  "https://api.bybitgeorgia.ge",
+  "https://api.bybit.ae",
+  "https://api.bybit.eu",
+  "https://api.bybit.id"
+];
+var RECV_WINDOW_MS = 5e3;
+var REQUEST_TIMEOUT_MS = 3e4;
+var CLOCK_SKEW_WARN_MS = 1e3;
+function loadEnvFile(file, env) {
+  import_dotenv.default.config({ path: file, processEnv: env, quiet: true });
+}
+function readCredentials(env) {
+  const apiKey = env.BYBIT_API_KEY;
+  const apiSecret = env.BYBIT_API_SECRET;
+  if (!apiKey || !apiSecret) return void 0;
+  if (!PRINTABLE.test(apiKey) || !PRINTABLE.test(apiSecret)) throw keyMalformedError();
+  return { apiKey, apiSecret };
+}
+var PRINTABLE = /^[\x21\x23-\x26\x28-\x7E]+$/;
+function keyMalformedError() {
+  return new AppError({
+    code: "APP_KEY_MALFORMED",
+    userMessage: `BYBIT_API_KEY \u0438\u043B\u0438 BYBIT_API_SECRET \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u0442 \u043F\u0440\u043E\u0431\u0435\u043B, \u043A\u0430\u0432\u044B\u0447\u043A\u0443, \u043F\u0435\u0440\u0435\u0432\u043E\u0434 \u0441\u0442\u0440\u043E\u043A\u0438 \u0438\u043B\u0438 \u0434\u0440\u0443\u0433\u043E\u0439 \u043D\u0435\u0434\u043E\u043F\u0443\u0441\u0442\u0438\u043C\u044B\u0439 \u0441\u0438\u043C\u0432\u043E\u043B. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u0441\u0442\u0440\u043E\u043A\u0438 \u0432 ${ENV_PATH}: \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435 \u0431\u0435\u0437 \u043A\u0430\u0432\u044B\u0447\u0435\u043A \u0438 \u043F\u0440\u043E\u0431\u0435\u043B\u043E\u0432, \u043A\u0430\u043A \u043E\u043D\u043E \u0441\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043E \u0441 Bybit.`
+  });
+}
+function keyMissingError() {
+  return new AppError({
+    code: "APP_KEY_MISSING",
+    userMessage: `\u041A\u043B\u044E\u0447 API \u043D\u0435 \u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043D. \u0421\u043E\u0437\u0434\u0430\u0439\u0442\u0435 \u043D\u0430 Bybit \u043A\u043B\u044E\u0447 \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430 \u0447\u0442\u0435\u043D\u0438\u0435 (Read-Only) \u0438 \u0437\u0430\u043F\u0438\u0448\u0438\u0442\u0435 \u0432 ${ENV_PATH} \u0441\u0442\u0440\u043E\u043A\u0438 BYBIT_API_KEY=<\u043A\u043B\u044E\u0447> \u0438 BYBIT_API_SECRET=<\u0441\u0435\u043A\u0440\u0435\u0442>.`
+  });
+}
+function resolveBaseUrl(env) {
+  const url = env.BYBIT_BASE_URL;
+  if (!url) return DEFAULT_BASE_URL;
+  if (ALLOWED_BASE_URLS.includes(url)) return url;
+  throw new AppError({
+    code: "APP_CONFIG_INVALID",
+    userMessage: `BYBIT_BASE_URL=${url} \u043D\u0435 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442\u0441\u044F. \u0414\u043E\u043F\u0443\u0441\u0442\u0438\u043C\u044B\u0435 \u0430\u0434\u0440\u0435\u0441\u0430 \u043E\u0441\u043D\u043E\u0432\u043D\u043E\u0439 \u0441\u0435\u0442\u0438: ${ALLOWED_BASE_URLS.join(", ")}.`
+  });
+}
+
+// src/api/error-map.ts
+var KIND = {
+  keyRejected: () => new AppError({
+    code: "APP_KEY_REJECTED",
+    userMessage: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u043F\u0440\u0438\u043D\u044F\u043B\u0430 \u043A\u043B\u044E\u0447 API: \u043E\u043D \u043D\u0435\u0432\u0435\u0440\u043D\u044B\u0439, \u043E\u0442\u043E\u0437\u0432\u0430\u043D \u0438\u043B\u0438 \u0438\u0441\u0442\u0451\u043A, \u043B\u0438\u0431\u043E \u0441\u0435\u043A\u0440\u0435\u0442 \u043D\u0435 \u0441\u043E\u043E\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0443\u0435\u0442 \u043A\u043B\u044E\u0447\u0443. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 BYBIT_API_KEY \u0438 BYBIT_API_SECRET \u0438\u043B\u0438 \u043F\u0435\u0440\u0435\u0441\u043E\u0437\u0434\u0430\u0439\u0442\u0435 \u043A\u043B\u044E\u0447 \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430 \u0447\u0442\u0435\u043D\u0438\u0435."
+  }),
+  ipMismatch: () => new AppError({
+    code: "APP_KEY_IP_MISMATCH",
+    userMessage: "\u041A\u043B\u044E\u0447 API \u043F\u0440\u0438\u0432\u044F\u0437\u0430\u043D \u043A \u0434\u0440\u0443\u0433\u0438\u043C IP-\u0430\u0434\u0440\u0435\u0441\u0430\u043C. \u0414\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u0442\u0435\u043A\u0443\u0449\u0438\u0439 IP \u0432 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430\u0445 \u043A\u043B\u044E\u0447\u0430 \u043D\u0430 Bybit \u0438\u043B\u0438 \u0441\u043D\u0438\u043C\u0438\u0442\u0435 \u043F\u0440\u0438\u0432\u044F\u0437\u043A\u0443."
+  }),
+  permissionDenied: (path2) => new AppError({
+    code: "APP_PERMISSION_DENIED",
+    userMessage: `\u0423 \u043A\u043B\u044E\u0447\u0430 API \u043D\u0435\u0442 \u043F\u0440\u0430\u0432\u0430 \u043D\u0430 \u0437\u0430\u043F\u0440\u043E\u0441 ${path2}. \u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0441\u043E\u043E\u0431\u0449\u0430\u0435\u0442, \u043A\u0430\u043A\u043E\u0435 \u043F\u0440\u0430\u0432\u043E \u043D\u0443\u0436\u043D\u043E: \u0441\u0432\u0435\u0440\u044C\u0442\u0435 \u043F\u0440\u0430\u0432\u0430 \u043A\u043B\u044E\u0447\u0430 (session status) \u0441 \u0440\u0430\u0437\u0434\u0435\u043B\u043E\u043C \u0434\u0430\u043D\u043D\u044B\u0445 \u0438 \u0434\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u043D\u0443\u0436\u043D\u043E\u0435 \u043F\u0440\u0430\u0432\u043E \u043D\u0430 \u0447\u0442\u0435\u043D\u0438\u0435.`
+  }),
+  regionBlocked: () => new AppError({
+    code: "APP_REGION_BLOCKED",
+    userMessage: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u043E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u0435\u0442 \u0437\u0430\u043F\u0440\u043E\u0441\u044B \u0441 \u044D\u0442\u043E\u0433\u043E \u0430\u0434\u0440\u0435\u0441\u0430: \u0434\u043E\u0441\u0442\u0443\u043F \u043E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D \u0434\u043B\u044F \u0432\u0430\u0448\u0435\u0433\u043E \u0440\u0435\u0433\u0438\u043E\u043D\u0430 (\u0432 \u0442\u043E\u043C \u0447\u0438\u0441\u043B\u0435 \u0421\u0428\u0410 \u0438 \u043C\u0430\u0442\u0435\u0440\u0438\u043A\u043E\u0432\u044B\u0439 \u041A\u0438\u0442\u0430\u0439)."
+  }),
+  rateLimit: (resetTimestamp) => new AppError({
+    code: "APP_RATE_LIMIT",
+    userMessage: "\u041B\u0438\u043C\u0438\u0442 \u0437\u0430\u043F\u0440\u043E\u0441\u043E\u0432 \u043A \u0431\u0438\u0440\u0436\u0435 \u0438\u0441\u0447\u0435\u0440\u043F\u0430\u043D. " + (resetTimestamp === void 0 ? "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u0437\u0430\u043F\u0440\u043E\u0441 \u043F\u043E\u0437\u0436\u0435." : `\u041B\u0438\u043C\u0438\u0442 \u043E\u0441\u0432\u043E\u0431\u043E\u0434\u0438\u0442\u0441\u044F \u0432 ${new Date(resetTimestamp).toISOString()}.`)
+  }),
+  unavailable: (details) => new AppError({
+    code: "APP_UNAVAILABLE",
+    userMessage: "\u0412\u0440\u0435\u043C\u0435\u043D\u043D\u044B\u0439 \u043E\u0442\u043A\u0430\u0437 \u0431\u0438\u0440\u0436\u0438. \u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u0437\u0430\u043F\u0440\u043E\u0441 \u043F\u043E\u0437\u0436\u0435.",
+    details
+  })
+};
+function mapRetCode(retCode, retMsg, ctx) {
+  switch (retCode) {
+    case 10003:
+    case 10004:
+    case 33004:
+      return KIND.keyRejected();
+    case 10010:
+      return KIND.ipMismatch();
+    case 10005:
+      return KIND.permissionDenied(ctx.path);
+    case 10009:
+    case 10024:
+      return KIND.regionBlocked();
+    case 10006:
+      return KIND.rateLimit(ctx.resetTimestamp);
+    case 1e4:
+    case 10016:
+      return KIND.unavailable({ path: ctx.path, retCode });
+    default:
+      return new AppError({
+        code: "APP_BYBIT_ERROR",
+        userMessage: `\u0411\u0438\u0440\u0436\u0430 \u043E\u0442\u043A\u043B\u043E\u043D\u0438\u043B\u0430 \u0437\u0430\u043F\u0440\u043E\u0441 ${ctx.path}: \u043A\u043E\u0434 ${retCode}, \xAB${retMsg}\xBB.`,
+        details: { path: ctx.path, retCode }
+      });
+  }
+}
+function mapHttpStatus(status, ctx) {
+  if (status === 401) return KIND.keyRejected();
+  if (status === 429) return KIND.rateLimit(ctx.resetTimestamp);
+  if (status === 403) {
+    return new AppError({
+      code: "APP_REGION_BLOCKED",
+      userMessage: "\u0411\u0438\u0440\u0436\u0430 \u043E\u0442\u043A\u0430\u0437\u0430\u043B\u0430 \u0432 \u0434\u043E\u0441\u0442\u0443\u043F\u0435 (HTTP 403). \u0412\u043E\u0437\u043C\u043E\u0436\u043D\u044B\u0435 \u043F\u0440\u0438\u0447\u0438\u043D\u044B: \u0437\u0430\u043F\u0440\u043E\u0441 \u0438\u0437 \u0440\u0435\u0433\u0438\u043E\u043D\u0430, \u043A\u043E\u0442\u043E\u0440\u044B\u0439 Bybit \u043D\u0435 \u043E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u0435\u0442 (\u0421\u0428\u0410, \u043C\u0430\u0442\u0435\u0440\u0438\u043A\u043E\u0432\u044B\u0439 \u041A\u0438\u0442\u0430\u0439), \u0438\u043B\u0438 \u043F\u0440\u0435\u0432\u044B\u0448\u0435\u043D \u043B\u0438\u043C\u0438\u0442 \u0437\u0430\u043F\u0440\u043E\u0441\u043E\u0432 \u0441 \u044D\u0442\u043E\u0433\u043E IP \u2014 \u0442\u043E\u0433\u0434\u0430 \u043F\u043E\u0434\u043E\u0436\u0434\u0438\u0442\u0435 \u043D\u0435 \u043C\u0435\u043D\u044C\u0448\u0435 10 \u043C\u0438\u043D\u0443\u0442.",
+      details: { path: ctx.path, status }
+    });
+  }
+  if (status >= 500) return KIND.unavailable({ path: ctx.path, status });
+  return new AppError({
+    code: "APP_BYBIT_ERROR",
+    userMessage: `\u0411\u0438\u0440\u0436\u0430 \u043E\u0442\u043A\u043B\u043E\u043D\u0438\u043B\u0430 \u0437\u0430\u043F\u0440\u043E\u0441 ${ctx.path}: HTTP ${status}.`,
+    details: { path: ctx.path, status }
+  });
+}
+function formatDrift(driftMs) {
+  return `${driftMs >= 0 ? "+" : "-"}${(Math.abs(driftMs) / 1e3).toFixed(1)} \u0441`;
+}
+function clockSkewError(driftMs) {
+  const measured = driftMs === null ? "\u0412\u0440\u0435\u043C\u044F \u0431\u0438\u0440\u0436\u0438 \u043F\u043E\u043B\u0443\u0447\u0438\u0442\u044C \u043D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C, \u0432\u0435\u043B\u0438\u0447\u0438\u043D\u0443 \u0440\u0430\u0441\u0445\u043E\u0436\u0434\u0435\u043D\u0438\u044F \u043D\u0430\u0437\u0432\u0430\u0442\u044C \u043D\u0435\u043B\u044C\u0437\u044F." : `\u041B\u043E\u043A\u0430\u043B\u044C\u043D\u043E\u0435 \u0432\u0440\u0435\u043C\u044F \u0440\u0430\u0441\u0445\u043E\u0434\u0438\u0442\u0441\u044F \u0441 \u0431\u0438\u0440\u0436\u0435\u0439 \u043D\u0430 ${formatDrift(driftMs)}.`;
+  return new AppError({
+    code: "APP_CLOCK_SKEW",
+    userMessage: `\u0411\u0438\u0440\u0436\u0430 \u043E\u0442\u0432\u0435\u0440\u0433\u043B\u0430 \u0437\u0430\u043F\u0440\u043E\u0441 \u0438\u0437-\u0437\u0430 \u0440\u0430\u0441\u0445\u043E\u0436\u0434\u0435\u043D\u0438\u044F \u0441\u0438\u0441\u0442\u0435\u043C\u043D\u044B\u0445 \u0447\u0430\u0441\u043E\u0432. ${measured} \u0421\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u0443\u0439\u0442\u0435 \u0447\u0430\u0441\u044B (NTP).`,
+    details: { driftMs }
+  });
+}
+
+// src/api/sign.ts
+var import_node_crypto = require("node:crypto");
+function signPayload(timestamp, apiKey, recvWindow, query) {
+  return timestamp + apiKey + recvWindow + query;
+}
+function sign(payload, secret) {
+  return (0, import_node_crypto.createHmac)("sha256", secret).update(payload).digest("hex");
+}
+
+// src/api/client.ts
+var BybitClient = class {
+  baseUrl;
+  hasCredentials;
+  credentials;
+  fetchFn;
+  now;
+  timeoutMs;
+  constructor(options) {
+    this.baseUrl = options.baseUrl;
+    this.credentials = options.credentials;
+    this.hasCredentials = options.credentials !== void 0;
+    this.fetchFn = options.fetchFn ?? fetch;
+    this.now = options.now ?? Date.now;
+    this.timeoutMs = options.timeoutMs ?? REQUEST_TIMEOUT_MS;
+  }
+  /** Unsigned GET; returns `result` of the envelope. */
+  getPublic(path2, params = {}) {
+    return this.request(path2, new URLSearchParams(params).toString(), {});
+  }
+  /** Signed GET; returns `result` of the envelope. On 10002 names the clock drift (D-3). */
+  async getPrivate(path2, params = {}) {
+    if (!this.credentials) throw keyMissingError();
+    const query = new URLSearchParams(params).toString();
+    const timestamp = String(this.now());
+    const recvWindow = String(RECV_WINDOW_MS);
+    const headers = {
+      "X-BAPI-API-KEY": this.credentials.apiKey,
+      "X-BAPI-TIMESTAMP": timestamp,
+      "X-BAPI-RECV-WINDOW": recvWindow,
+      "X-BAPI-SIGN": sign(signPayload(timestamp, this.credentials.apiKey, recvWindow, query), this.credentials.apiSecret)
+    };
+    try {
+      return await this.request(path2, query, headers);
+    } catch (err) {
+      if (err instanceof AppError && err.code === "APP_CLOCK_SKEW") throw clockSkewError(await this.driftOrNull());
+      throw err;
+    }
+  }
+  /** Exchange time in ms from /v5/market/time (timeNano / 1e6). */
+  async getServerTimeMs() {
+    const t = await this.getPublic("/v5/market/time");
+    return Number(BigInt(t.timeNano) / 1000000n);
+  }
+  /**
+   * Local minus exchange time, measured from the request midpoint.
+   * Error is at most half the round trip (rttMs / 2).
+   */
+  async measureDrift() {
+    const before = this.now();
+    const server = await this.getServerTimeMs();
+    const after = this.now();
+    return { driftMs: (before + after) / 2 - server, rttMs: after - before };
+  }
+  async driftOrNull() {
+    try {
+      return (await this.measureDrift()).driftMs;
+    } catch {
+      return null;
+    }
+  }
+  async request(path2, query, headers) {
+    const url = `${this.baseUrl}${path2}${query ? `?${query}` : ""}`;
+    let response;
+    try {
+      response = await this.fetchFn(url, { headers, signal: AbortSignal.timeout(this.timeoutMs) });
+    } catch (cause) {
+      const reason = cause instanceof DOMException && cause.name === "TimeoutError" ? "timeout" : "network";
+      throw new AppError({
+        code: "APP_UNAVAILABLE",
+        userMessage: `\u0411\u0438\u0440\u0436\u0430 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u0430 (${reason === "timeout" ? "\u043D\u0435\u0442 \u043E\u0442\u0432\u0435\u0442\u0430 \u0437\u0430 \u043E\u0442\u0432\u0435\u0434\u0451\u043D\u043D\u043E\u0435 \u0432\u0440\u0435\u043C\u044F" : "\u043D\u0435\u0442 \u0441\u043E\u0435\u0434\u0438\u043D\u0435\u043D\u0438\u044F"}). \u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u0437\u0430\u043F\u0440\u043E\u0441 \u043F\u043E\u0437\u0436\u0435.`,
+        // The fetch error itself is not kept: its message may echo a header value, i.e. the key (D-10).
+        details: { path: path2, reason, error: cause instanceof Error ? cause.name : typeof cause }
+      });
+    }
+    const reset = response.headers.get("X-Bapi-Limit-Reset-Timestamp");
+    const ctx = { path: path2, resetTimestamp: reset === null ? void 0 : Number(reset) };
+    if (!response.ok) throw mapHttpStatus(response.status, ctx);
+    const envelope = await parseEnvelope(response, path2);
+    if (envelope.retCode === 10002) throw clockSkewError(null);
+    if (envelope.retCode !== 0) throw mapRetCode(envelope.retCode, envelope.retMsg, ctx);
+    return envelope.result;
+  }
+};
+async function parseEnvelope(response, path2) {
+  try {
+    return await response.json();
+  } catch (cause) {
+    throw new AppError({
+      code: "APP_UNAVAILABLE",
+      userMessage: "\u0411\u0438\u0440\u0436\u0430 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u043E\u0442\u0432\u0435\u0442 \u0432 \u043D\u0435\u043E\u0436\u0438\u0434\u0430\u043D\u043D\u043E\u043C \u0444\u043E\u0440\u043C\u0430\u0442\u0435 (\u043D\u0435 JSON). \u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u0437\u0430\u043F\u0440\u043E\u0441 \u043F\u043E\u0437\u0436\u0435.",
+      details: { path: path2, status: response.status },
+      cause
+    });
+  }
+}
+
+// src/commands/session-status.ts
+var UTA_STATUSES = [3, 4, 5, 6];
+function maskKey(apiKey) {
+  return `****${apiKey.slice(-4)}`;
+}
+function notReadOnlyError() {
+  return new AppError({
+    code: "APP_KEY_NOT_READONLY",
+    userMessage: "\u041A\u043B\u044E\u0447 API \u0438\u043C\u0435\u0435\u0442 \u043F\u0440\u0430\u0432\u0430 \u043D\u0430 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0435 \u0441\u0447\u0451\u0442\u0430. \u0421\u043A\u0438\u043B\u043B \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442 \u0442\u043E\u043B\u044C\u043A\u043E \u0441 \u043A\u043B\u044E\u0447\u043E\u043C \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430 \u0447\u0442\u0435\u043D\u0438\u0435: \u0441\u043E\u0437\u0434\u0430\u0439\u0442\u0435 \u043D\u0430 Bybit \u043A\u043B\u044E\u0447 Read-Only \u0438 \u0437\u0430\u043C\u0435\u043D\u0438\u0442\u0435 \u0438\u043C \u0442\u0435\u043A\u0443\u0449\u0438\u0439."
+  });
+}
+async function capture(fn, problems) {
+  try {
+    return await fn();
+  } catch (err) {
+    if (!(err instanceof AppError)) throw err;
+    if (!problems.some((p) => p.code === err.code)) problems.push({ code: err.code, message: err.userMessage });
+    return null;
+  }
+}
+function toKeyView(info) {
+  return {
+    masked: maskKey(info.apiKey),
+    note: info.note,
+    readOnly: info.readOnly,
+    permissions: info.permissions,
+    ips: info.ips,
+    type: info.type,
+    expiredAt: info.expiredAt,
+    deadlineDay: info.deadlineDay,
+    uta: info.uta,
+    isMaster: info.isMaster
+  };
+}
+function driftNote(driftMs, rttMs, error) {
+  if (driftMs === null) return `\u0412\u0440\u0435\u043C\u044F \u0431\u0438\u0440\u0436\u0438 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E, \u0440\u0430\u0441\u0445\u043E\u0436\u0434\u0435\u043D\u0438\u0435 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u043E: ${error ?? "\u043D\u0435\u0442 \u043E\u0442\u0432\u0435\u0442\u0430"}`;
+  return `\u041B\u043E\u043A\u0430\u043B\u044C\u043D\u043E\u0435 \u0432\u0440\u0435\u043C\u044F \u0432 \u0441\u0435\u0440\u0435\u0434\u0438\u043D\u0435 \u0437\u0430\u043F\u0440\u043E\u0441\u0430 \u043C\u0438\u043D\u0443\u0441 \u0432\u0440\u0435\u043C\u044F \u0431\u0438\u0440\u0436\u0438 (/v5/market/time, timeNano), \u043C\u0441. \u041F\u043E\u043B\u043E\u0436\u0438\u0442\u0435\u043B\u044C\u043D\u043E\u0435 \u2014 \u043B\u043E\u043A\u0430\u043B\u044C\u043D\u044B\u0435 \u0447\u0430\u0441\u044B \u0441\u043F\u0435\u0448\u0430\u0442. \u041F\u043E\u0433\u0440\u0435\u0448\u043D\u043E\u0441\u0442\u044C \xB1${rttMs / 2} \u043C\u0441 (\u043F\u043E\u043B\u043E\u0432\u0438\u043D\u0430 \u0432\u0440\u0435\u043C\u0435\u043D\u0438 \u043E\u0442\u0432\u0435\u0442\u0430 ${rttMs} \u043C\u0441).`;
+}
+function clockSkewMessage(driftMs) {
+  const drift = `\u041B\u043E\u043A\u0430\u043B\u044C\u043D\u043E\u0435 \u0432\u0440\u0435\u043C\u044F \u0440\u0430\u0441\u0445\u043E\u0434\u0438\u0442\u0441\u044F \u0441 \u0431\u0438\u0440\u0436\u0435\u0439 \u043D\u0430 ${formatDrift(driftMs)}`;
+  if (driftMs > 0) return `${drift}: \u0447\u0430\u0441\u044B \u0441\u043F\u0435\u0448\u0430\u0442, \u0431\u0438\u0440\u0436\u0430 \u043E\u0442\u0432\u0435\u0440\u0433\u0430\u0435\u0442 \u043F\u043E\u0434\u043F\u0438\u0441\u0430\u043D\u043D\u044B\u0435 \u0437\u0430\u043F\u0440\u043E\u0441\u044B \u043F\u0440\u0438 \u043E\u043F\u0435\u0440\u0435\u0436\u0435\u043D\u0438\u0438 \u0431\u043E\u043B\u044C\u0448\u0435 1 \u0441. \u0421\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u0443\u0439\u0442\u0435 \u0447\u0430\u0441\u044B (NTP).`;
+  if (-driftMs >= RECV_WINDOW_MS) {
+    return `${drift}: \u0447\u0430\u0441\u044B \u043E\u0442\u0441\u0442\u0430\u044E\u0442 \u0431\u043E\u043B\u044C\u0448\u0435 \u043E\u043A\u043D\u0430 ${RECV_WINDOW_MS / 1e3} \u0441, \u0431\u0438\u0440\u0436\u0430 \u043E\u0442\u0432\u0435\u0440\u0433\u0430\u0435\u0442 \u043F\u043E\u0434\u043F\u0438\u0441\u0430\u043D\u043D\u044B\u0435 \u0437\u0430\u043F\u0440\u043E\u0441\u044B. \u0421\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u0443\u0439\u0442\u0435 \u0447\u0430\u0441\u044B (NTP).`;
+  }
+  return `${drift}: \u0447\u0430\u0441\u044B \u043E\u0442\u0441\u0442\u0430\u044E\u0442; \u043F\u043E\u043A\u0430 \u044D\u0442\u043E \u0432 \u043F\u0440\u0435\u0434\u0435\u043B\u0430\u0445 \u043E\u043A\u043D\u0430 ${RECV_WINDOW_MS / 1e3} \u0441 \u0438 \u0437\u0430\u043F\u0440\u043E\u0441\u044B \u043F\u0440\u043E\u0445\u043E\u0434\u044F\u0442, \u043D\u043E \u0437\u0430\u043F\u0430\u0441 \u043C\u0430\u043B. \u0421\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u0443\u0439\u0442\u0435 \u0447\u0430\u0441\u044B (NTP).`;
+}
+function unifiedNote(isUnified) {
+  if (isUnified === null) return "\u0420\u0435\u0436\u0438\u043C \u0441\u0447\u0451\u0442\u0430 \u043D\u0435 \u043F\u043E\u043B\u0443\u0447\u0435\u043D, \u043F\u0440\u0438\u0437\u043D\u0430\u043A UTA \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D.";
+  return "\u041F\u043E unifiedMarginStatus \u0438\u0437 /v5/account/info: 3\u20136 \u2014 \u0435\u0434\u0438\u043D\u044B\u0439 \u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 (UTA), 1 \u2014 \u043A\u043B\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043A\u0438\u0439 (docs /v5/enum).";
+}
+async function sessionStatus(client, now) {
+  const problems = [];
+  let serverTimeMs = null;
+  let connError = null;
+  let driftMs = null;
+  let rttMs = 0;
+  try {
+    const before = now();
+    serverTimeMs = await client.getServerTimeMs();
+    const after = now();
+    driftMs = (before + after) / 2 - serverTimeMs;
+    rttMs = after - before;
+  } catch (err) {
+    if (!(err instanceof AppError)) throw err;
+    connError = err.userMessage;
+  }
+  if (driftMs !== null && Math.abs(driftMs) - rttMs / 2 > CLOCK_SKEW_WARN_MS) {
+    problems.push({ code: "APP_CLOCK_SKEW", message: clockSkewMessage(driftMs) });
+  }
+  let key = null;
+  let account = null;
+  if (!client.hasCredentials) {
+    const err = keyMissingError();
+    problems.push({ code: err.code, message: err.userMessage });
+  } else {
+    const info = await capture(() => client.getPrivate("/v5/user/query-api"), problems);
+    key = info && toKeyView(info);
+    const acc = await capture(() => client.getPrivate("/v5/account/info"), problems);
+    account = acc && { unifiedMarginStatus: acc.unifiedMarginStatus, marginMode: acc.marginMode };
+  }
+  const isUnified = account ? UTA_STATUSES.includes(account.unifiedMarginStatus) : null;
+  if (key && key.readOnly !== 1) {
+    const err = notReadOnlyError();
+    problems.push({ code: err.code, message: err.userMessage });
+  }
+  if (isUnified === false) {
+    problems.push({
+      code: "APP_ACCOUNT_NOT_UTA",
+      message: "\u0421\u0447\u0451\u0442 \u043D\u0435 \u0435\u0434\u0438\u043D\u044B\u0439 \u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 (UTA). \u041E\u043F\u0446\u0438\u043E\u043D\u044B \u0438 \u0434\u0430\u043D\u043D\u044B\u0435 \u0441\u043A\u0438\u043B\u043B\u0430 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u044B \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430 UTA: \u043F\u0435\u0440\u0435\u0432\u0435\u0434\u0438\u0442\u0435 \u0441\u0447\u0451\u0442 \u0432 UTA \u043D\u0430 Bybit."
+    });
+  }
+  return {
+    configured: client.hasCredentials,
+    environment: { baseUrl: client.baseUrl, network: "mainnet" },
+    connectivity: { ok: serverTimeMs !== null, serverTimeMs, error: connError },
+    key,
+    account,
+    computed: { clockDriftMs: driftMs, isUnified },
+    computedNotes: { clockDriftMs: driftNote(driftMs, rttMs, connError), isUnified: unifiedNote(isUnified) },
+    problems
+  };
+}
+function permissionsLine(permissions) {
+  const granted = Object.entries(permissions).filter(([, list]) => list.length > 0);
+  return granted.length === 0 ? "\u043D\u0435\u0442" : granted.map(([group, list]) => `${group}: ${list.join(", ")}`).join("; ");
+}
+function renderSessionStatus(s) {
+  const lines = [];
+  if (s.key) {
+    lines.push(`\u041A\u043B\u044E\u0447:        ${s.key.masked} \xAB${s.key.note}\xBB, \u0442\u043E\u043B\u044C\u043A\u043E \u0447\u0442\u0435\u043D\u0438\u0435: ${s.key.readOnly === 1 ? "\u0434\u0430" : "\u041D\u0415\u0422"}`);
+    lines.push(`\u041F\u0440\u0430\u0432\u0430:       ${permissionsLine(s.key.permissions)}`);
+    lines.push(`IP:          ${s.key.ips.length === 0 ? "\u0431\u0435\u0437 \u043F\u0440\u0438\u0432\u044F\u0437\u043A\u0438" : s.key.ips.join(", ")}`);
+    lines.push(`\u0421\u0440\u043E\u043A:        expiredAt ${s.key.expiredAt}, deadlineDay ${s.key.deadlineDay}`);
+  } else {
+    lines.push(`\u041A\u043B\u044E\u0447:        ${s.configured ? "\u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043D, \u0434\u0430\u043D\u043D\u044B\u0435 \u043E \u043A\u043B\u044E\u0447\u0435 \u043D\u0435 \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u044B" : "\u043D\u0435 \u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043D"}`);
+  }
+  lines.push(`\u041E\u043A\u0440\u0443\u0436\u0435\u043D\u0438\u0435:   ${s.environment.network}, ${s.environment.baseUrl}`);
+  lines.push(
+    `\u0421\u0432\u044F\u0437\u044C:       ${s.connectivity.ok ? `\u0435\u0441\u0442\u044C, \u0432\u0440\u0435\u043C\u044F \u0431\u0438\u0440\u0436\u0438 ${new Date(s.connectivity.serverTimeMs ?? 0).toISOString()}` : `\u043D\u0435\u0442 \u2014 ${s.connectivity.error}`}`
+  );
+  if (s.account) lines.push(`\u0421\u0447\u0451\u0442:        unifiedMarginStatus ${s.account.unifiedMarginStatus}, ${s.account.marginMode}`);
+  const uta = s.computed.isUnified === null ? "\u2014" : s.computed.isUnified ? "\u0434\u0430" : "\u043D\u0435\u0442";
+  const drift = s.computed.clockDriftMs === null ? "\u2014" : formatDrift(s.computed.clockDriftMs);
+  lines.push(`UTA:         ${uta} [\u0440\u0430\u0441\u0447\u0451\u0442]`);
+  lines.push(`\u0427\u0430\u0441\u044B:        ${drift} [\u0440\u0430\u0441\u0447\u0451\u0442]`);
+  lines.push("", s.problems.length === 0 ? "\u041F\u0440\u043E\u0431\u043B\u0435\u043C \u043D\u0435\u0442." : "\u041F\u0440\u043E\u0431\u043B\u0435\u043C\u044B:");
+  for (const p of s.problems) lines.push(`- ${p.message} [${p.code}]`);
+  lines.push("", "[\u0440\u0430\u0441\u0447\u0451\u0442] \u2014 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u043E \u0441\u043A\u0438\u043B\u043B\u043E\u043C:", `- UTA: ${s.computedNotes.isUnified}`, `- \u0427\u0430\u0441\u044B: ${s.computedNotes.clockDriftMs}`);
+  return lines.join("\n");
+}
+
+// src/cli/runtime.ts
+function bootstrapEnv() {
+  loadEnvFile(ENV_PATH, process.env);
+}
+function formatOutput(value, json, render) {
+  return json ? JSON.stringify(value, null, 2) : render(value);
+}
+function printError(err) {
+  if (err instanceof AppError) {
+    console.error(`\u041E\u0448\u0438\u0431\u043A\u0430: ${err.userMessage} [${err.code}]`);
+    if (process.env.BYBIT_DEBUG) console.error("\u0414\u0435\u0442\u0430\u043B\u0438:", JSON.stringify(err.details ?? null));
+  } else {
+    console.error("\u041E\u0448\u0438\u0431\u043A\u0430: \u043D\u0435\u043F\u0440\u0435\u0434\u0432\u0438\u0434\u0435\u043D\u043D\u0430\u044F \u043E\u0448\u0438\u0431\u043A\u0430 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u044F \u043A\u043E\u043C\u0430\u043D\u0434\u044B. \u0417\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u0435 \u0441 BYBIT_DEBUG=1 \u0434\u043B\u044F \u0434\u0435\u0442\u0430\u043B\u0435\u0439. [APP_UNEXPECTED]");
+    if (process.env.BYBIT_DEBUG) console.error(err);
+  }
+  process.exitCode = 1;
+}
+
+// src/cli/register-session.ts
+function registerSessionCommands(program2) {
+  const session = program2.command("session").description("\u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0435 \u0434\u043E\u0441\u0442\u0443\u043F\u0430 \u043A \u0431\u0438\u0440\u0436\u0435");
+  session.command("status").description("\u043A\u043B\u044E\u0447, \u043F\u0440\u0430\u0432\u0430, \u043E\u043A\u0440\u0443\u0436\u0435\u043D\u0438\u0435, \u0447\u0430\u0441\u044B, \u0441\u0432\u044F\u0437\u044C \u0441 \u0431\u0438\u0440\u0436\u0435\u0439").action(async (_opts, cmd) => {
+    const { json } = cmd.optsWithGlobals();
+    const client = new BybitClient({ credentials: readCredentials(process.env), baseUrl: resolveBaseUrl(process.env) });
+    const status = await sessionStatus(client, Date.now);
+    console.log(formatOutput(status, Boolean(json), renderSessionStatus));
+  });
+}
+
 // src/cli/program.ts
 function buildProgram() {
-  return new Command().name("bybit").description("Read-only access to a Bybit account").version("0.1.0");
+  const program2 = new Command().name("bybit").description("Read-only access to a Bybit account").version("0.1.0").option("--json", "\u043C\u0430\u0448\u0438\u043D\u043D\u044B\u0439 \u0432\u044B\u0432\u043E\u0434 (JSON)");
+  registerSessionCommands(program2);
+  return program2;
 }
 
 // src/cli.ts
-buildProgram().parseAsync().catch((err) => {
-  console.error(err instanceof Error ? err.message : String(err));
-  process.exitCode = 1;
-});
+bootstrapEnv();
+buildProgram().parseAsync().catch(printError);

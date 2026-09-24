@@ -23,3 +23,34 @@ describe('CLI registration', () => {
     expect(program.options.map((o) => o.long)).toContain('--json');
   });
 });
+
+describe('review fixes: printError with BYBIT_DEBUG (D-10)', () => {
+  it('prints message, code and details but not the key from a client failure', async () => {
+    const { BybitClient } = await import('../api/client.js');
+    const { printError } = await import('./runtime.js');
+    const creds = { apiKey: 'LEAKKEY123456', apiSecret: 'LEAKSECRET987654' };
+    const fetchFn = (async () => {
+      throw new TypeError(`Headers.append: "${creds.apiKey}" is an invalid header value.`);
+    }) as typeof fetch;
+    const err = await new BybitClient({ credentials: creds, baseUrl: 'https://api.bybit.com', fetchFn })
+      .getPrivate('/v5/account/info')
+      .catch((e: unknown) => e);
+    const lines: string[] = [];
+    const orig = console.error;
+    const prevDebug = process.env.BYBIT_DEBUG;
+    const prevExit = process.exitCode;
+    console.error = (...args: unknown[]) => lines.push(args.map(String).join(' '));
+    process.env.BYBIT_DEBUG = '1';
+    try {
+      printError(err);
+    } finally {
+      console.error = orig;
+      process.env.BYBIT_DEBUG = prevDebug;
+      process.exitCode = prevExit;
+    }
+    const out = lines.join('\n');
+    expect(out).toContain('[APP_UNAVAILABLE]');
+    expect(out).not.toContain(creds.apiKey);
+    expect(out).not.toContain(creds.apiSecret);
+  });
+});

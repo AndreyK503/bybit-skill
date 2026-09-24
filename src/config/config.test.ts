@@ -70,3 +70,16 @@ describe('resolveBaseUrl', () => {
     },
   );
 });
+
+describe('review fixes: malformed credentials (D-10, NFR-6)', () => {
+  it.each([
+    ['newline in key', { BYBIT_API_KEY: 'LEAKKEY\nabc', BYBIT_API_SECRET: 's1' }],
+    ['space in secret', { BYBIT_API_KEY: 'k1', BYBIT_API_SECRET: 'LEAK SECRET' }],
+    ['quote in key', { BYBIT_API_KEY: '"LEAKKEY"', BYBIT_API_SECRET: 's1' }],
+  ])('%s -> APP_KEY_MALFORMED without the value', (_name, env) => {
+    const err = catchError(() => loadCredentials(env));
+    expect(err.code).toBe('APP_KEY_MALFORMED');
+    expect(err.userMessage).toContain(ENV_PATH);
+    expect(JSON.stringify({ m: err.message, d: err.details })).not.toContain('LEAK');
+  });
+});

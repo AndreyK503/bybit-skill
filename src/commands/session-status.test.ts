@@ -191,3 +191,66 @@ describe('requireReadOnlyKey (decision R1)', () => {
     expect((err as AppError).code).toBe('APP_KEY_NOT_READONLY');
   });
 });
+
+describe('review fixes: clock drift accuracy (NFR-3) and wording (NFR-6)', () => {
+  it('drift is measured from the request midpoint; note names the ± half round-trip error', async () => {
+    // Local clock read before (SERVER+100) and after (SERVER+500) the time request:
+    // midpoint SERVER+300 -> drift 300; round trip 400 -> error ±200 ms.
+    const { client } = setup();
+    const reads = [SERVER_MS + 100, SERVER_MS + 500];
+    const s = await sessionStatus(client, () => reads.shift() ?? SERVER_MS + 500);
+    expect(s.computed.clockDriftMs).toBe(300);
+    expect(s.computedNotes.clockDriftMs).toContain('±200');
+  });
+
+  it('local clock ahead by 2 s -> says the exchange rejects signed requests', async () => {
+    const p = (await status({}, { now: SERVER_MS + 2000 })).status.problems.find((x) => x.code === 'APP_CLOCK_SKEW');
+    expect(p?.message).toMatch(/спешат/);
+    expect(p?.message).toMatch(/отверга/);
+  });
+
+  it('local clock behind by 2 s -> within the 5 s window, not rejected yet', async () => {
+    const p = (await status({}, { now: SERVER_MS - 2000 })).status.problems.find((x) => x.code === 'APP_CLOCK_SKEW');
+    expect(p?.message).toContain('-2.0 с');
+    expect(p?.message).toMatch(/отстают/);
+    expect(p?.message).not.toMatch(/отвергает/);
+  });
+
+  it('local clock behind by 6 s -> exchange rejects signed requests', async () => {
+    const p = (await status({}, { now: SERVER_MS - 6000 })).status.problems.find((x) => x.code === 'APP_CLOCK_SKEW');
+    expect(p?.message).toMatch(/отстают/);
+    expect(p?.message).toMatch(/отвергает/);
+  });
+});
+
+describe('review fixes: problems carry an action (claim 24)', () => {
+  it('APP_KEY_NOT_READONLY tells to create a read-only key', async () => {
+    const { status: s } = await status({ '/v5/user/query-api': () => json(withKey({ readOnly: 0 })) });
+    expect(s.problems.find((p) => p.code === 'APP_KEY_NOT_READONLY')?.message).toMatch(/создайте.*Read-Only/);
+  });
+
+  it('APP_ACCOUNT_NOT_UTA tells to switch the account to UTA', async () => {
+    const classic = { ...ACCOUNT_INFO, result: { ...ACCOUNT_INFO.result, unifiedMarginStatus: 1 } };
+    const { status: s } = await status({ '/v5/account/info': () => json(classic) });
+    expect(s.problems.find((p) => p.code === 'APP_ACCOUNT_NOT_UTA')?.message).toMatch(/переведите/);
+  });
+});
+
+describe('decision A: clock problem only when the drift exceeds 1 s beyond the error', () => {
+  // Live case: drift -1.6 s measured with a 3564 ms round trip (error ±1782 ms) proves nothing.
+  it('drift -1600 with ±1782 error -> no APP_CLOCK_SKEW, drift still reported', async () => {
+    const { client } = setup();
+    const reads = [SERVER_MS - 3382, SERVER_MS + 182];
+    const s = await sessionStatus(client, () => reads.shift() ?? SERVER_MS);
+    expect(s.computed.clockDriftMs).toBe(-1600);
+    expect(codes(s.problems)).not.toContain('APP_CLOCK_SKEW');
+  });
+
+  it('drift +2500 with ±1000 error -> APP_CLOCK_SKEW (at least 1.5 s ahead)', async () => {
+    const { client } = setup();
+    const reads = [SERVER_MS + 1500, SERVER_MS + 3500];
+    const s = await sessionStatus(client, () => reads.shift() ?? SERVER_MS);
+    expect(s.computed.clockDriftMs).toBe(2500);
+    expect(codes(s.problems)).toContain('APP_CLOCK_SKEW');
+  });
+});
