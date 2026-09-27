@@ -54,3 +54,10 @@ describe('review fixes: printError with BYBIT_DEBUG (D-10)', () => {
     expect(out).not.toContain(creds.apiSecret);
   });
 });
+
+describe('E2 CLI registration', () => {
+  it('has portfolio, balance and positions commands', () => {
+    const names = buildProgram().commands.map((c) => c.name());
+    expect(names).toEqual(expect.arrayContaining(['portfolio', 'balance', 'positions']));
+  });
+});
