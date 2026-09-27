@@ -3,7 +3,7 @@ import type { RawAccountInfo, RawAssetOverview, RawOptionAsset } from '../api/ty
 import { renderTable } from '../format/table.js';
 import { DASH, numOrDash, orDash } from '../format/values.js';
 import { isUnvaluedCoin } from '../valuation/usd.js';
-import { UNVALUED_NOTE, fetchWallet, fundingTotalEquity, totalUsd } from './balance.js';
+import { UNVALUED_NOTE, earnView, fetchWallet, fundingTotalEquity, totalUsd } from './balance.js';
 import { fetchAllPositions } from './positions.js';
 import { requireReadOnlyKey } from './session-status.js';
 
@@ -44,6 +44,7 @@ export interface PortfolioResult {
   options: OptionAsset[];
   positionCounts: { linear: number; inverse: number; option: number };
   fundingTotalEquity: string | null;
+  earnTotalEquity: string | null;
   computed: {
     totalValueUsd: number | null;
     unrealisedPnlTotal: number | null;
@@ -98,13 +99,15 @@ export async function portfolio(client: BybitClient): Promise<PortfolioResult> {
     assetMM: o.assetMM,
   }));
   const positions = await fetchAllPositions(client);
-  const fundingTotal = fundingTotalEquity(await client.getPrivate<RawAssetOverview>('/v5/asset/asset-overview'));
+  const overview = await client.getPrivate<RawAssetOverview>('/v5/asset/asset-overview');
+  const fundingTotal = fundingTotalEquity(overview);
+  const earnTotal = earnView(overview).totalEquity;
 
   const coins = a.coin.map((c) => ({ coin: c.coin, equity: c.equity, usdValue: c.usdValue, unrealisedPnl: c.unrealisedPnl, cumRealisedPnl: c.cumRealisedPnl }));
   const unvaluedCoins = a.coin.filter(isUnvaluedCoin).map((c) => c.coin);
   const upl = unrealisedTotal(a.totalPerpUPL, options);
   // Funding coins are not fetched here, so a missing funding total is a gap, not zero.
-  const total = totalUsd(a.totalEquity, fundingTotal, false);
+  const total = totalUsd(a.totalEquity, fundingTotal, false, earnTotal);
   const shares = coinShares(coins, new Set(unvaluedCoins));
   const count = (category: string) => positions.filter((p) => p.category === category).length;
 
@@ -125,6 +128,7 @@ export async function portfolio(client: BybitClient): Promise<PortfolioResult> {
     options,
     positionCounts: { linear: count('linear'), inverse: count('inverse'), option: count('option') },
     fundingTotalEquity: fundingTotal,
+    earnTotalEquity: earnTotal,
     computed: { totalValueUsd: total.value, unrealisedPnlTotal: upl.value, coinShares: shares.shares, unvaluedCoins },
     computedNotes: { totalValueUsd: total.note, unrealisedPnlTotal: upl.note, coinShares: shares.note, unvaluedCoins: UNVALUED_NOTE, realised: REALISED_NOTE },
   };
@@ -139,8 +143,8 @@ export function renderPortfolio(r: PortfolioResult): string {
   const coinRows = r.coins.map((c) => [c.coin, c.equity, r.computed.unvaluedCoins.includes(c.coin) ? DASH : c.usdValue, share(c.coin), c.unrealisedPnl, c.cumRealisedPnl]);
   const optionRows = r.options.map((o) => [o.coin, o.totalUPL, o.totalRPL, o.totalDelta, o.assetIM, o.assetMM]);
   return [
-    `Всего (торговый счёт + финансирование): ${numOrDash(r.computed.totalValueUsd)} USD [расчёт]`,
-    `Торговый счёт: ${a.totalEquity} USD   Кошелёк финансирования: ${r.fundingTotalEquity ?? DASH} USD`,
+    `Всего (торговый счёт + финансирование + Earn): ${numOrDash(r.computed.totalValueUsd)} USD [расчёт]`,
+    `Торговый счёт: ${a.totalEquity} USD   Кошелёк финансирования: ${r.fundingTotalEquity ?? DASH} USD   Earn: ${r.earnTotalEquity ?? DASH} USD`,
     `Свободно: ${a.totalAvailableBalance} USD   Режим маржи: ${a.marginMode}`,
     `Баланс кошелька: ${a.totalWalletBalance}   Маржинальный баланс: ${a.totalMarginBalance}`,
     `IM: ${a.totalInitialMargin} (${a.accountIMRate})   MM: ${a.totalMaintenanceMargin} (${a.accountMMRate})`,

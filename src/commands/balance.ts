@@ -21,10 +21,22 @@ export interface FundingCoinView {
   transferBalance: string;
 }
 
-/** FR-3: balances split by trading account (UTA) and funding wallet. */
+export interface EarnCoinView {
+  coin: string;
+  equity: string;
+  category: string;
+}
+
+export interface EarnView {
+  totalEquity: string | null;
+  coins: EarnCoinView[];
+}
+
+/** FR-3: balances split by trading account (UTA), funding wallet and Earn. */
 export interface BalanceResult {
   unified: { totalEquity: string; coins: UnifiedCoinView[] };
   funding: { totalEquity: string | null; coins: FundingCoinView[] };
+  earn: EarnView;
   computed: {
     unvaluedCoins: string[];
     fundingUsd: Record<string, number | null>;
@@ -68,12 +80,34 @@ async function spotPrices(client: BybitClient): Promise<Map<string, string>> {
   return new Map(tickers.list.map((t) => [t.symbol, t.lastPrice]));
 }
 
-/** Trading account plus funding wallet in USD; empty with a reason if the funding total is missing while it holds coins. */
-export function totalUsd(unified: string, funding: string | null, fundingEmpty: boolean): { value: number | null; note: string } {
-  const scope = 'Сумма totalEquity торгового счёта (wallet-balance) и кошелька финансирования (asset-overview). Earn и прочие счета не входят (A-2).';
-  if (funding !== null) return { value: Number(unified) + Number(funding), note: scope };
-  if (fundingEmpty) return { value: Number(unified), note: `${scope} Кошелёк финансирования пуст.` };
-  return { value: null, note: 'Биржа не вернула итог кошелька финансирования (asset-overview), хотя в нём есть монеты: сумма не вычислена.' };
+/** Raw Earn total and coins from asset-overview (A-2); empty when the exchange did not list Earn. */
+export function earnView(overview: RawAssetOverview): EarnView {
+  const earn = overview.list.find((a) => a.accountType === 'Earn');
+  if (!earn) return { totalEquity: null, coins: [] };
+  const coins = (earn.categories ?? []).flatMap((c) => c.coinDetail.map((d) => ({ coin: d.coin, equity: d.equity, category: c.category })));
+  return { totalEquity: earn.totalEquity, coins };
+}
+
+/**
+ * Trading account + funding wallet + Earn in USD (A-2).
+ * Empty with a reason if the funding total is missing while the wallet holds coins.
+ */
+export function totalUsd(
+  unified: string,
+  funding: string | null,
+  fundingEmpty: boolean,
+  earn: string | null,
+): { value: number | null; note: string } {
+  const scope =
+    'Сумма totalEquity торгового счёта (wallet-balance), кошелька финансирования и Earn (asset-overview). ' +
+    'Боты, займы и прочие счета не входят (A-2).';
+  if (funding === null && !fundingEmpty) {
+    return { value: null, note: 'Биржа не вернула итог кошелька финансирования (asset-overview), хотя в нём есть монеты: сумма не вычислена.' };
+  }
+  const notes = [scope];
+  if (funding === null) notes.push('Кошелёк финансирования пуст.');
+  if (earn === null) notes.push('Earn: биржа не вернула счёт, в сумму не входит.');
+  return { value: Number(unified) + Number(funding ?? 0) + Number(earn ?? 0), note: notes.join(' ') };
 }
 
 export async function balance(client: BybitClient): Promise<BalanceResult> {
@@ -94,11 +128,13 @@ export async function balance(client: BybitClient): Promise<BalanceResult> {
     fundingNotes[c.coin] = e.note;
   }
   const fundingTotal = fundingTotalEquity(overview);
-  const total = totalUsd(account.totalEquity, fundingTotal, fundingCoins.length === 0);
+  const earn = earnView(overview);
+  const total = totalUsd(account.totalEquity, fundingTotal, fundingCoins.length === 0, earn.totalEquity);
 
   return {
     unified: { totalEquity: account.totalEquity, coins: account.coin.map(unifiedView) },
     funding: { totalEquity: fundingTotal, coins: fundingCoins },
+    earn,
     computed: { unvaluedCoins: account.coin.filter(isUnvaluedCoin).map((c) => c.coin), fundingUsd, totalUsd: total.value },
     computedNotes: { unvaluedCoins: UNVALUED_NOTE, fundingUsd: fundingNotes, totalUsd: total.note },
   };
@@ -122,7 +158,10 @@ export function renderBalance(r: BalanceResult): string {
     `Кошелёк финансирования: ${r.funding.totalEquity ?? DASH} USD`,
     fundRows.length ? renderTable(['Монета', 'Кошелёк', 'Доступно к переводу', 'USD [расчёт]'], fundRows) : 'Пусто.',
     '',
-    `Итого, торговый счёт + финансирование: ${numOrDash(r.computed.totalUsd)} USD [расчёт]`,
+    `Earn: ${r.earn.totalEquity ?? DASH} USD`,
+    r.earn.coins.length ? renderTable(['Монета', 'Количество', 'Продукт'], r.earn.coins.map((c) => [c.coin, c.equity, c.category])) : 'Пусто.',
+    '',
+    `Итого, торговый счёт + финансирование + Earn: ${numOrDash(r.computed.totalUsd)} USD [расчёт]`,
     '',
     '[расчёт] — вычислено скиллом:',
     `- Итого: ${r.computedNotes.totalUsd}`,

@@ -216,3 +216,28 @@ export const SPOT_TICKERS = {
   retExtInfo: {},
   time: 1673859087947,
 };
+
+/** Earn entry of asset/balance/asset-overview.mdx "Response Example" (verbatim). */
+export const ASSET_OVERVIEW_EARN = {
+  totalEquity: '20888.1',
+  valuationCurrency: 'USD',
+  accountType: 'Earn',
+  snapshotTime: '1772449024908',
+  categories: [
+    {
+      coinDetail: [
+        { equity: '0.3', coin: 'BTC' },
+        { equity: '100', coin: 'MNT' },
+        { equity: '200', coin: 'USDT' },
+      ],
+      category: 'Easy Earn',
+      equity: '20888.1',
+    },
+  ],
+};
+
+/** Docs asset-overview trimmed to FundingAccount, UnifiedTradingAccount and Earn. */
+export const ASSET_OVERVIEW_WITH_EARN = {
+  ...ASSET_OVERVIEW,
+  result: { ...ASSET_OVERVIEW.result, list: [...ASSET_OVERVIEW.result.list, ASSET_OVERVIEW_EARN] },
+};

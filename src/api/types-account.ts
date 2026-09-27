@@ -62,7 +62,11 @@ export interface RawFundBalance {
 }
 
 export interface RawAssetOverview {
-  list: { accountType: string; totalEquity: string }[];
+  list: {
+    accountType: string;
+    totalEquity: string;
+    categories?: { category: string; coinDetail: { coin: string; equity: string }[] }[];
+  }[];
 }
 
 export interface RawTickers {

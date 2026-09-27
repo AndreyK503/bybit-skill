@@ -4312,11 +4312,21 @@ async function spotPrices(client) {
   const tickers = await client.getPublic("/v5/market/tickers", { category: "spot" });
   return new Map(tickers.list.map((t) => [t.symbol, t.lastPrice]));
 }
-function totalUsd(unified, funding, fundingEmpty) {
-  const scope = "\u0421\u0443\u043C\u043C\u0430 totalEquity \u0442\u043E\u0440\u0433\u043E\u0432\u043E\u0433\u043E \u0441\u0447\u0451\u0442\u0430 (wallet-balance) \u0438 \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430 \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F (asset-overview). Earn \u0438 \u043F\u0440\u043E\u0447\u0438\u0435 \u0441\u0447\u0435\u0442\u0430 \u043D\u0435 \u0432\u0445\u043E\u0434\u044F\u0442 (A-2).";
-  if (funding !== null) return { value: Number(unified) + Number(funding), note: scope };
-  if (fundingEmpty) return { value: Number(unified), note: `${scope} \u041A\u043E\u0448\u0435\u043B\u0451\u043A \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F \u043F\u0443\u0441\u0442.` };
-  return { value: null, note: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0438\u0442\u043E\u0433 \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430 \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F (asset-overview), \u0445\u043E\u0442\u044F \u0432 \u043D\u0451\u043C \u0435\u0441\u0442\u044C \u043C\u043E\u043D\u0435\u0442\u044B: \u0441\u0443\u043C\u043C\u0430 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0430." };
+function earnView(overview) {
+  const earn = overview.list.find((a) => a.accountType === "Earn");
+  if (!earn) return { totalEquity: null, coins: [] };
+  const coins = (earn.categories ?? []).flatMap((c) => c.coinDetail.map((d) => ({ coin: d.coin, equity: d.equity, category: c.category })));
+  return { totalEquity: earn.totalEquity, coins };
+}
+function totalUsd(unified, funding, fundingEmpty, earn) {
+  const scope = "\u0421\u0443\u043C\u043C\u0430 totalEquity \u0442\u043E\u0440\u0433\u043E\u0432\u043E\u0433\u043E \u0441\u0447\u0451\u0442\u0430 (wallet-balance), \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430 \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F \u0438 Earn (asset-overview). \u0411\u043E\u0442\u044B, \u0437\u0430\u0439\u043C\u044B \u0438 \u043F\u0440\u043E\u0447\u0438\u0435 \u0441\u0447\u0435\u0442\u0430 \u043D\u0435 \u0432\u0445\u043E\u0434\u044F\u0442 (A-2).";
+  if (funding === null && !fundingEmpty) {
+    return { value: null, note: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0438\u0442\u043E\u0433 \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430 \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F (asset-overview), \u0445\u043E\u0442\u044F \u0432 \u043D\u0451\u043C \u0435\u0441\u0442\u044C \u043C\u043E\u043D\u0435\u0442\u044B: \u0441\u0443\u043C\u043C\u0430 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0430." };
+  }
+  const notes = [scope];
+  if (funding === null) notes.push("\u041A\u043E\u0448\u0435\u043B\u0451\u043A \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F \u043F\u0443\u0441\u0442.");
+  if (earn === null) notes.push("Earn: \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0441\u0447\u0451\u0442, \u0432 \u0441\u0443\u043C\u043C\u0443 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442.");
+  return { value: Number(unified) + Number(funding ?? 0) + Number(earn ?? 0), note: notes.join(" ") };
 }
 async function balance(client) {
   await requireReadOnlyKey(client);
@@ -4333,10 +4343,12 @@ async function balance(client) {
     fundingNotes[c.coin] = e.note;
   }
   const fundingTotal = fundingTotalEquity(overview);
-  const total = totalUsd(account.totalEquity, fundingTotal, fundingCoins.length === 0);
+  const earn = earnView(overview);
+  const total = totalUsd(account.totalEquity, fundingTotal, fundingCoins.length === 0, earn.totalEquity);
   return {
     unified: { totalEquity: account.totalEquity, coins: account.coin.map(unifiedView) },
     funding: { totalEquity: fundingTotal, coins: fundingCoins },
+    earn,
     computed: { unvaluedCoins: account.coin.filter(isUnvaluedCoin).map((c) => c.coin), fundingUsd, totalUsd: total.value },
     computedNotes: { unvaluedCoins: UNVALUED_NOTE, fundingUsd: fundingNotes, totalUsd: total.note }
   };
@@ -4359,7 +4371,10 @@ function renderBalance(r) {
     `\u041A\u043E\u0448\u0435\u043B\u0451\u043A \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F: ${r.funding.totalEquity ?? DASH} USD`,
     fundRows.length ? renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "\u041A\u043E\u0448\u0435\u043B\u0451\u043A", "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u043A \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u0443", "USD [\u0440\u0430\u0441\u0447\u0451\u0442]"], fundRows) : "\u041F\u0443\u0441\u0442\u043E.",
     "",
-    `\u0418\u0442\u043E\u0433\u043E, \u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 + \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435: ${numOrDash(r.computed.totalUsd)} USD [\u0440\u0430\u0441\u0447\u0451\u0442]`,
+    `Earn: ${r.earn.totalEquity ?? DASH} USD`,
+    r.earn.coins.length ? renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E", "\u041F\u0440\u043E\u0434\u0443\u043A\u0442"], r.earn.coins.map((c) => [c.coin, c.equity, c.category])) : "\u041F\u0443\u0441\u0442\u043E.",
+    "",
+    `\u0418\u0442\u043E\u0433\u043E, \u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 + \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435 + Earn: ${numOrDash(r.computed.totalUsd)} USD [\u0440\u0430\u0441\u0447\u0451\u0442]`,
     "",
     "[\u0440\u0430\u0441\u0447\u0451\u0442] \u2014 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u043E \u0441\u043A\u0438\u043B\u043B\u043E\u043C:",
     `- \u0418\u0442\u043E\u0433\u043E: ${r.computedNotes.totalUsd}`,
@@ -4499,11 +4514,13 @@ async function portfolio(client) {
     assetMM: o.assetMM
   }));
   const positions2 = await fetchAllPositions(client);
-  const fundingTotal = fundingTotalEquity(await client.getPrivate("/v5/asset/asset-overview"));
+  const overview = await client.getPrivate("/v5/asset/asset-overview");
+  const fundingTotal = fundingTotalEquity(overview);
+  const earnTotal = earnView(overview).totalEquity;
   const coins = a.coin.map((c) => ({ coin: c.coin, equity: c.equity, usdValue: c.usdValue, unrealisedPnl: c.unrealisedPnl, cumRealisedPnl: c.cumRealisedPnl }));
   const unvaluedCoins = a.coin.filter(isUnvaluedCoin).map((c) => c.coin);
   const upl = unrealisedTotal(a.totalPerpUPL, options);
-  const total = totalUsd(a.totalEquity, fundingTotal, false);
+  const total = totalUsd(a.totalEquity, fundingTotal, false, earnTotal);
   const shares = coinShares(coins, new Set(unvaluedCoins));
   const count = (category) => positions2.filter((p) => p.category === category).length;
   return {
@@ -4523,6 +4540,7 @@ async function portfolio(client) {
     options,
     positionCounts: { linear: count("linear"), inverse: count("inverse"), option: count("option") },
     fundingTotalEquity: fundingTotal,
+    earnTotalEquity: earnTotal,
     computed: { totalValueUsd: total.value, unrealisedPnlTotal: upl.value, coinShares: shares.shares, unvaluedCoins },
     computedNotes: { totalValueUsd: total.note, unrealisedPnlTotal: upl.note, coinShares: shares.note, unvaluedCoins: UNVALUED_NOTE, realised: REALISED_NOTE }
   };
@@ -4536,8 +4554,8 @@ function renderPortfolio(r) {
   const coinRows = r.coins.map((c) => [c.coin, c.equity, r.computed.unvaluedCoins.includes(c.coin) ? DASH : c.usdValue, share(c.coin), c.unrealisedPnl, c.cumRealisedPnl]);
   const optionRows = r.options.map((o) => [o.coin, o.totalUPL, o.totalRPL, o.totalDelta, o.assetIM, o.assetMM]);
   return [
-    `\u0412\u0441\u0435\u0433\u043E (\u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 + \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435): ${numOrDash(r.computed.totalValueUsd)} USD [\u0440\u0430\u0441\u0447\u0451\u0442]`,
-    `\u0422\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442: ${a.totalEquity} USD   \u041A\u043E\u0448\u0435\u043B\u0451\u043A \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F: ${r.fundingTotalEquity ?? DASH} USD`,
+    `\u0412\u0441\u0435\u0433\u043E (\u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 + \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435 + Earn): ${numOrDash(r.computed.totalValueUsd)} USD [\u0440\u0430\u0441\u0447\u0451\u0442]`,
+    `\u0422\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442: ${a.totalEquity} USD   \u041A\u043E\u0448\u0435\u043B\u0451\u043A \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F: ${r.fundingTotalEquity ?? DASH} USD   Earn: ${r.earnTotalEquity ?? DASH} USD`,
     `\u0421\u0432\u043E\u0431\u043E\u0434\u043D\u043E: ${a.totalAvailableBalance} USD   \u0420\u0435\u0436\u0438\u043C \u043C\u0430\u0440\u0436\u0438: ${a.marginMode}`,
     `\u0411\u0430\u043B\u0430\u043D\u0441 \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430: ${a.totalWalletBalance}   \u041C\u0430\u0440\u0436\u0438\u043D\u0430\u043B\u044C\u043D\u044B\u0439 \u0431\u0430\u043B\u0430\u043D\u0441: ${a.totalMarginBalance}`,
     `IM: ${a.totalInitialMargin} (${a.accountIMRate})   MM: ${a.totalMaintenanceMargin} (${a.accountMMRate})`,
