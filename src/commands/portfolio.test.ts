@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { AppError } from '../api/errors.js';
-import { ACCOUNT_INFO, QUERY_API } from '../fixtures/bybit-v5-access.js';
-import { OPTION_ASSET_INFO, POSITION, WALLET_ACCOUNT, WALLET_BALANCE, WALLET_COIN, positionPage } from '../fixtures/bybit-v5-account.js';
+import { ACCOUNT_INFO, QUERY_API, errorEnvelope } from '../fixtures/bybit-v5-access.js';
+import { ASSET_OVERVIEW, OPTION_ASSET_INFO, POSITION, WALLET_ACCOUNT, WALLET_BALANCE, WALLET_COIN, positionPage } from '../fixtures/bybit-v5-account.js';
 import { READ_ONLY_KEY, routedClient, type Route } from '../fixtures/route-fetch.js';
 import { portfolio, renderPortfolio } from './portfolio.js';
 
@@ -40,6 +40,7 @@ function setup(over: Record<string, Route> = {}) {
     '/v5/account/wallet-balance': () => wallet({}),
     '/v5/account/option-asset-info': () => OPTION_ASSET_INFO,
     '/v5/position/list': positionsRoute,
+    '/v5/asset/asset-overview': () => ASSET_OVERVIEW,
     ...over,
   });
 }
@@ -77,7 +78,7 @@ describe('portfolio: unrealised result', () => {
     const r = await portfolio(setup({ '/v5/account/option-asset-info': () => NO_OPTIONS }).client);
     expect(r.options).toEqual([]);
     expect(r.computed.unrealisedPnlTotal).toBe(100);
-    expect(r.computedNotes.unrealisedPnlTotal).toMatch(/опцион\w* нет/);
+    expect(r.computedNotes.unrealisedPnlTotal).toMatch(/опцион\p{L}* нет/iu);
   });
 
   it('empty totalPerpUPL -> total empty with a reason, not a partial sum', async () => {
@@ -130,5 +131,42 @@ describe('portfolio: access and output', () => {
 
   it('text marks computed values', async () => {
     expect(renderPortfolio(await portfolio(setup().client))).toContain('[расчёт]');
+  });
+});
+
+describe('review fixes (NFR-3, FR-2, criterion 4)', () => {
+  // Negative usdValue: coin in debt, e.g. USDT after paying option premium in Portfolio Margin.
+  // Shares by hand (bc): sum 3000 + 1000 - 500 = 3500; USDT 3000/3500, BTC 1000/3500, USDC -500/3500.
+  it('coin with negative usdValue stays in the shares, sum covers it', async () => {
+    const debt = [...COINS, coin({ coin: 'USDC', equity: '-500', usdValue: '-500' })];
+    const r = await portfolio(setup({ '/v5/account/wallet-balance': () => wallet({ coin: debt }) }).client);
+    expect(r.computed.coinShares.USDT).toBeCloseTo(3000 / 3500, 10);
+    expect(r.computed.coinShares.USDC).toBeCloseTo(-500 / 3500, 10);
+    expect(r.computedNotes.coinShares).toMatch(/отрицательн/);
+  });
+
+  it('empty option totalUPL -> unrealised total empty with a reason, not counted as 0', async () => {
+    const empty = { ...OPTION_ASSET_INFO, result: { result: [{ ...OPTION_ASSET_INFO.result.result[0]!, totalUPL: '' }] } };
+    const r = await portfolio(setup({ '/v5/account/option-asset-info': () => empty }).client);
+    expect(r.computed.unrealisedPnlTotal).toBeNull();
+    expect(r.computedNotes.unrealisedPnlTotal).toMatch(/totalUPL/);
+  });
+
+  // 3.31216591 (docs UTA totalEquity) + 7175590.45 (docs FundingAccount totalEquity) = 7175593.76216591 (bc).
+  it('total account value includes the funding wallet (raw per account, computed sum)', async () => {
+    const r = await portfolio(setup({ '/v5/asset/asset-overview': () => ASSET_OVERVIEW }).client);
+    expect(r.fundingTotalEquity).toBe('7175590.45');
+    expect(r.computed.totalValueUsd).toBeCloseTo(7175593.76216591, 6);
+    expect(r.computedNotes.totalValueUsd).toMatch(/Earn/);
+  });
+
+  it('empty totalPerpUPL is shown as a dash in text', async () => {
+    const r = await portfolio(setup({ '/v5/account/wallet-balance': () => wallet({ totalPerpUPL: '' }) }).client);
+    expect(renderPortfolio(r)).toMatch(/бессрочные —/);
+  });
+
+  it('refused sub-request (rate limit on option-asset-info) is an AppError, not a partial summary', async () => {
+    const err = await portfolio(setup({ '/v5/account/option-asset-info': () => errorEnvelope(10006) }).client).catch((e: unknown) => e);
+    expect((err as AppError).code).toBe('APP_RATE_LIMIT');
   });
 });

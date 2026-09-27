@@ -3899,6 +3899,11 @@ var CLOCK_SKEW_WARN_MS = 1e3;
 function loadEnvFile(file, env) {
   import_dotenv.default.config({ path: file, processEnv: env, quiet: true });
 }
+function loadCredentials(env) {
+  const credentials = readCredentials(env);
+  if (!credentials) throw keyMissingError();
+  return credentials;
+}
 function readCredentials(env) {
   const apiKey = env.BYBIT_API_KEY;
   const apiSecret = env.BYBIT_API_SECRET;
@@ -4118,6 +4123,37 @@ async function parseEnvelope(response, path2) {
   }
 }
 
+// src/format/table.ts
+function renderTable(headers, rows) {
+  const widths = headers.map((header, col) => Math.max(header.length, ...rows.map((row) => (row[col] ?? "").length)));
+  const renderRow = (cells) => widths.map((width, col) => (cells[col] ?? "").padEnd(width)).join("  ");
+  const lines = [renderRow(headers), widths.map((w) => "-".repeat(w)).join("  ")];
+  for (const row of rows) lines.push(renderRow(row));
+  return lines.join("\n");
+}
+
+// src/format/values.ts
+var DASH = "\u2014";
+function orDash(value) {
+  return value === "" ? DASH : value;
+}
+function numOrDash(value, digits = 2) {
+  return value === null || value === void 0 ? DASH : value.toFixed(digits);
+}
+
+// src/valuation/usd.ts
+var USD_STABLECOINS = ["USDT", "USDC"];
+function isUnvaluedCoin(coin) {
+  return Number(coin.equity) !== 0 && Number(coin.usdValue) === 0 && !coin.marginCollateral;
+}
+function estimateUsd(coin, amount, spotLastPrice) {
+  if (USD_STABLECOINS.includes(coin)) return { usd: Number(amount), note: "\u0421\u0442\u0435\u0439\u0431\u043B\u043A\u043E\u0438\u043D, \u043F\u0440\u0438\u043D\u044F\u0442 \u0440\u0430\u0432\u043D\u044B\u043C 1 USD: \u0442\u043E\u0447\u043D\u0430\u044F \u043E\u0446\u0435\u043D\u043A\u0430." };
+  const pair = `${coin}USDT`;
+  const price = spotLastPrice.get(pair);
+  if (price === void 0) return { usd: null, note: `\u041D\u0430 Bybit \u043D\u0435\u0442 \u0441\u043F\u043E\u0442\u043E\u0432\u043E\u0439 \u043F\u0430\u0440\u044B ${pair}: \u043E\u0446\u0435\u043D\u043A\u0430 \u0432 \u0434\u043E\u043B\u043B\u0430\u0440\u0430\u0445 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u0430.` };
+  return { usd: Number(amount) * Number(price), note: `\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \xD7 lastPrice ${pair} = ${price} (\u0441\u043F\u043E\u0442 Bybit, \u043D\u0430 \u043C\u043E\u043C\u0435\u043D\u0442 \u0437\u0430\u043F\u0440\u043E\u0441\u0430).` };
+}
+
 // src/commands/session-status.ts
 var UTA_STATUSES = [3, 4, 5, 6];
 function maskKey(apiKey) {
@@ -4128,6 +4164,10 @@ function notReadOnlyError() {
     code: "APP_KEY_NOT_READONLY",
     userMessage: "\u041A\u043B\u044E\u0447 API \u0438\u043C\u0435\u0435\u0442 \u043F\u0440\u0430\u0432\u0430 \u043D\u0430 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0435 \u0441\u0447\u0451\u0442\u0430. \u0421\u043A\u0438\u043B\u043B \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442 \u0442\u043E\u043B\u044C\u043A\u043E \u0441 \u043A\u043B\u044E\u0447\u043E\u043C \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430 \u0447\u0442\u0435\u043D\u0438\u0435: \u0441\u043E\u0437\u0434\u0430\u0439\u0442\u0435 \u043D\u0430 Bybit \u043A\u043B\u044E\u0447 Read-Only \u0438 \u0437\u0430\u043C\u0435\u043D\u0438\u0442\u0435 \u0438\u043C \u0442\u0435\u043A\u0443\u0449\u0438\u0439."
   });
+}
+async function requireReadOnlyKey(client) {
+  const info = await client.getPrivate("/v5/user/query-api");
+  if (info.readOnly !== 1) throw notReadOnlyError();
 }
 async function capture(fn, problems) {
   try {
@@ -4249,6 +4289,275 @@ function renderSessionStatus(s) {
   return lines.join("\n");
 }
 
+// src/commands/balance.ts
+var UNVALUED_NOTE = "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u043E\u0446\u0435\u043D\u0438\u0432\u0430\u0435\u0442 \u0432 \u0434\u043E\u043B\u043B\u0430\u0440\u0430\u0445 \u043C\u043E\u043D\u0435\u0442\u0443, \u043A\u043E\u0442\u043E\u0440\u0430\u044F \u043D\u0435 \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u0437\u0430\u043B\u043E\u0433\u043E\u043C (marginCollateral=false): usdValue \u043F\u0440\u0438\u0445\u043E\u0434\u0438\u0442 0. \u041E\u0446\u0435\u043D\u043A\u0430 \u043D\u0435 \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442\u0441\u044F, \u0447\u0442\u043E\u0431\u044B \u043D\u0435 \u0432\u044B\u0434\u0430\u0432\u0430\u0442\u044C 0 \u0437\u0430 \u0441\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C (docs WebSocket wallet, usdValue).";
+async function fetchWallet(client) {
+  const wallet = await client.getPrivate("/v5/account/wallet-balance", { accountType: "UNIFIED" });
+  const account = wallet.list[0];
+  if (!account) {
+    throw new AppError({
+      code: "APP_ACCOUNT_NOT_UTA",
+      userMessage: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0435\u0434\u0438\u043D\u044B\u0439 \u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 (UTA). \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u0440\u0435\u0436\u0438\u043C \u0441\u0447\u0451\u0442\u0430: session status."
+    });
+  }
+  return account;
+}
+function unifiedView(c) {
+  return { coin: c.coin, equity: c.equity, walletBalance: c.walletBalance, locked: c.locked, borrowAmount: c.borrowAmount, usdValue: c.usdValue };
+}
+function fundingTotalEquity(overview) {
+  return overview.list.find((a) => a.accountType === "FundingAccount")?.totalEquity ?? null;
+}
+async function spotPrices(client) {
+  const tickers = await client.getPublic("/v5/market/tickers", { category: "spot" });
+  return new Map(tickers.list.map((t) => [t.symbol, t.lastPrice]));
+}
+function totalUsd(unified, funding, fundingEmpty) {
+  const scope = "\u0421\u0443\u043C\u043C\u0430 totalEquity \u0442\u043E\u0440\u0433\u043E\u0432\u043E\u0433\u043E \u0441\u0447\u0451\u0442\u0430 (wallet-balance) \u0438 \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430 \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F (asset-overview). Earn \u0438 \u043F\u0440\u043E\u0447\u0438\u0435 \u0441\u0447\u0435\u0442\u0430 \u043D\u0435 \u0432\u0445\u043E\u0434\u044F\u0442 (A-2).";
+  if (funding !== null) return { value: Number(unified) + Number(funding), note: scope };
+  if (fundingEmpty) return { value: Number(unified), note: `${scope} \u041A\u043E\u0448\u0435\u043B\u0451\u043A \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F \u043F\u0443\u0441\u0442.` };
+  return { value: null, note: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0438\u0442\u043E\u0433 \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430 \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F (asset-overview), \u0445\u043E\u0442\u044F \u0432 \u043D\u0451\u043C \u0435\u0441\u0442\u044C \u043C\u043E\u043D\u0435\u0442\u044B: \u0441\u0443\u043C\u043C\u0430 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0430." };
+}
+async function balance(client) {
+  await requireReadOnlyKey(client);
+  const account = await fetchWallet(client);
+  const fund = await client.getPrivate("/v5/asset/transfer/query-account-coins-balance", { accountType: "FUND" });
+  const overview = await client.getPrivate("/v5/asset/asset-overview");
+  const fundingCoins = fund.balance.filter((b) => Number(b.walletBalance) !== 0).map((b) => ({ coin: b.coin, walletBalance: b.walletBalance, transferBalance: b.transferBalance }));
+  const prices = fundingCoins.length > 0 ? await spotPrices(client) : /* @__PURE__ */ new Map();
+  const fundingUsd = {};
+  const fundingNotes = {};
+  for (const c of fundingCoins) {
+    const e = estimateUsd(c.coin, c.walletBalance, prices);
+    fundingUsd[c.coin] = e.usd;
+    fundingNotes[c.coin] = e.note;
+  }
+  const fundingTotal = fundingTotalEquity(overview);
+  const total = totalUsd(account.totalEquity, fundingTotal, fundingCoins.length === 0);
+  return {
+    unified: { totalEquity: account.totalEquity, coins: account.coin.map(unifiedView) },
+    funding: { totalEquity: fundingTotal, coins: fundingCoins },
+    computed: { unvaluedCoins: account.coin.filter(isUnvaluedCoin).map((c) => c.coin), fundingUsd, totalUsd: total.value },
+    computedNotes: { unvaluedCoins: UNVALUED_NOTE, fundingUsd: fundingNotes, totalUsd: total.note }
+  };
+}
+function renderBalance(r) {
+  const unvalued = new Set(r.computed.unvaluedCoins);
+  const utaRows = r.unified.coins.map((c) => [
+    c.coin,
+    c.equity,
+    c.walletBalance,
+    c.locked,
+    c.borrowAmount,
+    unvalued.has(c.coin) ? `${DASH} (\u043D\u0435 \u043E\u0446\u0435\u043D\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u0431\u0438\u0440\u0436\u0435\u0439)` : c.usdValue
+  ]);
+  const fundRows = r.funding.coins.map((c) => [c.coin, c.walletBalance, c.transferBalance, numOrDash(r.computed.fundingUsd[c.coin])]);
+  const lines = [
+    `\u0422\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 (UTA): ${r.unified.totalEquity} USD`,
+    renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "Equity", "\u041A\u043E\u0448\u0435\u043B\u0451\u043A", "\u0417\u0430\u0431\u043B\u043E\u043A.", "\u0414\u043E\u043B\u0433", "USD"], utaRows),
+    "",
+    `\u041A\u043E\u0448\u0435\u043B\u0451\u043A \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F: ${r.funding.totalEquity ?? DASH} USD`,
+    fundRows.length ? renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "\u041A\u043E\u0448\u0435\u043B\u0451\u043A", "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u043A \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u0443", "USD [\u0440\u0430\u0441\u0447\u0451\u0442]"], fundRows) : "\u041F\u0443\u0441\u0442\u043E.",
+    "",
+    `\u0418\u0442\u043E\u0433\u043E, \u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 + \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435: ${numOrDash(r.computed.totalUsd)} USD [\u0440\u0430\u0441\u0447\u0451\u0442]`,
+    "",
+    "[\u0440\u0430\u0441\u0447\u0451\u0442] \u2014 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u043E \u0441\u043A\u0438\u043B\u043B\u043E\u043C:",
+    `- \u0418\u0442\u043E\u0433\u043E: ${r.computedNotes.totalUsd}`,
+    ...Object.entries(r.computedNotes.fundingUsd).map(([coin, note]) => `- ${coin}: ${note}`)
+  ];
+  if (unvalued.size > 0) lines.push(`- \u0411\u0435\u0437 \u043E\u0446\u0435\u043D\u043A\u0438 (${[...unvalued].join(", ")}): ${r.computedNotes.unvaluedCoins}`);
+  return lines.join("\n");
+}
+
+// src/util/cursor.ts
+async function fetchAllPages(fetchPage) {
+  const rows = [];
+  const seen = /* @__PURE__ */ new Set();
+  let cursor = "";
+  do {
+    seen.add(cursor);
+    const page = await fetchPage(cursor);
+    rows.push(...page.list);
+    cursor = page.nextPageCursor;
+    if (cursor && seen.has(cursor)) {
+      throw new AppError({
+        code: "APP_PAGINATION_LOOP",
+        userMessage: "\u0411\u0438\u0440\u0436\u0430 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0443\u0436\u0435 \u043F\u0440\u043E\u0439\u0434\u0435\u043D\u043D\u0443\u044E \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0443. \u0421\u0431\u043E\u0440 \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D, \u0447\u0442\u043E\u0431\u044B \u043D\u0435 \u0437\u0430\u0434\u0432\u043E\u0438\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u0438. \u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u0437\u0430\u043F\u0440\u043E\u0441 \u043F\u043E\u0437\u0436\u0435."
+      });
+    }
+  } while (cursor);
+  return rows;
+}
+
+// src/commands/positions.ts
+var QUERIES = [
+  { category: "option" },
+  { category: "linear", settleCoin: "USDT" },
+  { category: "linear", settleCoin: "USDC" },
+  { category: "inverse" }
+];
+var EMPTIABLE = ["leverage", "liqPrice", "positionIM", "positionMM"];
+var PM_NOTE = "Portfolio Margin: \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u0440\u0430\u0441\u0441\u0447\u0438\u0442\u044B\u0432\u0430\u0435\u0442 \u044D\u0442\u043E \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435 \u043F\u043E \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u043E\u0439 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 (docs /v5/position/list).";
+var EMPTY_NOTE = {
+  leverage: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u043F\u043B\u0435\u0447\u043E \u043F\u043E \u043F\u043E\u0437\u0438\u0446\u0438\u0438.",
+  liqPrice: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0446\u0435\u043D\u0443 \u043B\u0438\u043A\u0432\u0438\u0434\u0430\u0446\u0438\u0438: \u043E\u043D\u0430 \u0432\u043D\u0435 \u0434\u043E\u043F\u0443\u0441\u0442\u0438\u043C\u043E\u0433\u043E \u0434\u0438\u0430\u043F\u0430\u0437\u043E\u043D\u0430 \u0446\u0435\u043D \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430 (docs /v5/position/list).",
+  positionIM: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u043D\u0430\u0447\u0430\u043B\u044C\u043D\u0443\u044E \u043C\u0430\u0440\u0436\u0443 \u043F\u043E \u043F\u043E\u0437\u0438\u0446\u0438\u0438.",
+  positionMM: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u044E\u0449\u0443\u044E \u043C\u0430\u0440\u0436\u0443 \u043F\u043E \u043F\u043E\u0437\u0438\u0446\u0438\u0438."
+};
+function toView(category, p) {
+  return {
+    category,
+    symbol: p.symbol,
+    side: p.side,
+    size: p.size,
+    avgPrice: p.avgPrice,
+    markPrice: p.markPrice,
+    positionValue: p.positionValue,
+    unrealisedPnl: p.unrealisedPnl,
+    leverage: p.leverage,
+    liqPrice: p.liqPrice,
+    positionIM: p.positionIM,
+    positionMM: p.positionMM
+  };
+}
+async function fetchAllPositions(client) {
+  const views = [];
+  for (const q of QUERIES) {
+    const base = { category: q.category, ...q.settleCoin ? { settleCoin: q.settleCoin } : {}, limit: "200" };
+    const rows = await fetchAllPages(
+      (cursor) => client.getPrivate("/v5/position/list", cursor ? { ...base, cursor } : base)
+    );
+    views.push(...rows.map((p) => toView(q.category, p)));
+  }
+  return views;
+}
+function fieldNotes(marginMode, views) {
+  const notes = {};
+  for (const f of EMPTIABLE) {
+    if (views.some((v) => v[f] === "")) notes[f] = marginMode === "PORTFOLIO_MARGIN" ? PM_NOTE : EMPTY_NOTE[f];
+  }
+  return notes;
+}
+async function positions(client) {
+  await requireReadOnlyKey(client);
+  const { marginMode } = await client.getPrivate("/v5/account/info");
+  const views = await fetchAllPositions(client);
+  return { marginMode, positions: views, fieldNotes: fieldNotes(marginMode, views) };
+}
+function renderPositions(result) {
+  if (result.positions.length === 0) return `\u041E\u0442\u043A\u0440\u044B\u0442\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u043D\u0435\u0442. \u0420\u0435\u0436\u0438\u043C \u043C\u0430\u0440\u0436\u0438: ${result.marginMode}.`;
+  const rows = result.positions.map((p) => [
+    p.symbol,
+    p.category,
+    p.side,
+    p.size,
+    p.avgPrice,
+    p.markPrice,
+    p.unrealisedPnl,
+    orDash(p.leverage),
+    orDash(p.liqPrice),
+    orDash(p.positionIM),
+    orDash(p.positionMM)
+  ]);
+  const table = renderTable(["\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442", "\u0422\u0438\u043F", "\u0421\u0442\u043E\u0440\u043E\u043D\u0430", "\u0420\u0430\u0437\u043C\u0435\u0440", "\u0412\u0445\u043E\u0434", "\u041C\u0430\u0440\u043A\u0438\u0440\u043E\u0432\u043A\u0430", "\u041D\u0435\u0440\u0435\u0430\u043B\u0438\u0437.", "\u041F\u043B\u0435\u0447\u043E", "\u041B\u0438\u043A\u0432\u0438\u0434\u0430\u0446\u0438\u044F", "IM", "MM"], rows);
+  const notes = Object.entries(result.fieldNotes).map(([f, note]) => `\u2014 ${f}: ${note}`);
+  return [`\u0420\u0435\u0436\u0438\u043C \u043C\u0430\u0440\u0436\u0438: ${result.marginMode}`, "", table, ...notes.length ? ["", ...notes] : []].join("\n");
+}
+
+// src/commands/portfolio.ts
+var REALISED_NOTE = "cumRealisedPnl \u2014 \u043D\u0430\u043A\u043E\u043F\u043B\u0435\u043D\u043D\u044B\u0439 \u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0435 \u0437\u0430 \u0432\u0441\u0451 \u0432\u0440\u0435\u043C\u044F, \u0432 \u0435\u0434\u0438\u043D\u0438\u0446\u0430\u0445 \u043C\u043E\u043D\u0435\u0442\u044B (\u0441\u044B\u0440\u043E\u0435 \u043F\u043E\u043B\u0435 wallet-balance). totalRPL \u2014 \u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C (option-asset-info). \u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 \u2014 \u043A\u043E\u043C\u0430\u043D\u0434\u0430 pnl.";
+function unrealisedTotal(perpUpl, options) {
+  if (perpUpl === "") return { value: null, note: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 totalPerpUPL: \u0441\u0443\u043C\u043C\u0430 \u043D\u0435\u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u043E\u0433\u043E \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u0430 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0430." };
+  const missing = options.filter((o) => o.totalUPL === "").map((o) => o.coin);
+  if (missing.length > 0) {
+    return { value: null, note: `\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 totalUPL \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C ${missing.join(", ")}: \u0441\u0443\u043C\u043C\u0430 \u043D\u0435\u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u043E\u0433\u043E \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u0430 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0430.` };
+  }
+  const optionsUpl = options.reduce((sum, o) => sum + Number(o.totalUPL), 0);
+  const base = "\u0421\u0443\u043C\u043C\u0430 totalPerpUPL (\u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435 \u0438 \u0444\u044C\u044E\u0447\u0435\u0440\u0441\u044B, wallet-balance) \u0438 totalUPL \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C (option-asset-info), USD.";
+  return { value: Number(perpUpl) + optionsUpl, note: options.length === 0 ? `${base} \u041E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043D\u0435\u0442.` : base };
+}
+function coinShares(coins, unvalued) {
+  const valued = coins.filter((c) => !unvalued.has(c.coin) && Number(c.usdValue) !== 0);
+  const sum = valued.reduce((s, c) => s + Number(c.usdValue), 0);
+  if (sum <= 0) return { shares: {}, note: "\u0421\u0443\u043C\u043C\u0430 \u0434\u043E\u043B\u043B\u0430\u0440\u043E\u0432\u044B\u0445 \u043E\u0446\u0435\u043D\u043E\u043A \u043C\u043E\u043D\u0435\u0442 \u043D\u0435 \u043F\u043E\u043B\u043E\u0436\u0438\u0442\u0435\u043B\u044C\u043D\u0430: \u0434\u043E\u043B\u0438 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u044B." };
+  const shares = Object.fromEntries(valued.map((c) => [c.coin, Number(c.usdValue) / sum]));
+  return {
+    shares,
+    note: "\u0414\u043E\u043B\u044F usdValue \u043C\u043E\u043D\u0435\u0442\u044B \u043E\u0442 \u0441\u0443\u043C\u043C\u044B usdValue \u0432\u0441\u0435\u0445 \u043E\u0446\u0435\u043D\u0451\u043D\u043D\u044B\u0445 \u043C\u043E\u043D\u0435\u0442 \u0442\u043E\u0440\u0433\u043E\u0432\u043E\u0433\u043E \u0441\u0447\u0451\u0442\u0430. \u041C\u043E\u043D\u0435\u0442\u0430 \u0432 \u0434\u043E\u043B\u0433\u0435 \u0438\u043C\u0435\u0435\u0442 \u043E\u0442\u0440\u0438\u0446\u0430\u0442\u0435\u043B\u044C\u043D\u044B\u0439 usdValue \u0438 \u043E\u0442\u0440\u0438\u0446\u0430\u0442\u0435\u043B\u044C\u043D\u0443\u044E \u0434\u043E\u043B\u044E."
+  };
+}
+async function portfolio(client) {
+  await requireReadOnlyKey(client);
+  const { marginMode } = await client.getPrivate("/v5/account/info");
+  const a = await fetchWallet(client);
+  const options = (await client.getPrivate("/v5/account/option-asset-info")).result.map((o) => ({
+    coin: o.coin,
+    totalUPL: o.totalUPL,
+    totalRPL: o.totalRPL,
+    totalDelta: o.totalDelta,
+    assetIM: o.assetIM,
+    assetMM: o.assetMM
+  }));
+  const positions2 = await fetchAllPositions(client);
+  const fundingTotal = fundingTotalEquity(await client.getPrivate("/v5/asset/asset-overview"));
+  const coins = a.coin.map((c) => ({ coin: c.coin, equity: c.equity, usdValue: c.usdValue, unrealisedPnl: c.unrealisedPnl, cumRealisedPnl: c.cumRealisedPnl }));
+  const unvaluedCoins = a.coin.filter(isUnvaluedCoin).map((c) => c.coin);
+  const upl = unrealisedTotal(a.totalPerpUPL, options);
+  const total = totalUsd(a.totalEquity, fundingTotal, false);
+  const shares = coinShares(coins, new Set(unvaluedCoins));
+  const count = (category) => positions2.filter((p) => p.category === category).length;
+  return {
+    account: {
+      marginMode,
+      totalEquity: a.totalEquity,
+      totalWalletBalance: a.totalWalletBalance,
+      totalMarginBalance: a.totalMarginBalance,
+      totalAvailableBalance: a.totalAvailableBalance,
+      totalInitialMargin: a.totalInitialMargin,
+      totalMaintenanceMargin: a.totalMaintenanceMargin,
+      accountIMRate: a.accountIMRate,
+      accountMMRate: a.accountMMRate,
+      totalPerpUPL: a.totalPerpUPL
+    },
+    coins,
+    options,
+    positionCounts: { linear: count("linear"), inverse: count("inverse"), option: count("option") },
+    fundingTotalEquity: fundingTotal,
+    computed: { totalValueUsd: total.value, unrealisedPnlTotal: upl.value, coinShares: shares.shares, unvaluedCoins },
+    computedNotes: { totalValueUsd: total.note, unrealisedPnlTotal: upl.note, coinShares: shares.note, unvaluedCoins: UNVALUED_NOTE, realised: REALISED_NOTE }
+  };
+}
+function renderPortfolio(r) {
+  const a = r.account;
+  const share = (coin) => {
+    const s = r.computed.coinShares[coin];
+    return s === void 0 ? DASH : `${(s * 100).toFixed(1)}%`;
+  };
+  const coinRows = r.coins.map((c) => [c.coin, c.equity, r.computed.unvaluedCoins.includes(c.coin) ? DASH : c.usdValue, share(c.coin), c.unrealisedPnl, c.cumRealisedPnl]);
+  const optionRows = r.options.map((o) => [o.coin, o.totalUPL, o.totalRPL, o.totalDelta, o.assetIM, o.assetMM]);
+  return [
+    `\u0412\u0441\u0435\u0433\u043E (\u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 + \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435): ${numOrDash(r.computed.totalValueUsd)} USD [\u0440\u0430\u0441\u0447\u0451\u0442]`,
+    `\u0422\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442: ${a.totalEquity} USD   \u041A\u043E\u0448\u0435\u043B\u0451\u043A \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F: ${r.fundingTotalEquity ?? DASH} USD`,
+    `\u0421\u0432\u043E\u0431\u043E\u0434\u043D\u043E: ${a.totalAvailableBalance} USD   \u0420\u0435\u0436\u0438\u043C \u043C\u0430\u0440\u0436\u0438: ${a.marginMode}`,
+    `\u0411\u0430\u043B\u0430\u043D\u0441 \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430: ${a.totalWalletBalance}   \u041C\u0430\u0440\u0436\u0438\u043D\u0430\u043B\u044C\u043D\u044B\u0439 \u0431\u0430\u043B\u0430\u043D\u0441: ${a.totalMarginBalance}`,
+    `IM: ${a.totalInitialMargin} (${a.accountIMRate})   MM: ${a.totalMaintenanceMargin} (${a.accountMMRate})`,
+    "",
+    `\u041F\u043E\u0437\u0438\u0446\u0438\u0438: \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435/\u0444\u044C\u044E\u0447\u0435\u0440\u0441\u044B ${r.positionCounts.linear}, \u0438\u043D\u0432\u0435\u0440\u0441\u043D\u044B\u0435 ${r.positionCounts.inverse}, \u043E\u043F\u0446\u0438\u043E\u043D\u044B ${r.positionCounts.option}`,
+    `\u041D\u0435\u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442: \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435 ${orDash(a.totalPerpUPL)}, \u0432\u0441\u0435\u0433\u043E ${numOrDash(r.computed.unrealisedPnlTotal)} USD [\u0440\u0430\u0441\u0447\u0451\u0442]`,
+    "",
+    renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "Equity", "USD", "\u0414\u043E\u043B\u044F [\u0440\u0430\u0441\u0447\u0451\u0442]", "\u041D\u0435\u0440\u0435\u0430\u043B\u0438\u0437.", "\u0420\u0435\u0430\u043B\u0438\u0437. \u0432\u0441\u0435\u0433\u043E"], coinRows),
+    "",
+    r.options.length ? renderTable(["\u041E\u043F\u0446\u0438\u043E\u043D\u044B", "\u041D\u0435\u0440\u0435\u0430\u043B\u0438\u0437.", "\u0420\u0435\u0430\u043B\u0438\u0437.", "\u0414\u0435\u043B\u044C\u0442\u0430", "IM", "MM"], optionRows) : "\u041E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043D\u0435\u0442.",
+    "",
+    "[\u0440\u0430\u0441\u0447\u0451\u0442] \u2014 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u043E \u0441\u043A\u0438\u043B\u043B\u043E\u043C:",
+    `- \u0412\u0441\u0435\u0433\u043E: ${r.computedNotes.totalValueUsd}`,
+    `- \u0412\u0441\u0435\u0433\u043E \u043D\u0435\u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439: ${r.computedNotes.unrealisedPnlTotal}`,
+    `- \u0414\u043E\u043B\u044F: ${r.computedNotes.coinShares}`,
+    ...r.computed.unvaluedCoins.length ? [`- \u0411\u0435\u0437 \u043E\u0446\u0435\u043D\u043A\u0438 (${r.computed.unvaluedCoins.join(", ")}): ${r.computedNotes.unvaluedCoins}`] : [],
+    `\u0420\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442: ${r.computedNotes.realised}`
+  ].join("\n");
+}
+
 // src/cli/runtime.ts
 function bootstrapEnv() {
   loadEnvFile(ENV_PATH, process.env);
@@ -4267,6 +4576,22 @@ function printError(err) {
   process.exitCode = 1;
 }
 
+// src/cli/register-account.ts
+function dataClient() {
+  return new BybitClient({ credentials: loadCredentials(process.env), baseUrl: resolveBaseUrl(process.env) });
+}
+function register(program2, name, description, run, render) {
+  program2.command(name).description(description).action(async (_opts, cmd) => {
+    const { json } = cmd.optsWithGlobals();
+    console.log(formatOutput(await run(dataClient()), Boolean(json), render));
+  });
+}
+function registerAccountCommands(program2) {
+  register(program2, "portfolio", "\u0441\u0432\u043E\u0434\u043A\u0430 \u0441\u0447\u0451\u0442\u0430: \u043A\u0430\u043F\u0438\u0442\u0430\u043B, \u043C\u0430\u0440\u0436\u0430, \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442, \u0440\u0430\u0441\u043F\u0440\u0435\u0434\u0435\u043B\u0435\u043D\u0438\u0435", portfolio, renderPortfolio);
+  register(program2, "balance", "\u043E\u0441\u0442\u0430\u0442\u043A\u0438 \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0430\u043C: \u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 \u0438 \u043A\u043E\u0448\u0435\u043B\u0451\u043A \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F", balance, renderBalance);
+  register(program2, "positions", "\u043E\u0442\u043A\u0440\u044B\u0442\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438: \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435, \u0438\u043D\u0432\u0435\u0440\u0441\u043D\u044B\u0435, \u043E\u043F\u0446\u0438\u043E\u043D\u044B", positions, renderPositions);
+}
+
 // src/cli/register-session.ts
 function registerSessionCommands(program2) {
   const session = program2.command("session").description("\u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0435 \u0434\u043E\u0441\u0442\u0443\u043F\u0430 \u043A \u0431\u0438\u0440\u0436\u0435");
@@ -4282,6 +4607,7 @@ function registerSessionCommands(program2) {
 function buildProgram() {
   const program2 = new Command().name("bybit").description("Read-only access to a Bybit account").version("0.1.0").option("--json", "\u043C\u0430\u0448\u0438\u043D\u043D\u044B\u0439 \u0432\u044B\u0432\u043E\u0434 (JSON)");
   registerSessionCommands(program2);
+  registerAccountCommands(program2);
   return program2;
 }
 
