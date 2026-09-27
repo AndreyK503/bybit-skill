@@ -4610,6 +4610,373 @@ function registerAccountCommands(program2) {
   register(program2, "positions", "\u043E\u0442\u043A\u0440\u044B\u0442\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438: \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435, \u0438\u043D\u0432\u0435\u0440\u0441\u043D\u044B\u0435, \u043E\u043F\u0446\u0438\u043E\u043D\u044B", positions, renderPositions);
 }
 
+// src/options/instruments.ts
+function fetchOptionInstruments(client, baseCoin) {
+  const base = { category: "option", baseCoin, limit: "1000" };
+  return fetchAllPages(
+    (cursor) => client.getPublic("/v5/market/instruments-info", cursor ? { ...base, cursor } : base)
+  );
+}
+function utcDate(ms) {
+  return new Date(Number(ms)).toISOString().slice(0, 10);
+}
+
+// src/options/symbol.ts
+var MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+var SYMBOL = /^([A-Z0-9]+)-(\d{1,2})([A-Z]{3})(\d{2})-(\d+(?:\.\d+)?)-([CP])(?:-([A-Z]+))?$/;
+function calendarDate(year, month, day) {
+  const d = new Date(Date.UTC(year, month, day));
+  if (d.getUTCMonth() !== month || d.getUTCDate() !== day) return null;
+  return d.toISOString().slice(0, 10);
+}
+function parseOptionSymbol(symbol) {
+  const m = SYMBOL.exec(symbol);
+  if (!m) return null;
+  const [, baseCoin = "", day = "", mon = "", yy = "", strike = "", cp = "", settle] = m;
+  const month = MONTHS.indexOf(mon);
+  if (month < 0) return null;
+  const expiryDate = calendarDate(2e3 + Number(yy), month, Number(day));
+  if (!expiryDate) return null;
+  return { baseCoin, expiryDate, strike: Number(strike), type: cp === "C" ? "Call" : "Put", settleCoin: settle ?? "USDC" };
+}
+
+// src/commands/opt-chain.ts
+var STRIKE_NOTE = "\u0421\u0442\u0440\u0430\u0439\u043A \u0440\u0430\u0437\u043E\u0431\u0440\u0430\u043D \u0438\u0437 \u0441\u0438\u043C\u0432\u043E\u043B\u0430 \u043F\u043E \u0444\u043E\u0440\u043C\u0430\u0442\u0443 Bybit (enum symbol): \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u043E\u0433\u043E \u043F\u043E\u043B\u044F \u0443 \u0431\u0438\u0440\u0436\u0438 \u043D\u0435\u0442.";
+function toRow(t, inst, strike) {
+  return {
+    symbol: t.symbol,
+    optionsType: inst.optionsType,
+    deliveryTime: inst.deliveryTime,
+    bid1Price: t.bid1Price,
+    bid1Size: t.bid1Size,
+    ask1Price: t.ask1Price,
+    ask1Size: t.ask1Size,
+    markPrice: t.markPrice,
+    bid1Iv: t.bid1Iv,
+    ask1Iv: t.ask1Iv,
+    markIv: t.markIv,
+    delta: t.delta,
+    gamma: t.gamma,
+    vega: t.vega,
+    theta: t.theta,
+    volume24h: t.volume24h,
+    openInterest: t.openInterest,
+    underlyingPrice: t.underlyingPrice,
+    computed: { strike }
+  };
+}
+function joinRows(tickers, instruments, notes) {
+  const cards = new Map(instruments.map((i) => [i.symbol, i]));
+  const rows = [];
+  const noCard = [];
+  const unparsed = [];
+  for (const t of tickers) {
+    const card = cards.get(t.symbol);
+    const contract = parseOptionSymbol(t.symbol);
+    if (!card) noCard.push(t.symbol);
+    else if (!contract) unparsed.push(t.symbol);
+    else rows.push(toRow(t, card, contract.strike));
+  }
+  if (noCard.length) notes.push(`\u041D\u0435\u0442 \u0432 instruments-info, \u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u044B (\u0432\u0440\u0435\u043C\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u043D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E): ${noCard.join(", ")}.`);
+  if (unparsed.length) notes.push(`\u0421\u0438\u043C\u0432\u043E\u043B \u043D\u0435 \u0440\u0430\u0437\u043E\u0431\u0440\u0430\u043D, \u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u044B (\u0441\u0442\u0440\u0430\u0439\u043A \u043D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D): ${unparsed.join(", ")}.`);
+  return rows;
+}
+function pickExpiry(rows, expiry, now) {
+  if (expiry) return rows.filter((r) => utcDate(r.deliveryTime) === expiry);
+  const future = rows.filter((r) => Number(r.deliveryTime) > now);
+  const nearest = Math.min(...future.map((r) => Number(r.deliveryTime)));
+  return future.filter((r) => Number(r.deliveryTime) === nearest);
+}
+function applyFilters(rows, o) {
+  return rows.filter((r) => !o.type || r.optionsType === o.type).filter((r) => o.minStrike === void 0 || r.computed.strike >= o.minStrike).filter((r) => o.maxStrike === void 0 || r.computed.strike <= o.maxStrike).sort((a, b) => a.computed.strike - b.computed.strike || (a.optionsType === "Call" ? -1 : 1));
+}
+async function optChain(client, options) {
+  const baseCoin = options.coin.toUpperCase();
+  const now = options.now ?? Date.now();
+  const { list: tickers } = await client.getPublic("/v5/market/tickers", { category: "option", baseCoin });
+  const instruments = await fetchOptionInstruments(client, baseCoin);
+  const notes = [];
+  const all = joinRows(tickers, instruments, notes);
+  const available = [...new Set(instruments.filter((i) => Number(i.deliveryTime) > now).map((i) => utcDate(i.deliveryTime)))].sort();
+  const chosen = pickExpiry(all, options.expiry, now);
+  const first = chosen[0];
+  if (all.length === 0) notes.push(`\u041F\u043E ${baseCoin} \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432.`);
+  else if (!first) notes.push(`\u041D\u0430 ${options.expiry ?? "\u0431\u0443\u0434\u0443\u0449\u0438\u0435 \u0434\u0430\u0442\u044B"} \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u043F\u043E ${baseCoin} \u043D\u0435\u0442. \u0414\u043E\u0441\u0442\u0443\u043F\u043D\u044B\u0435 \u0434\u0430\u0442\u044B: ${available.join(", ") || "\u043D\u0435\u0442"}.`);
+  return {
+    baseCoin,
+    expiry: first ? { date: utcDate(first.deliveryTime), deliveryTime: first.deliveryTime } : null,
+    availableExpiries: available,
+    rows: applyFilters(chosen, options),
+    computedNotes: { strike: STRIKE_NOTE },
+    notes
+  };
+}
+function renderOptChain(r) {
+  const head = r.expiry ? `${r.baseCoin}, \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F ${r.expiry.date} ${new Date(Number(r.expiry.deliveryTime)).toISOString().slice(11, 16)} UTC, \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u043E\u0432: ${r.rows.length}` : `${r.baseCoin}: \u0434\u043E\u0441\u043A\u0430 \u043F\u0443\u0441\u0442\u0430.`;
+  const rows = r.rows.map((x) => [
+    String(x.computed.strike),
+    x.optionsType,
+    x.bid1Price,
+    x.ask1Price,
+    x.markPrice,
+    x.bid1Iv,
+    x.ask1Iv,
+    x.markIv,
+    x.delta,
+    x.gamma,
+    x.vega,
+    x.theta,
+    x.volume24h,
+    x.openInterest
+  ]);
+  const lines = [head];
+  if (rows.length) lines.push(renderTable(["\u0421\u0442\u0440\u0430\u0439\u043A*", "\u0422\u0438\u043F", "Bid", "Ask", "Mark", "IV bid", "IV ask", "IV mark", "Delta", "Gamma", "Vega", "Theta", "\u041E\u0431\u044A\u0451\u043C 24\u0447", "OI"], rows));
+  lines.push(`\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u044B\u0435 \u0434\u0430\u0442\u044B \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438: ${r.availableExpiries.join(", ") || "\u043D\u0435\u0442"}`, "", `* [\u0440\u0430\u0441\u0447\u0451\u0442] ${r.computedNotes.strike}`, ...r.notes.map((n) => `- ${n}`));
+  return lines.join("\n");
+}
+
+// src/commands/opt-expiries.ts
+async function optExpiries(client, options = {}) {
+  const instruments = await fetchOptionInstruments(client, options.coin?.toUpperCase() ?? "All");
+  const groups = /* @__PURE__ */ new Map();
+  for (const i of instruments) {
+    const key = `${i.baseCoin}|${i.deliveryTime}`;
+    const row = groups.get(key) ?? { baseCoin: i.baseCoin, date: utcDate(i.deliveryTime), deliveryTime: i.deliveryTime, calls: 0, puts: 0 };
+    if (i.optionsType === "Call") row.calls += 1;
+    else row.puts += 1;
+    groups.set(key, row);
+  }
+  const expiries = [...groups.values()].sort((a, b) => Number(a.deliveryTime) - Number(b.deliveryTime) || a.baseCoin.localeCompare(b.baseCoin));
+  return { expiries };
+}
+function renderOptExpiries(r) {
+  if (r.expiries.length === 0) return "\u041E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u044D\u0442\u043E\u0439 \u043C\u043E\u043D\u0435\u0442\u0435 \u043D\u0435\u0442.";
+  const rows = r.expiries.map((e) => [e.baseCoin, e.date, new Date(Number(e.deliveryTime)).toISOString().slice(11, 16), String(e.calls), String(e.puts)]);
+  return renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "\u0414\u0430\u0442\u0430", "\u0412\u0440\u0435\u043C\u044F UTC", "Call", "Put"], rows);
+}
+
+// src/commands/opt-greeks.ts
+var SOURCE_NOTES = [
+  "Delta \u2014 totalDelta \u0438\u0437 option-asset-info: \u0442\u043E\u043B\u044C\u043A\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438, \u0431\u0435\u0437 \u0441\u043F\u043E\u0442\u0430 \u0438 \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0445.",
+  "Gamma, Vega, Theta \u2014 \u0438\u0437 coin-greeks; \u043D\u0430 \u0436\u0438\u0432\u043E\u043C \u0441\u0447\u0451\u0442\u0435 \u0440\u0430\u0432\u043D\u044B \u0441\u0443\u043C\u043C\u0435 \u0433\u0440\u0435\u043A\u043E\u0432 \u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439.",
+  "\u0412\u0441\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F \u0441\u044B\u0440\u044B\u0435, \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u044B \u043E\u0442 \u0431\u0438\u0440\u0436\u0438; \u0441\u043A\u0438\u043B\u043B \u0438\u0445 \u043D\u0435 \u043F\u0435\u0440\u0435\u0441\u0447\u0438\u0442\u044B\u0432\u0430\u0435\u0442."
+];
+async function optGreeks(client, options = {}) {
+  await requireReadOnlyKey(client);
+  const coin = options.coin?.toUpperCase();
+  const greeks = await client.getPrivate("/v5/asset/coin-greeks", coin ? { baseCoin: coin } : {});
+  const { result: assets } = await client.getPrivate("/v5/account/option-asset-info");
+  const deltas = new Map(assets.filter((a) => !coin || a.coin === coin).map((a) => [a.coin, a.totalDelta]));
+  const byCoin = new Map(greeks.list.map((g) => [g.baseCoin, g]));
+  const notes = [...SOURCE_NOTES];
+  const coins = [.../* @__PURE__ */ new Set([...byCoin.keys(), ...deltas.keys()])].map((baseCoin) => {
+    const g = byCoin.get(baseCoin);
+    const delta = deltas.get(baseCoin);
+    if (delta === void 0) notes.push(`${baseCoin}: \u043D\u0435\u0442 \u0432 option-asset-info \u2014 \u0434\u0435\u043B\u044C\u0442\u0430 \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C \u043D\u0435 \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u0430.`);
+    if (!g) notes.push(`${baseCoin}: \u043D\u0435\u0442 \u0432 coin-greeks \u2014 \u0433\u0430\u043C\u043C\u0430, \u0432\u0435\u0433\u0430 \u0438 \u0442\u0435\u0442\u0430 \u043D\u0435 \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u044B.`);
+    return { baseCoin, delta: delta ?? "", gamma: g?.totalGamma ?? "", vega: g?.totalVega ?? "", theta: g?.totalTheta ?? "" };
+  });
+  return { coins, notes };
+}
+function renderOptGreeks(r) {
+  if (r.coins.length === 0) return "\u041D\u0435\u0442\u0442\u043E-\u0433\u0440\u0435\u043A\u043E\u0432 \u043D\u0435\u0442: \u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u043D\u0435\u0442.";
+  const rows = r.coins.map((c) => [c.baseCoin, orDash(c.delta), orDash(c.gamma), orDash(c.vega), orDash(c.theta)]);
+  return [renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "Delta", "Gamma", "Vega", "Theta"], rows), "", ...r.notes.map((n) => `- ${n}`)].join("\n");
+}
+
+// src/commands/opt-margin.ts
+var SUM_TOLERANCE = 0.01;
+var METHOD_NOTE = "Portfolio Margin: MM \u043C\u043E\u043D\u0435\u0442\u044B = \u0445\u0443\u0434\u0448\u0438\u0439 \u0443\u0431\u044B\u0442\u043E\u043A \u043F\u043E \u0441\u0435\u0442\u043A\u0435 \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0435\u0432 \u0446\u0435\u043D\u044B \u0438 IV (\u0432\u0441\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 \u043C\u043E\u043D\u0435\u0442\u044B) + contingency; IM = 1.2 \xD7 MM; MM \u0441\u0447\u0451\u0442\u0430 = \u0441\u0443\u043C\u043C\u0430 MM \u043C\u043E\u043D\u0435\u0442; accountMMRate = accountMM / equity. \u041C\u0430\u0440\u0436\u0443 \u043D\u0430 \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u044B\u0439 \u043E\u043F\u0446\u0438\u043E\u043D \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u043D\u0430\u0437\u043D\u0430\u0447\u0430\u0435\u0442 (\u0441\u0432\u0435\u0440\u0435\u043D\u043E \u043D\u0430 \u0441\u0447\u0451\u0442\u0435 2026-09-27).";
+var SHARE_NOTE = "assetMM / accountMM.";
+var LOSS_NOTE = "\u0423\u0431\u044B\u0442\u043E\u043A \u043E\u043F\u0446\u0438\u043E\u043D\u0430 \u0432 \u0445\u0443\u0434\u0448\u0435\u043C \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0438 \u043C\u043E\u043D\u0435\u0442\u044B (priceScale = maxLossPriceMove), \u0438\u0437 portfolio-margin. \u0423 \u043E\u043F\u0446\u0438\u043E\u043D\u0430 \u0442\u0440\u0438 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F \u043D\u0430 \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0439: IV \u0432\u0432\u0435\u0440\u0445, \u0431\u0435\u0437 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0439, \u0432\u043D\u0438\u0437; \u0431\u0435\u0440\u0451\u0442\u0441\u044F \u043F\u043E \u0437\u043D\u0430\u043A\u0443 maxLossIvShock (\u043F\u043E\u0440\u044F\u0434\u043E\u043A \u0432 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0446\u0438\u0438 \u043D\u0435 \u043E\u043F\u0438\u0441\u0430\u043D, \u0432\u044B\u0432\u0435\u0434\u0435\u043D \u0438\u0437 \u043F\u0440\u0438\u043C\u0435\u0440\u0430 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0446\u0438\u0438 \u0438 \u0436\u0438\u0432\u043E\u0433\u043E \u0441\u0447\u0451\u0442\u0430). \u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430: \u0441\u0443\u043C\u043C\u0430 \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C \u0441\u043E\u0432\u043F\u0430\u0434\u0430\u0435\u0442 \u0441 \u0438\u0442\u043E\u0433\u043E\u043C OPTION \u0434\u043E 0.01. \u042D\u0442\u043E \u0432\u043A\u043B\u0430\u0434 \u0432 \u0440\u0438\u0441\u043A, \u043D\u0435 \u043C\u0430\u0440\u0436\u0430 \u043F\u043E\u0437\u0438\u0446\u0438\u0438: contingency \u043D\u0435 \u0434\u0435\u043B\u0438\u0442\u0441\u044F.";
+var atScale = (ranges, scale) => ranges?.find((r) => Number(r.priceScale) === scale)?.pnls;
+function ivIndex(pnls, shock) {
+  if (pnls.length === 1) return 0;
+  return shock > 0 ? 0 : shock < 0 ? 2 : 1;
+}
+function optionLosses(a, scale, optionTotal) {
+  const positions2 = a.optionExpiryDatePnlRanges.flatMap((e) => e.optionPositionPnlRanges);
+  if (positions2.length === 0) return { values: {}, note: "\u041E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0435 \u043D\u0435\u0442." };
+  const shock = Number(a.maxLossIvShock);
+  const picked = positions2.map((p) => {
+    const pnls = atScale(p.pnlRanges, scale);
+    const v = pnls?.[ivIndex(pnls, shock)];
+    return [p.symbolName, v === void 0 ? null : Number(v)];
+  });
+  const empty = Object.fromEntries(positions2.map((p) => [p.symbolName, null]));
+  if (picked.some(([, v]) => v === null) || optionTotal === "") {
+    return { values: empty, note: `\u041D\u0435\u0442 \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u044F priceScale = ${a.maxLossPriceMove} \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C \u0438\u043B\u0438 \u0438\u0442\u043E\u0433\u0430 OPTION: \u0443\u0431\u044B\u0442\u043E\u043A \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C \u043D\u0435 \u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0451\u043D.` };
+  }
+  const sum = picked.reduce((s, [, v]) => s + (v ?? 0), 0);
+  if (Math.abs(sum - Number(optionTotal)) > SUM_TOLERANCE) {
+    return { values: empty, note: `\u0421\u0443\u043C\u043C\u0430 \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C (${sum.toFixed(2)}) \u043D\u0435 \u0441\u0445\u043E\u0434\u0438\u0442\u0441\u044F \u0441 \u0438\u0442\u043E\u0433\u043E\u043C OPTION (${optionTotal}): \u0432\u044B\u0431\u043E\u0440 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F \u043D\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0451\u043D, \u0443\u0431\u044B\u0442\u043A\u0438 \u043D\u0435 \u043F\u043E\u043A\u0430\u0437\u0430\u043D\u044B.` };
+  }
+  return { values: Object.fromEntries(picked), note: LOSS_NOTE };
+}
+function toCoin(a, accountMM) {
+  const scale = Number(a.maxLossPriceMove);
+  const loss = (k) => atScale(a.totalPnlRanges[k]?.pnlRanges, scale)?.[0] ?? "";
+  const worstLoss = { all: loss("ALL"), option: loss("OPTION"), perpetual: loss("PERPETUAL") };
+  const notes = worstLoss.all === "" ? [`\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0439 priceScale = ${a.maxLossPriceMove} (maxLossPriceMove): \u0443\u0431\u044B\u0442\u043E\u043A \u0432 \u0445\u0443\u0434\u0448\u0435\u043C \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0438 \u043D\u0435 \u043F\u043E\u043A\u0430\u0437\u0430\u043D.`] : ["OPTION", "PERPETUAL"].filter((k) => loss(k) === "").map((k) => `\u0418\u0442\u043E\u0433\u0430 ${k} \u0434\u043B\u044F \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u044F priceScale = ${a.maxLossPriceMove} \u0432 \u043E\u0442\u0432\u0435\u0442\u0435 \u0431\u0438\u0440\u0436\u0438 \u043D\u0435\u0442.`);
+  const losses = optionLosses(a, scale, worstLoss.option);
+  const share = accountMM > 0 ? Number(a.asset.assetMM) / accountMM : null;
+  return {
+    baseCoin: a.baseCoin,
+    assetIM: a.asset.assetIM,
+    assetMM: a.asset.assetMM,
+    maxLossPriceMove: a.maxLossPriceMove,
+    maxLossIvShock: a.maxLossIvShock,
+    contingencyComponents: a.contingency.contingencyComponents,
+    worstLoss,
+    options: a.optionExpiryDatePnlRanges.flatMap((e) => e.optionPositionPnlRanges.map((p) => ({ symbol: p.symbolName, position: p.position }))),
+    notes,
+    computed: { shareOfAccountMM: share, optionLoss: losses.values },
+    computedNotes: { shareOfAccountMM: share === null ? "accountMM \u0440\u0430\u0432\u0435\u043D \u043D\u0443\u043B\u044E \u0438\u043B\u0438 \u043F\u0443\u0441\u0442: \u0434\u043E\u043B\u044F \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0430." : SHARE_NOTE, optionLoss: losses.note }
+  };
+}
+async function optMargin(client) {
+  await requireReadOnlyKey(client);
+  const { marginMode } = await client.getPrivate("/v5/account/info");
+  if (marginMode !== "PORTFOLIO_MARGIN") {
+    const note = `\u0420\u0435\u0436\u0438\u043C \u043C\u0430\u0440\u0436\u0438 ${marginMode}, \u043D\u0435 Portfolio Margin: \u043C\u0430\u0440\u0436\u0430 \u0441\u0447\u0438\u0442\u0430\u0435\u0442\u0441\u044F \u043F\u043E \u043A\u0430\u0436\u0434\u043E\u0439 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 \u2014 \u0441\u043C. \u043A\u043E\u043C\u0430\u043D\u0434\u0443 positions (positionIM, positionMM).`;
+    return { marginMode, account: null, coins: [], notes: [note] };
+  }
+  const pm = await client.getPrivate("/v5/asset/portfolio-margin");
+  const { equity, marginBalance, accountIM, accountMM, accountIMRate, accountMMRate } = pm.wallet;
+  const account = { equity, marginBalance, accountIM, accountMM, accountIMRate, accountMMRate };
+  return { marginMode, account, coins: pm.assetPnlRange.map((a) => toCoin(a, Number(accountMM))), notes: [METHOD_NOTE] };
+}
+var pct = (v) => v === null ? "\u2014" : `${(v * 100).toFixed(1)}%`;
+function renderOptMargin(r) {
+  if (!r.account) return r.notes.join("\n");
+  const a = r.account;
+  const lines = [
+    `\u041A\u0430\u043F\u0438\u0442\u0430\u043B ${a.equity} USD, MM ${a.accountMM} (${a.accountMMRate}), IM ${a.accountIM} (${a.accountIMRate})`,
+    "",
+    renderTable(
+      ["\u041C\u043E\u043D\u0435\u0442\u0430", "MM", "IM", "\u0414\u043E\u043B\u044F MM*", "\u0421\u0434\u0432\u0438\u0433 \u0446\u0435\u043D\u044B", "IV-\u0448\u043E\u043A", "\u0423\u0431\u044B\u0442\u043E\u043A \u0432\u0441\u0435\u0433\u043E", "\u043E\u043F\u0446\u0438\u043E\u043D\u044B", "\u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435", "Contingency"],
+      r.coins.map((c) => [
+        c.baseCoin,
+        c.assetMM,
+        c.assetIM,
+        pct(c.computed.shareOfAccountMM),
+        c.maxLossPriceMove,
+        c.maxLossIvShock,
+        orDash(c.worstLoss.all),
+        orDash(c.worstLoss.option),
+        orDash(c.worstLoss.perpetual),
+        c.contingencyComponents
+      ])
+    )
+  ];
+  const optionRows = r.coins.flatMap((c) => c.options.map((o) => [c.baseCoin, o.symbol, o.position, numOrDash(c.computed.optionLoss[o.symbol])]));
+  if (optionRows.length) lines.push("", renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "\u041E\u043F\u0446\u0438\u043E\u043D", "\u041F\u043E\u0437\u0438\u0446\u0438\u044F", "\u0423\u0431\u044B\u0442\u043E\u043A \u0432 \u0445\u0443\u0434\u0448\u0435\u043C \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0438*"], optionRows));
+  const coinNotes = r.coins.flatMap((c) => [...c.notes.map((n) => `${c.baseCoin}: ${n}`), ...c.computedNotes.optionLoss === LOSS_NOTE ? [] : [`${c.baseCoin}: ${c.computedNotes.optionLoss}`]]);
+  lines.push("", "* [\u0440\u0430\u0441\u0447\u0451\u0442] \u2014 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u043E \u0441\u043A\u0438\u043B\u043B\u043E\u043C:", `- \u0414\u043E\u043B\u044F MM: ${SHARE_NOTE}`, `- \u0423\u0431\u044B\u0442\u043E\u043A \u043E\u043F\u0446\u0438\u043E\u043D\u0430: ${LOSS_NOTE}`, ...coinNotes.map((n) => `- ${n}`), "", ...r.notes);
+  return lines.join("\n");
+}
+
+// src/commands/opt-positions.ts
+var DAY_MS = 864e5;
+var CONTRACT_NOTE = "\u0420\u0430\u0437\u043E\u0431\u0440\u0430\u043D\u043E \u0438\u0437 \u0441\u0438\u043C\u0432\u043E\u043B\u0430 \u043F\u043E \u0444\u043E\u0440\u043C\u0430\u0442\u0443 Bybit (enum symbol): \u043C\u043E\u043D\u0435\u0442\u0430-\u0414\u0414\u041C\u041C\u041C\u0413\u0413-\u0441\u0442\u0440\u0430\u0439\u043A-C/P[-\u0440\u0430\u0441\u0447\u0451\u0442\u043D\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430]; \u0431\u0435\u0437 \u0441\u0443\u0444\u0444\u0438\u043A\u0441\u0430 \u2014 USDC.";
+var DAYS_NOTE = "(deliveryTime \u0438\u0437 instruments-info \u2212 \u0442\u0435\u043A\u0443\u0449\u0435\u0435 \u0432\u0440\u0435\u043C\u044F) / 86 400 000, \u0434\u0440\u043E\u0431\u043D\u044B\u0435 \u0441\u0443\u0442\u043A\u0438, \u043E\u043A\u0440\u0443\u0433\u043B\u0435\u043D\u0438\u0435 \u0434\u043E 0.01.";
+var GREEKS_NOTE = "\u0413\u0440\u0435\u043A\u0438 \u2014 \u0441\u044B\u0440\u044B\u0435 \u043F\u043E\u043B\u044F position/list: \u043D\u0430 \u0432\u0441\u044E \u043F\u043E\u0437\u0438\u0446\u0438\u044E, \u0441 \u0443\u0447\u0451\u0442\u043E\u043C \u0441\u0442\u043E\u0440\u043E\u043D\u044B (\u0443 \u043F\u0440\u043E\u0434\u0430\u043D\u043D\u043E\u0439 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 \u0437\u043D\u0430\u043A \u043E\u0431\u0440\u0430\u0442\u043D\u044B\u0439).";
+function fetchOptionPositions(client) {
+  const base = { category: "option", limit: "200" };
+  return fetchAllPages(
+    (cursor) => client.getPrivate("/v5/position/list", cursor ? { ...base, cursor } : base)
+  );
+}
+function toView2(p, deliveryTime, now) {
+  const contract = parseOptionSymbol(p.symbol);
+  const days = deliveryTime === "" ? null : Math.round((Number(deliveryTime) - now) / DAY_MS * 100) / 100;
+  return {
+    symbol: p.symbol,
+    side: p.side,
+    size: p.size,
+    avgPrice: p.avgPrice,
+    markPrice: p.markPrice,
+    unrealisedPnl: p.unrealisedPnl,
+    delta: p.delta,
+    gamma: p.gamma,
+    vega: p.vega,
+    theta: p.theta,
+    deliveryTime,
+    computed: { contract, daysToExpiry: days },
+    computedNotes: {
+      contract: contract ? CONTRACT_NOTE : `\u0421\u0438\u043C\u0432\u043E\u043B ${p.symbol} \u043D\u0435 \u0441\u043E\u043E\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0443\u0435\u0442 \u0444\u043E\u0440\u043C\u0430\u0442\u0443 \u043E\u043F\u0446\u0438\u043E\u043D\u0430 Bybit: \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442 \u043D\u0435 \u0440\u0430\u0437\u043E\u0431\u0440\u0430\u043D.`,
+      daysToExpiry: days === null ? `\u041A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u0430 ${p.symbol} \u043D\u0435\u0442 \u0432 instruments-info: \u0432\u0440\u0435\u043C\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u043D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E, \u0434\u043D\u0438 \u043D\u0435 \u043F\u043E\u0441\u0447\u0438\u0442\u0430\u043D\u044B.` : DAYS_NOTE
+    }
+  };
+}
+async function optPositions(client, options = {}) {
+  await requireReadOnlyKey(client);
+  const raw = await fetchOptionPositions(client);
+  if (raw.length === 0) return { positions: [] };
+  const delivery = new Map((await fetchOptionInstruments(client, "All")).map((i) => [i.symbol, i.deliveryTime]));
+  const now = options.now ?? Date.now();
+  return { positions: raw.map((p) => toView2(p, delivery.get(p.symbol) ?? "", now)) };
+}
+function renderOptPositions(r) {
+  if (r.positions.length === 0) return "\u041E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u043D\u0435\u0442.";
+  const rows = r.positions.map((p) => {
+    const c = p.computed.contract;
+    return [
+      p.symbol,
+      c?.baseCoin ?? "\u2014",
+      c ? String(c.strike) : "\u2014",
+      c?.expiryDate ?? "\u2014",
+      c?.type ?? "\u2014",
+      numOrDash(p.computed.daysToExpiry),
+      p.side,
+      p.size,
+      p.avgPrice,
+      p.markPrice,
+      orDash(p.unrealisedPnl),
+      p.delta,
+      p.gamma,
+      p.vega,
+      p.theta
+    ];
+  });
+  const head = ["\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442", "\u041C\u043E\u043D\u0435\u0442\u0430*", "\u0421\u0442\u0440\u0430\u0439\u043A*", "\u042D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F*", "\u0422\u0438\u043F*", "\u0414\u043D\u0435\u0439*", "\u0421\u0442\u043E\u0440\u043E\u043D\u0430", "\u0420\u0430\u0437\u043C\u0435\u0440", "\u0412\u0445\u043E\u0434", "\u041C\u0430\u0440\u043A\u0438\u0440\u043E\u0432\u043A\u0430", "\u041D\u0435\u0440\u0435\u0430\u043B\u0438\u0437.", "Delta", "Gamma", "Vega", "Theta"];
+  const notes = [...new Set(r.positions.flatMap((p) => [p.computedNotes.contract, p.computedNotes.daysToExpiry]))];
+  return [renderTable(head, rows), "", "* [\u0440\u0430\u0441\u0447\u0451\u0442] \u2014 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u043E \u0441\u043A\u0438\u043B\u043B\u043E\u043C:", ...notes.map((n) => `- ${n}`), "", GREEKS_NOTE].join("\n");
+}
+
+// src/cli/register-options.ts
+function parseExpiryArg(value) {
+  const ms = Date.parse(`${value}T00:00:00Z`);
+  const ok = /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(ms) && new Date(ms).toISOString().startsWith(value);
+  if (!ok) throw new InvalidArgumentError("\u0434\u0430\u0442\u0430 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u0432 \u0444\u043E\u0440\u043C\u0430\u0442\u0435 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 2026-10-30.");
+  return value;
+}
+function parseTypeArg(value) {
+  const v = value.toLowerCase();
+  if (v === "call") return "Call";
+  if (v === "put") return "Put";
+  throw new InvalidArgumentError("\u0442\u0438\u043F \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u0430: call \u0438\u043B\u0438 put.");
+}
+function parseStrikeArg(value) {
+  const n = Number(value);
+  if (value.trim() === "" || !Number.isFinite(n)) throw new InvalidArgumentError("\u0441\u0442\u0440\u0430\u0439\u043A \u2014 \u0447\u0438\u0441\u043B\u043E, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 60000 \u0438\u043B\u0438 0.85.");
+  return n;
+}
+var accountClient = () => new BybitClient({ credentials: loadCredentials(process.env), baseUrl: resolveBaseUrl(process.env) });
+var marketClient = () => new BybitClient({ baseUrl: resolveBaseUrl(process.env) });
+function print(cmd, value, render) {
+  const { json } = cmd.optsWithGlobals();
+  console.log(formatOutput(value, Boolean(json), render));
+}
+function registerOptionCommands(program2) {
+  const opt = program2.command("opt").description("\u043E\u043F\u0446\u0438\u043E\u043D\u044B: \u043F\u043E\u0437\u0438\u0446\u0438\u0438, \u0433\u0440\u0435\u043A\u0438, \u043C\u0430\u0440\u0436\u0430, \u0434\u043E\u0441\u043A\u0430, \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438");
+  opt.command("positions").description("\u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438: \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442, \u0434\u043D\u0438 \u0434\u043E \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438, \u0433\u0440\u0435\u043A\u0438").action(async (_o, cmd) => print(cmd, await optPositions(accountClient()), renderOptPositions));
+  opt.command("greeks").description("\u043D\u0435\u0442\u0442\u043E-\u0433\u0440\u0435\u043A\u0438 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u0431\u0430\u0437\u043E\u0432\u043E\u0439 \u043C\u043E\u043D\u0435\u0442\u0435").option("--coin <coin>", "\u043E\u0434\u043D\u0430 \u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (o, cmd) => print(cmd, await optGreeks(accountClient(), o), renderOptGreeks));
+  opt.command("margin").description("\u043C\u0430\u0440\u0436\u0430 Portfolio Margin \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0430\u043C \u0438 \u0432\u043A\u043B\u0430\u0434 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u0432 \u0445\u0443\u0434\u0448\u0438\u0439 \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0439").action(async (_o, cmd) => print(cmd, await optMargin(accountClient()), renderOptMargin));
+  opt.command("chain").description("\u0434\u043E\u0441\u043A\u0430 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0435; \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E \u0431\u043B\u0438\u0436\u0430\u0439\u0448\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F").argument("<coin>", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").option("--expiry <date>", "\u0434\u0430\u0442\u0430 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414", parseExpiryArg).option("--type <type>", "call \u0438\u043B\u0438 put", parseTypeArg).option("--min-strike <n>", "\u0441\u0442\u0440\u0430\u0439\u043A \u043E\u0442 (\u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E)", parseStrikeArg).option("--max-strike <n>", "\u0441\u0442\u0440\u0430\u0439\u043A \u0434\u043E (\u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E)", parseStrikeArg).action(async (coin, o, cmd) => print(cmd, await optChain(marketClient(), { ...o, coin }), renderOptChain));
+  opt.command("expiries").description("\u0434\u0430\u0442\u044B \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438; \u0431\u0435\u0437 \u043C\u043E\u043D\u0435\u0442\u044B \u2014 \u043F\u043E \u0432\u0441\u0435\u043C \u043C\u043E\u043D\u0435\u0442\u0430\u043C").argument("[coin]", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (coin, _o, cmd) => print(cmd, await optExpiries(marketClient(), { coin }), renderOptExpiries));
+}
+
 // src/cli/register-session.ts
 function registerSessionCommands(program2) {
   const session = program2.command("session").description("\u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0435 \u0434\u043E\u0441\u0442\u0443\u043F\u0430 \u043A \u0431\u0438\u0440\u0436\u0435");
@@ -4626,6 +4993,7 @@ function buildProgram() {
   const program2 = new Command().name("bybit").description("Read-only access to a Bybit account").version("0.1.0").option("--json", "\u043C\u0430\u0448\u0438\u043D\u043D\u044B\u0439 \u0432\u044B\u0432\u043E\u0434 (JSON)");
   registerSessionCommands(program2);
   registerAccountCommands(program2);
+  registerOptionCommands(program2);
   return program2;
 }
 

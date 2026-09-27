@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import { registerAccountCommands } from './register-account.js';
+import { registerOptionCommands } from './register-options.js';
 import { registerSessionCommands } from './register-session.js';
 
 /** Build the root CLI program. Commands are registered by stage (plan section 10). */
@@ -11,5 +12,6 @@ export function buildProgram(): Command {
     .option('--json', 'машинный вывод (JSON)');
   registerSessionCommands(program);
   registerAccountCommands(program);
+  registerOptionCommands(program);
   return program;
 }
