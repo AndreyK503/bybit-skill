@@ -8,6 +8,8 @@ import { optChain } from './opt-chain.js';
  * optionsType and deliveryTime. Timestamps (`date -u -j -f "%Y-%m-%d %H:%M:%S" ... +%s`):
  * 2026-09-28 08:00 UTC = 1790582400, 2026-10-30 08:00 = 1793347200, 2026-11-27 08:00 = 1795766400.
  * NOW = 1793217600000 (2026-10-28 20:00 UTC): the 28SEP26 expiry is past, 30OCT26 is the nearest.
+ * Monthly = last Friday of the month (`cal 10 2026`: 23 Oct is a Friday, 30 Oct the last one).
+ * 2026-10-23 08:00 UTC = 1792742400; NOW_EARLY 2026-10-20 00:00 UTC = 1792454400.
  */
 const T_PAST = '1790582400000';
 const T_OCT = '1793347200000';
@@ -75,7 +77,7 @@ describe('opt chain', () => {
     expect(r.computedNotes.strike).toContain('символ');
   });
 
-  it('default: nearest expiry after now, named in the result, sorted by strike, Call before Put', async () => {
+  it('default: nearest monthly expiry after now, named in the result, sorted by strike, Call before Put', async () => {
     const { client } = setup();
     const r = await optChain(client, { coin: 'BTC', now: NOW });
     expect(r.expiry).toEqual({ date: '2026-10-30', deliveryTime: T_OCT });
@@ -118,5 +120,25 @@ describe('opt chain', () => {
     const r = await optChain(client, { coin: 'BTC', now: NOW });
     expect(symbols(r)).not.toContain(extra.symbol);
     expect(r.notes.join('\n')).toContain(extra.symbol);
+  });
+
+  it('default skips weekly: 23OCT26 is nearer, 30OCT26 (last Friday) is taken', async () => {
+    const weekly = { ...OPTION_INSTRUMENT, symbol: 'BTC-23OCT26-60000-P-USDT', optionsType: 'Put', deliveryTime: '1792742400000' };
+    const { client } = setup(
+      () => tickersPage([...TICKERS, { ...OPTION_TICKER, symbol: weekly.symbol }]),
+      () => instrumentsPage([...INSTRUMENTS, weekly], ''),
+    );
+    const r = await optChain(client, { coin: 'BTC', now: 1792454400000 });
+    expect(r.expiry).toEqual({ date: '2026-10-30', deliveryTime: T_OCT });
+    expect(symbols(r)).not.toContain(weekly.symbol);
+    expect(r.notes.join('\n')).toContain('последняя пятница');
+  });
+
+  it('no monthly expiry ahead: nearest one is taken and the note says so', async () => {
+    const weekly = { ...OPTION_INSTRUMENT, symbol: 'BTC-23OCT26-60000-P-USDT', optionsType: 'Put', deliveryTime: '1792742400000' };
+    const { client } = setup(() => tickersPage([{ ...OPTION_TICKER, symbol: weekly.symbol }]), () => instrumentsPage([weekly], ''));
+    const r = await optChain(client, { coin: 'BTC', now: 1792454400000 });
+    expect(r.expiry).toEqual({ date: '2026-10-23', deliveryTime: '1792742400000' });
+    expect(r.notes.join('\n')).toContain('месячной');
   });
 });

@@ -1,7 +1,7 @@
 import type { BybitClient } from '../api/client.js';
 import type { RawOptionInstrument, RawOptionTicker } from '../api/types-options.js';
 import { renderTable } from '../format/table.js';
-import { fetchOptionInstruments, utcDate } from '../options/instruments.js';
+import { MONTHLY_RULE, fetchOptionInstruments, isMonthly, utcDate } from '../options/instruments.js';
 import { parseOptionSymbol } from '../options/symbol.js';
 
 export type OptionType = 'Call' | 'Put';
@@ -92,11 +92,22 @@ function joinRows(tickers: RawOptionTicker[], instruments: RawOptionInstrument[]
   return rows;
 }
 
-function pickExpiry(rows: ChainRow[], expiry: string | undefined, now: number): ChainRow[] {
+const MONTHLY_NOTE = `По умолчанию — ближайшая месячная экспирация. ${MONTHLY_RULE}`;
+
+const earliest = (rows: ChainRow[]) => rows.filter((r) => r.deliveryTime === rows.reduce((m, x) => (Number(x.deliveryTime) < Number(m.deliveryTime) ? x : m)).deliveryTime);
+
+/** Rows of the requested date, else of the nearest monthly expiry after now, else of the nearest one. */
+function pickExpiry(rows: ChainRow[], expiry: string | undefined, now: number, notes: string[]): ChainRow[] {
   if (expiry) return rows.filter((r) => utcDate(r.deliveryTime) === expiry);
   const future = rows.filter((r) => Number(r.deliveryTime) > now);
-  const nearest = Math.min(...future.map((r) => Number(r.deliveryTime)));
-  return future.filter((r) => Number(r.deliveryTime) === nearest);
+  if (future.length === 0) return [];
+  const monthly = future.filter((r) => isMonthly(r.deliveryTime));
+  if (monthly.length > 0) {
+    notes.push(MONTHLY_NOTE);
+    return earliest(monthly);
+  }
+  notes.push('Впереди нет месячной экспирации: взята ближайшая.');
+  return earliest(future);
 }
 
 function applyFilters(rows: ChainRow[], o: ChainOptions): ChainRow[] {
@@ -116,7 +127,7 @@ export async function optChain(client: BybitClient, options: ChainOptions): Prom
   const notes: string[] = [];
   const all = joinRows(tickers, instruments, notes);
   const available = [...new Set(instruments.filter((i) => Number(i.deliveryTime) > now).map((i) => utcDate(i.deliveryTime)))].sort();
-  const chosen = pickExpiry(all, options.expiry, now);
+  const chosen = pickExpiry(all, options.expiry, now, notes);
   const first = chosen[0];
   if (all.length === 0) notes.push(`По ${baseCoin} биржа не вернула опционов.`);
   else if (!first) notes.push(`На ${options.expiry ?? 'будущие даты'} экспирации по ${baseCoin} нет. Доступные даты: ${available.join(', ') || 'нет'}.`);

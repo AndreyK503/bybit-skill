@@ -14,3 +14,12 @@ export function fetchOptionInstruments(client: BybitClient, baseCoin: string): P
 export function utcDate(ms: string): string {
   return new Date(Number(ms)).toISOString().slice(0, 10);
 }
+
+/** Monthly expiry: last Friday of its month by UTC date. Bybit has no such flag; this is the rule. */
+export function isMonthly(deliveryTime: string): boolean {
+  const d = new Date(Number(deliveryTime));
+  const weekLater = new Date(d.getTime() + 7 * 86_400_000);
+  return d.getUTCDay() === 5 && weekLater.getUTCMonth() !== d.getUTCMonth();
+}
+
+export const MONTHLY_RULE = 'Месячная экспирация — последняя пятница месяца по дате UTC (признака у биржи нет, правило).';

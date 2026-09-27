@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { OPTION_INSTRUMENT, instrumentsPage } from '../fixtures/bybit-v5-options.js';
 import { publicClient } from '../fixtures/route-fetch.js';
-import { optExpiries } from './opt-expiries.js';
+import { optExpiries, renderOptExpiries } from './opt-expiries.js';
 
 /**
  * Fixture: OPTION_INSTRUMENT (docs example); variants change symbol, baseCoin, optionsType, deliveryTime.
  * 2026-10-30 08:00 UTC = 1793347200000; 2026-10-01 20:00 UTC = 1790884800000 (stock options expire at 20:00,
  * live 2026-09-27); 2026-11-27 08:00 UTC = 1795766400000.
+ * Monthly = last Friday of the month (`cal`: 30 Oct and 27 Nov 2026 are last Fridays, 1 Oct is a Thursday).
  */
 const T_OCT30 = '1793347200000';
 const T_OCT01_20H = '1790884800000';
@@ -29,8 +30,8 @@ describe('opt expiries', () => {
     });
     const r = await optExpiries(client, { coin: 'btc' });
     expect(r.expiries).toEqual([
-      { baseCoin: 'BTC', date: '2026-10-30', deliveryTime: T_OCT30, calls: 1, puts: 2 },
-      { baseCoin: 'BTC', date: '2026-11-27', deliveryTime: T_NOV, calls: 0, puts: 1 },
+      { baseCoin: 'BTC', date: '2026-10-30', deliveryTime: T_OCT30, calls: 1, puts: 2, computed: { monthly: true } },
+      { baseCoin: 'BTC', date: '2026-11-27', deliveryTime: T_NOV, calls: 0, puts: 1, computed: { monthly: true } },
     ]);
     expect(urls.map((u) => Object.fromEntries(u.searchParams))).toEqual([
       { category: 'option', baseCoin: 'BTC', limit: '1000' },
@@ -43,14 +44,21 @@ describe('opt expiries', () => {
     const r = await optExpiries(client);
     expect(urls[0]?.searchParams.get('baseCoin')).toBe('All');
     expect(r.expiries).toEqual([
-      { baseCoin: 'NVDA', date: '2026-10-01', deliveryTime: T_OCT01_20H, calls: 1, puts: 0 },
-      { baseCoin: 'BTC', date: '2026-10-30', deliveryTime: T_OCT30, calls: 1, puts: 2 },
-      { baseCoin: 'BTC', date: '2026-11-27', deliveryTime: T_NOV, calls: 0, puts: 1 },
+      { baseCoin: 'NVDA', date: '2026-10-01', deliveryTime: T_OCT01_20H, calls: 1, puts: 0, computed: { monthly: false } },
+      { baseCoin: 'BTC', date: '2026-10-30', deliveryTime: T_OCT30, calls: 1, puts: 2, computed: { monthly: true } },
+      { baseCoin: 'BTC', date: '2026-11-27', deliveryTime: T_NOV, calls: 0, puts: 1, computed: { monthly: true } },
     ]);
   });
 
   it('no options for the coin: empty list', async () => {
     const { client } = publicClient({ '/v5/market/instruments-info': () => instrumentsPage([], '') });
     expect((await optExpiries(client, { coin: 'DOT' })).expiries).toEqual([]);
+  });
+
+  it('monthly flag explained in computedNotes and marked in text', async () => {
+    const { client } = publicClient({ '/v5/market/instruments-info': () => instrumentsPage([...BTC, ...NVDA], '') });
+    const r = await optExpiries(client);
+    expect(r.computedNotes.monthly).toContain('последняя пятница');
+    expect(renderOptExpiries(r)).toContain('[расчёт]');
   });
 });

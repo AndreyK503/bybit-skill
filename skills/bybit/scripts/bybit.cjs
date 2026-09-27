@@ -4620,6 +4620,12 @@ function fetchOptionInstruments(client, baseCoin) {
 function utcDate(ms) {
   return new Date(Number(ms)).toISOString().slice(0, 10);
 }
+function isMonthly(deliveryTime) {
+  const d = new Date(Number(deliveryTime));
+  const weekLater = new Date(d.getTime() + 7 * 864e5);
+  return d.getUTCDay() === 5 && weekLater.getUTCMonth() !== d.getUTCMonth();
+}
+var MONTHLY_RULE = "\u041C\u0435\u0441\u044F\u0447\u043D\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F \u2014 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u043F\u044F\u0442\u043D\u0438\u0446\u0430 \u043C\u0435\u0441\u044F\u0446\u0430 \u043F\u043E \u0434\u0430\u0442\u0435 UTC (\u043F\u0440\u0438\u0437\u043D\u0430\u043A\u0430 \u0443 \u0431\u0438\u0440\u0436\u0438 \u043D\u0435\u0442, \u043F\u0440\u0430\u0432\u0438\u043B\u043E).";
 
 // src/options/symbol.ts
 var MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -4681,11 +4687,19 @@ function joinRows(tickers, instruments, notes) {
   if (unparsed.length) notes.push(`\u0421\u0438\u043C\u0432\u043E\u043B \u043D\u0435 \u0440\u0430\u0437\u043E\u0431\u0440\u0430\u043D, \u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u044B (\u0441\u0442\u0440\u0430\u0439\u043A \u043D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D): ${unparsed.join(", ")}.`);
   return rows;
 }
-function pickExpiry(rows, expiry, now) {
+var MONTHLY_NOTE = `\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E \u2014 \u0431\u043B\u0438\u0436\u0430\u0439\u0448\u0430\u044F \u043C\u0435\u0441\u044F\u0447\u043D\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F. ${MONTHLY_RULE}`;
+var earliest = (rows) => rows.filter((r) => r.deliveryTime === rows.reduce((m, x) => Number(x.deliveryTime) < Number(m.deliveryTime) ? x : m).deliveryTime);
+function pickExpiry(rows, expiry, now, notes) {
   if (expiry) return rows.filter((r) => utcDate(r.deliveryTime) === expiry);
   const future = rows.filter((r) => Number(r.deliveryTime) > now);
-  const nearest = Math.min(...future.map((r) => Number(r.deliveryTime)));
-  return future.filter((r) => Number(r.deliveryTime) === nearest);
+  if (future.length === 0) return [];
+  const monthly = future.filter((r) => isMonthly(r.deliveryTime));
+  if (monthly.length > 0) {
+    notes.push(MONTHLY_NOTE);
+    return earliest(monthly);
+  }
+  notes.push("\u0412\u043F\u0435\u0440\u0435\u0434\u0438 \u043D\u0435\u0442 \u043C\u0435\u0441\u044F\u0447\u043D\u043E\u0439 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438: \u0432\u0437\u044F\u0442\u0430 \u0431\u043B\u0438\u0436\u0430\u0439\u0448\u0430\u044F.");
+  return earliest(future);
 }
 function applyFilters(rows, o) {
   return rows.filter((r) => !o.type || r.optionsType === o.type).filter((r) => o.minStrike === void 0 || r.computed.strike >= o.minStrike).filter((r) => o.maxStrike === void 0 || r.computed.strike <= o.maxStrike).sort((a, b) => a.computed.strike - b.computed.strike || (a.optionsType === "Call" ? -1 : 1));
@@ -4698,7 +4712,7 @@ async function optChain(client, options) {
   const notes = [];
   const all = joinRows(tickers, instruments, notes);
   const available = [...new Set(instruments.filter((i) => Number(i.deliveryTime) > now).map((i) => utcDate(i.deliveryTime)))].sort();
-  const chosen = pickExpiry(all, options.expiry, now);
+  const chosen = pickExpiry(all, options.expiry, now, notes);
   const first = chosen[0];
   if (all.length === 0) notes.push(`\u041F\u043E ${baseCoin} \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432.`);
   else if (!first) notes.push(`\u041D\u0430 ${options.expiry ?? "\u0431\u0443\u0434\u0443\u0449\u0438\u0435 \u0434\u0430\u0442\u044B"} \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u043F\u043E ${baseCoin} \u043D\u0435\u0442. \u0414\u043E\u0441\u0442\u0443\u043F\u043D\u044B\u0435 \u0434\u0430\u0442\u044B: ${available.join(", ") || "\u043D\u0435\u0442"}.`);
@@ -4741,18 +4755,18 @@ async function optExpiries(client, options = {}) {
   const groups = /* @__PURE__ */ new Map();
   for (const i of instruments) {
     const key = `${i.baseCoin}|${i.deliveryTime}`;
-    const row = groups.get(key) ?? { baseCoin: i.baseCoin, date: utcDate(i.deliveryTime), deliveryTime: i.deliveryTime, calls: 0, puts: 0 };
+    const row = groups.get(key) ?? { baseCoin: i.baseCoin, date: utcDate(i.deliveryTime), deliveryTime: i.deliveryTime, calls: 0, puts: 0, computed: { monthly: isMonthly(i.deliveryTime) } };
     if (i.optionsType === "Call") row.calls += 1;
     else row.puts += 1;
     groups.set(key, row);
   }
   const expiries = [...groups.values()].sort((a, b) => Number(a.deliveryTime) - Number(b.deliveryTime) || a.baseCoin.localeCompare(b.baseCoin));
-  return { expiries };
+  return { expiries, computedNotes: { monthly: MONTHLY_RULE } };
 }
 function renderOptExpiries(r) {
   if (r.expiries.length === 0) return "\u041E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u044D\u0442\u043E\u0439 \u043C\u043E\u043D\u0435\u0442\u0435 \u043D\u0435\u0442.";
-  const rows = r.expiries.map((e) => [e.baseCoin, e.date, new Date(Number(e.deliveryTime)).toISOString().slice(11, 16), String(e.calls), String(e.puts)]);
-  return renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "\u0414\u0430\u0442\u0430", "\u0412\u0440\u0435\u043C\u044F UTC", "Call", "Put"], rows);
+  const rows = r.expiries.map((e) => [e.baseCoin, e.date, new Date(Number(e.deliveryTime)).toISOString().slice(11, 16), e.computed.monthly ? "\u0434\u0430" : "", String(e.calls), String(e.puts)]);
+  return [renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "\u0414\u0430\u0442\u0430", "\u0412\u0440\u0435\u043C\u044F UTC", "\u041C\u0435\u0441\u044F\u0447\u043D\u0430\u044F*", "Call", "Put"], rows), "", `* [\u0440\u0430\u0441\u0447\u0451\u0442] ${r.computedNotes.monthly}`].join("\n");
 }
 
 // src/commands/opt-greeks.ts
