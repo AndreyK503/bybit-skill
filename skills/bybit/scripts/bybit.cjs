@@ -4165,8 +4165,8 @@ function notReadOnlyError() {
     userMessage: "\u041A\u043B\u044E\u0447 API \u0438\u043C\u0435\u0435\u0442 \u043F\u0440\u0430\u0432\u0430 \u043D\u0430 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0435 \u0441\u0447\u0451\u0442\u0430. \u0421\u043A\u0438\u043B\u043B \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442 \u0442\u043E\u043B\u044C\u043A\u043E \u0441 \u043A\u043B\u044E\u0447\u043E\u043C \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430 \u0447\u0442\u0435\u043D\u0438\u0435: \u0441\u043E\u0437\u0434\u0430\u0439\u0442\u0435 \u043D\u0430 Bybit \u043A\u043B\u044E\u0447 Read-Only \u0438 \u0437\u0430\u043C\u0435\u043D\u0438\u0442\u0435 \u0438\u043C \u0442\u0435\u043A\u0443\u0449\u0438\u0439."
   });
 }
-async function requireReadOnlyKey(client) {
-  const info = await client.getPrivate("/v5/user/query-api");
+async function requireReadOnlyKey(client2) {
+  const info = await client2.getPrivate("/v5/user/query-api");
   if (info.readOnly !== 1) throw notReadOnlyError();
 }
 async function capture(fn, problems) {
@@ -4208,7 +4208,7 @@ function unifiedNote(isUnified) {
   if (isUnified === null) return "\u0420\u0435\u0436\u0438\u043C \u0441\u0447\u0451\u0442\u0430 \u043D\u0435 \u043F\u043E\u043B\u0443\u0447\u0435\u043D, \u043F\u0440\u0438\u0437\u043D\u0430\u043A UTA \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D.";
   return "\u041F\u043E unifiedMarginStatus \u0438\u0437 /v5/account/info: 3\u20136 \u2014 \u0435\u0434\u0438\u043D\u044B\u0439 \u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 (UTA), 1 \u2014 \u043A\u043B\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043A\u0438\u0439 (docs /v5/enum).";
 }
-async function sessionStatus(client, now) {
+async function sessionStatus(client2, now) {
   const problems = [];
   let serverTimeMs = null;
   let connError = null;
@@ -4216,7 +4216,7 @@ async function sessionStatus(client, now) {
   let rttMs = 0;
   try {
     const before = now();
-    serverTimeMs = await client.getServerTimeMs();
+    serverTimeMs = await client2.getServerTimeMs();
     const after = now();
     driftMs = (before + after) / 2 - serverTimeMs;
     rttMs = after - before;
@@ -4229,13 +4229,13 @@ async function sessionStatus(client, now) {
   }
   let key = null;
   let account = null;
-  if (!client.hasCredentials) {
+  if (!client2.hasCredentials) {
     const err = keyMissingError();
     problems.push({ code: err.code, message: err.userMessage });
   } else {
-    const info = await capture(() => client.getPrivate("/v5/user/query-api"), problems);
+    const info = await capture(() => client2.getPrivate("/v5/user/query-api"), problems);
     key = info && toKeyView(info);
-    const acc = await capture(() => client.getPrivate("/v5/account/info"), problems);
+    const acc = await capture(() => client2.getPrivate("/v5/account/info"), problems);
     account = acc && { unifiedMarginStatus: acc.unifiedMarginStatus, marginMode: acc.marginMode };
   }
   const isUnified = account ? UTA_STATUSES.includes(account.unifiedMarginStatus) : null;
@@ -4250,8 +4250,8 @@ async function sessionStatus(client, now) {
     });
   }
   return {
-    configured: client.hasCredentials,
-    environment: { baseUrl: client.baseUrl, network: "mainnet" },
+    configured: client2.hasCredentials,
+    environment: { baseUrl: client2.baseUrl, network: "mainnet" },
     connectivity: { ok: serverTimeMs !== null, serverTimeMs, error: connError },
     key,
     account,
@@ -4291,8 +4291,8 @@ function renderSessionStatus(s) {
 
 // src/commands/balance.ts
 var UNVALUED_NOTE = "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u043E\u0446\u0435\u043D\u0438\u0432\u0430\u0435\u0442 \u0432 \u0434\u043E\u043B\u043B\u0430\u0440\u0430\u0445 \u043C\u043E\u043D\u0435\u0442\u0443, \u043A\u043E\u0442\u043E\u0440\u0430\u044F \u043D\u0435 \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u0437\u0430\u043B\u043E\u0433\u043E\u043C (marginCollateral=false): usdValue \u043F\u0440\u0438\u0445\u043E\u0434\u0438\u0442 0. \u041E\u0446\u0435\u043D\u043A\u0430 \u043D\u0435 \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442\u0441\u044F, \u0447\u0442\u043E\u0431\u044B \u043D\u0435 \u0432\u044B\u0434\u0430\u0432\u0430\u0442\u044C 0 \u0437\u0430 \u0441\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C (docs WebSocket wallet, usdValue).";
-async function fetchWallet(client) {
-  const wallet = await client.getPrivate("/v5/account/wallet-balance", { accountType: "UNIFIED" });
+async function fetchWallet(client2) {
+  const wallet = await client2.getPrivate("/v5/account/wallet-balance", { accountType: "UNIFIED" });
   const account = wallet.list[0];
   if (!account) {
     throw new AppError({
@@ -4308,8 +4308,8 @@ function unifiedView(c) {
 function fundingTotalEquity(overview) {
   return overview.list.find((a) => a.accountType === "FundingAccount")?.totalEquity ?? null;
 }
-async function spotPrices(client) {
-  const tickers = await client.getPublic("/v5/market/tickers", { category: "spot" });
+async function spotPrices(client2) {
+  const tickers = await client2.getPublic("/v5/market/tickers", { category: "spot" });
   return new Map(tickers.list.map((t) => [t.symbol, t.lastPrice]));
 }
 function earnView(overview) {
@@ -4328,13 +4328,13 @@ function totalUsd(unified, funding, fundingEmpty, earn) {
   if (earn === null) notes.push("Earn: \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0441\u0447\u0451\u0442, \u0432 \u0441\u0443\u043C\u043C\u0443 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442.");
   return { value: Number(unified) + Number(funding ?? 0) + Number(earn ?? 0), note: notes.join(" ") };
 }
-async function balance(client) {
-  await requireReadOnlyKey(client);
-  const account = await fetchWallet(client);
-  const fund = await client.getPrivate("/v5/asset/transfer/query-account-coins-balance", { accountType: "FUND" });
-  const overview = await client.getPrivate("/v5/asset/asset-overview");
+async function balance(client2) {
+  await requireReadOnlyKey(client2);
+  const account = await fetchWallet(client2);
+  const fund = await client2.getPrivate("/v5/asset/transfer/query-account-coins-balance", { accountType: "FUND" });
+  const overview = await client2.getPrivate("/v5/asset/asset-overview");
   const fundingCoins = fund.balance.filter((b) => Number(b.walletBalance) !== 0).map((b) => ({ coin: b.coin, walletBalance: b.walletBalance, transferBalance: b.transferBalance }));
-  const prices = fundingCoins.length > 0 ? await spotPrices(client) : /* @__PURE__ */ new Map();
+  const prices = fundingCoins.length > 0 ? await spotPrices(client2) : /* @__PURE__ */ new Map();
   const fundingUsd = {};
   const fundingNotes = {};
   for (const c of fundingCoins) {
@@ -4435,12 +4435,12 @@ function toView(category, p) {
     positionMM: p.positionMM
   };
 }
-async function fetchAllPositions(client) {
+async function fetchAllPositions(client2) {
   const views = [];
   for (const q of QUERIES) {
     const base = { category: q.category, ...q.settleCoin ? { settleCoin: q.settleCoin } : {}, limit: "200" };
     const rows = await fetchAllPages(
-      (cursor) => client.getPrivate("/v5/position/list", cursor ? { ...base, cursor } : base)
+      (cursor) => client2.getPrivate("/v5/position/list", cursor ? { ...base, cursor } : base)
     );
     views.push(...rows.map((p) => toView(q.category, p)));
   }
@@ -4453,10 +4453,10 @@ function fieldNotes(marginMode, views) {
   }
   return notes;
 }
-async function positions(client) {
-  await requireReadOnlyKey(client);
-  const { marginMode } = await client.getPrivate("/v5/account/info");
-  const views = await fetchAllPositions(client);
+async function positions(client2) {
+  await requireReadOnlyKey(client2);
+  const { marginMode } = await client2.getPrivate("/v5/account/info");
+  const views = await fetchAllPositions(client2);
   return { marginMode, positions: views, fieldNotes: fieldNotes(marginMode, views) };
 }
 function renderPositions(result) {
@@ -4501,11 +4501,11 @@ function coinShares(coins, unvalued) {
     note: "\u0414\u043E\u043B\u044F usdValue \u043C\u043E\u043D\u0435\u0442\u044B \u043E\u0442 \u0441\u0443\u043C\u043C\u044B usdValue \u0432\u0441\u0435\u0445 \u043E\u0446\u0435\u043D\u0451\u043D\u043D\u044B\u0445 \u043C\u043E\u043D\u0435\u0442 \u0442\u043E\u0440\u0433\u043E\u0432\u043E\u0433\u043E \u0441\u0447\u0451\u0442\u0430. \u041C\u043E\u043D\u0435\u0442\u0430 \u0432 \u0434\u043E\u043B\u0433\u0435 \u0438\u043C\u0435\u0435\u0442 \u043E\u0442\u0440\u0438\u0446\u0430\u0442\u0435\u043B\u044C\u043D\u044B\u0439 usdValue \u0438 \u043E\u0442\u0440\u0438\u0446\u0430\u0442\u0435\u043B\u044C\u043D\u0443\u044E \u0434\u043E\u043B\u044E."
   };
 }
-async function portfolio(client) {
-  await requireReadOnlyKey(client);
-  const { marginMode } = await client.getPrivate("/v5/account/info");
-  const a = await fetchWallet(client);
-  const options = (await client.getPrivate("/v5/account/option-asset-info")).result.map((o) => ({
+async function portfolio(client2) {
+  await requireReadOnlyKey(client2);
+  const { marginMode } = await client2.getPrivate("/v5/account/info");
+  const a = await fetchWallet(client2);
+  const options = (await client2.getPrivate("/v5/account/option-asset-info")).result.map((o) => ({
     coin: o.coin,
     totalUPL: o.totalUPL,
     totalRPL: o.totalRPL,
@@ -4513,8 +4513,8 @@ async function portfolio(client) {
     assetIM: o.assetIM,
     assetMM: o.assetMM
   }));
-  const positions2 = await fetchAllPositions(client);
-  const overview = await client.getPrivate("/v5/asset/asset-overview");
+  const positions2 = await fetchAllPositions(client2);
+  const overview = await client2.getPrivate("/v5/asset/asset-overview");
   const fundingTotal = fundingTotalEquity(overview);
   const earnTotal = earnView(overview).totalEquity;
   const coins = a.coin.map((c) => ({ coin: c.coin, equity: c.equity, usdValue: c.usdValue, unrealisedPnl: c.unrealisedPnl, cumRealisedPnl: c.cumRealisedPnl }));
@@ -4593,6 +4593,16 @@ function printError(err) {
   }
   process.exitCode = 1;
 }
+function progressReporter(write) {
+  let current = { label: "", shown: 0 };
+  return (label, done, total) => {
+    if (label !== current.label) current = { label, shown: 0 };
+    const step = Math.floor(done * 10 / total);
+    if (step <= current.shown) return;
+    current.shown = step;
+    write(`\u0421\u0431\u043E\u0440: ${label} \u2014 \u043E\u043A\u043D\u043E ${done} \u0438\u0437 ${total}`);
+  };
+}
 
 // src/cli/register-account.ts
 function dataClient() {
@@ -4610,22 +4620,178 @@ function registerAccountCommands(program2) {
   register(program2, "positions", "\u043E\u0442\u043A\u0440\u044B\u0442\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438: \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435, \u0438\u043D\u0432\u0435\u0440\u0441\u043D\u044B\u0435, \u043E\u043F\u0446\u0438\u043E\u043D\u044B", positions, renderPositions);
 }
 
-// src/options/instruments.ts
-function fetchOptionInstruments(client, baseCoin) {
-  const base = { category: "option", baseCoin, limit: "1000" };
-  return fetchAllPages(
-    (cursor) => client.getPublic("/v5/market/instruments-info", cursor ? { ...base, cursor } : base)
-  );
+// src/format/history.ts
+function utcTime(ms) {
+  return new Date(Number(ms)).toISOString().slice(0, 16).replace("T", " ");
 }
-function utcDate(ms) {
-  return new Date(Number(ms)).toISOString().slice(0, 10);
+function renderPeriod(period, coverage) {
+  const lines = [`\u041F\u0435\u0440\u0438\u043E\u0434: ${utcTime(period.from)} \u2014 ${utcTime(period.to)} UTC`];
+  for (const c of coverage) if (c.boundary) lines.push(`\u0413\u0440\u0430\u043D\u0438\u0446\u0430 \u0434\u0430\u043D\u043D\u044B\u0445: ${c.boundary}`);
+  return lines.join("\n");
 }
-function isMonthly(deliveryTime) {
-  const d = new Date(Number(deliveryTime));
-  const weekLater = new Date(d.getTime() + 7 * 864e5);
-  return d.getUTCDay() === 5 && weekLater.getUTCMonth() !== d.getUTCMonth();
+function sumStrings(values) {
+  return values.filter((v) => v !== "").reduce((sum, v) => sum + Number(v), 0);
 }
-var MONTHLY_RULE = "\u041C\u0435\u0441\u044F\u0447\u043D\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F \u2014 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u043F\u044F\u0442\u043D\u0438\u0446\u0430 \u043C\u0435\u0441\u044F\u0446\u0430 \u043F\u043E \u0434\u0430\u0442\u0435 UTC (\u043F\u0440\u0438\u0437\u043D\u0430\u043A\u0430 \u0443 \u0431\u0438\u0440\u0436\u0438 \u043D\u0435\u0442, \u043F\u0440\u0430\u0432\u0438\u043B\u043E).";
+
+// src/util/window.ts
+var DAY_MS = 864e5;
+var DEPTH_2Y_DAYS = 729;
+var DEPTH_6M_DAYS = 179;
+var MIN_REQUEST_INTERVAL_MS = 50;
+var isoDate = (ms) => new Date(ms).toISOString().slice(0, 10);
+function splitWindows(period, windowDays) {
+  const size = windowDays * DAY_MS;
+  const windows = [];
+  for (let from = period.from; from <= period.to; from += size) windows.push({ from, to: Math.min(from + size - 1, period.to) });
+  return windows;
+}
+function clampToDepth(period, source, now) {
+  const minFrom = now - source.depthDays * DAY_MS;
+  const from = Math.max(period.from, minFrom);
+  const boundary = period.from < minFrom ? `\u0411\u0438\u0440\u0436\u0430 \u043E\u0442\u0434\u0430\u0451\u0442 ${source.label} \u043D\u0435 \u0433\u043B\u0443\u0431\u0436\u0435 ${source.depthText}: \u0434\u0430\u043D\u043D\u044B\u0435 \u0441 ${isoDate(minFrom)}, \u0437\u0430\u043F\u0440\u043E\u0448\u0435\u043D\u043E \u0441 ${isoDate(period.from)}.` : null;
+  const coverage = { source: source.label, requestedFrom: period.from, from, to: period.to, boundary };
+  return { period: from <= period.to ? { from, to: period.to } : null, coverage };
+}
+function createThrottle(intervalMs, clock, sleep) {
+  let last = null;
+  return async () => {
+    const wait = last === null ? 0 : last + intervalMs - clock();
+    if (wait > 0) await sleep(wait);
+    last = clock();
+  };
+}
+async function fetchWindowed(client2, source, period, deps) {
+  const clamped = clampToDepth(period, source, deps.now);
+  if (!clamped.period) return { rows: [], coverage: clamped.coverage };
+  const windows = splitWindows(clamped.period, source.windowDays);
+  const rows = [];
+  for (const [i, w] of windows.entries()) {
+    const base = { ...source.params, startTime: String(w.from), endTime: String(w.to) };
+    const page = await fetchAllPages(async (cursor) => {
+      await deps.throttle?.();
+      const r = await client2.getPrivate(source.path, cursor ? { ...base, cursor } : base);
+      return { list: r.list ?? r.rows ?? [], nextPageCursor: r.nextPageCursor };
+    });
+    rows.push(...page);
+    deps.onProgress?.(source.label, i + 1, windows.length);
+  }
+  return { rows, coverage: clamped.coverage };
+}
+
+// src/commands/deliveries.ts
+var DELIVERIES_DEFAULT_DAYS = DEPTH_2Y_DAYS;
+var CATEGORIES = ["option", "linear", "inverse"];
+async function fetchDeliveries(client2, period, deps) {
+  const views = [];
+  const coverage = [];
+  for (const category of CATEGORIES) {
+    const source = { label: `\u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 ${category}`, path: "/v5/asset/delivery-record", params: { category, limit: "50" }, windowDays: 30, depthDays: DEPTH_2Y_DAYS, depthText: "2 \u043B\u0435\u0442" };
+    const r = await fetchWindowed(client2, source, period, deps);
+    views.push(...r.rows.map((d) => ({ category, symbol: d.symbol, side: d.side, position: d.position, entryPrice: d.entryPrice ?? "", strike: d.strike, deliveryPrice: d.deliveryPrice, fee: d.fee, deliveryRpl: d.deliveryRpl, deliveryTime: d.deliveryTime })));
+    coverage.push(r.coverage);
+  }
+  views.sort((a, b) => b.deliveryTime - a.deliveryTime);
+  return { deliveries: views, coverage };
+}
+async function deliveries(client2, options, deps) {
+  await requireReadOnlyKey(client2);
+  const r = await fetchDeliveries(client2, options.period, deps);
+  const coin = options.coin?.toUpperCase();
+  return { period: options.period, coverage: r.coverage, deliveries: coin ? r.deliveries.filter((d) => d.symbol.startsWith(coin)) : r.deliveries };
+}
+function renderDeliveryTable(list) {
+  if (list.length === 0) return "\u042D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0439 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 \u043D\u0435\u0442.";
+  const rows = list.map((d) => [utcTime(d.deliveryTime), d.symbol, d.side, d.position, orDash(d.entryPrice), d.deliveryPrice, d.fee, d.deliveryRpl]);
+  return renderTable(["\u0412\u0440\u0435\u043C\u044F UTC", "\u041A\u043E\u043D\u0442\u0440\u0430\u043A\u0442", "\u0421\u0442\u043E\u0440\u043E\u043D\u0430", "\u041E\u0431\u044A\u0451\u043C", "\u0412\u0445\u043E\u0434", "\u0426\u0435\u043D\u0430 \u0440\u0430\u0441\u0447\u0451\u0442\u0430", "\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u044F", "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442"], rows);
+}
+function renderDeliveries(r) {
+  return [renderPeriod(r.period, r.coverage), "", renderDeliveryTable(r.deliveries)].join("\n");
+}
+
+// src/commands/operations.ts
+var OPERATIONS_DEFAULT_DAYS = 30;
+var JOURNAL_SOURCE = {
+  label: "\u0436\u0443\u0440\u043D\u0430\u043B \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0439",
+  path: "/v5/account/transaction-log",
+  params: { accountType: "UNIFIED", limit: "50" },
+  windowDays: 7,
+  depthDays: DEPTH_2Y_DAYS,
+  depthText: "2 \u043B\u0435\u0442"
+};
+var NOTES = {
+  totals: "\u0421\u0443\u043C\u043C\u044B \u0441\u044B\u0440\u044B\u0445 \u043F\u043E\u043B\u0435\u0439 \u043F\u043E \u0442\u0438\u043F\u0443 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438 \u0438 \u0432\u0430\u043B\u044E\u0442\u0435 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434. change = cashFlow + funding \u2212 fee (\u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0446\u0438\u044F Bybit).",
+  feesFunding: "\u0421\u0443\u043C\u043C\u0430 fee (\u043F\u043B\u044E\u0441 \u2014 \u0440\u0430\u0441\u0445\u043E\u0434, \u043C\u0438\u043D\u0443\u0441 \u2014 \u0432\u043E\u0437\u0432\u0440\u0430\u0442) \u0438 funding (\u043F\u043B\u044E\u0441 \u2014 \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u043E, \u043C\u0438\u043D\u0443\u0441 \u2014 \u0443\u043F\u043B\u0430\u0447\u0435\u043D\u043E) \u043F\u043E \u0432\u0430\u043B\u044E\u0442\u0435 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434."
+};
+function groupBy(rows, key) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const r of rows) groups.set(key(r), [...groups.get(key(r)) ?? [], r]);
+  return groups;
+}
+function sumFeesFunding(rows) {
+  const out = {};
+  for (const [currency, list] of groupBy(rows, (r) => r.currency)) {
+    out[currency] = { fee: sumStrings(list.map((r) => r.fee)), funding: sumStrings(list.map((r) => r.funding)) };
+  }
+  return out;
+}
+function totalsByType(rows) {
+  return [...groupBy(rows, (r) => `${r.type}|${r.currency}`).values()].map((list) => ({
+    type: list[0].type,
+    currency: list[0].currency,
+    count: list.length,
+    cashFlow: sumStrings(list.map((r) => r.cashFlow)),
+    fee: sumStrings(list.map((r) => r.fee)),
+    funding: sumStrings(list.map((r) => r.funding)),
+    change: sumStrings(list.map((r) => r.change))
+  })).sort((a, b) => a.type.localeCompare(b.type) || a.currency.localeCompare(b.currency));
+}
+function toView2(r) {
+  return {
+    transactionTime: r.transactionTime,
+    type: r.type,
+    category: r.category,
+    symbol: r.symbol,
+    currency: r.currency,
+    side: r.side,
+    qty: r.qty,
+    size: r.size,
+    tradePrice: r.tradePrice,
+    cashFlow: r.cashFlow,
+    fee: r.fee,
+    funding: r.funding,
+    change: r.change,
+    cashBalance: r.cashBalance
+  };
+}
+async function operations(client2, options, deps) {
+  await requireReadOnlyKey(client2);
+  const filters = { ...options.type ? { type: options.type } : {}, ...options.currency ? { currency: options.currency } : {} };
+  const source = { ...JOURNAL_SOURCE, params: { ...JOURNAL_SOURCE.params, ...filters } };
+  const { rows, coverage } = await fetchWindowed(client2, source, options.period, deps);
+  const sorted = [...rows].sort((a, b) => Number(b.transactionTime) - Number(a.transactionTime));
+  return {
+    period: options.period,
+    coverage: [coverage],
+    operations: sorted.map(toView2),
+    computed: { totals: totalsByType(rows), feesFunding: sumFeesFunding(rows) },
+    computedNotes: NOTES
+  };
+}
+var n8 = (v) => v.toFixed(8);
+function renderOperations(r) {
+  const rows = r.operations.map((o) => [utcTime(o.transactionTime), o.type, orDash(o.symbol), o.currency, orDash(o.cashFlow), orDash(o.fee), orDash(o.funding), o.change]);
+  const totals = r.computed.totals.map((t) => [t.type, t.currency, String(t.count), n8(t.cashFlow), n8(t.fee), n8(t.funding), n8(t.change)]);
+  return [
+    renderPeriod(r.period, r.coverage),
+    "",
+    r.operations.length ? renderTable(["\u0412\u0440\u0435\u043C\u044F UTC", "\u0422\u0438\u043F", "\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442", "\u0412\u0430\u043B\u044E\u0442\u0430", "cashFlow", "\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u044F", "\u0424\u0430\u043D\u0434\u0438\u043D\u0433", "\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0435"], rows) : "\u041E\u043F\u0435\u0440\u0430\u0446\u0438\u0439 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 \u043D\u0435\u0442.",
+    "",
+    "\u0418\u0442\u043E\u0433\u0438 \u043F\u043E \u0442\u0438\u043F\u0430\u043C [\u0440\u0430\u0441\u0447\u0451\u0442]:",
+    totals.length ? renderTable(["\u0422\u0438\u043F", "\u0412\u0430\u043B\u044E\u0442\u0430", "\u0417\u0430\u043F\u0438\u0441\u0435\u0439", "cashFlow", "\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u044F", "\u0424\u0430\u043D\u0434\u0438\u043D\u0433", "\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0435"], totals) : "\u043D\u0435\u0442",
+    "",
+    `* [\u0440\u0430\u0441\u0447\u0451\u0442] ${r.computedNotes.totals}`
+  ].join("\n");
+}
 
 // src/options/symbol.ts
 var MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -4645,6 +4811,323 @@ function parseOptionSymbol(symbol) {
   if (!expiryDate) return null;
   return { baseCoin, expiryDate, strike: Number(strike), type: cp === "C" ? "Call" : "Put", settleCoin: settle ?? "USDC" };
 }
+
+// src/options/journal.ts
+var DAY_MS2 = 864e5;
+var EXPIRY_HOUR_UTC = 8;
+var REASON = {
+  openedBefore: "\u041F\u043E\u0437\u0438\u0446\u0438\u044F \u043E\u0442\u043A\u0440\u044B\u0442\u0430 \u0440\u0430\u043D\u044C\u0448\u0435, \u0447\u0435\u043C \u043D\u0430\u0447\u0438\u043D\u0430\u0435\u0442\u0441\u044F \u0436\u0443\u0440\u043D\u0430\u043B \u0431\u0438\u0440\u0436\u0438 (2 \u0433\u043E\u0434\u0430): \u0435\u0451 \u043D\u0430\u0447\u0430\u043B\u0430 \u0432 \u0434\u0430\u043D\u043D\u044B\u0445 \u043D\u0435\u0442.",
+  open: "\u041F\u043E\u0437\u0438\u0446\u0438\u044F \u0435\u0449\u0451 \u043E\u0442\u043A\u0440\u044B\u0442\u0430: \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043D\u0435 \u0437\u0430\u0444\u0438\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D."
+};
+var round8 = (v) => Math.round(v * 1e8) / 1e8;
+var sizeAfter = (r) => round8(Number(r.size));
+var sizeBefore = (r) => round8(Number(r.size) - (r.side === "Buy" ? 1 : -1) * Number(r.qty));
+function chainOrder(group, previousSize) {
+  const rest = [...group];
+  const out = [];
+  let next = rest.find((x) => sizeBefore(x) === previousSize) ?? rest.find((x) => !rest.some((y) => y !== x && sizeAfter(y) === sizeBefore(x))) ?? rest[0];
+  while (next) {
+    out.push(next);
+    rest.splice(rest.indexOf(next), 1);
+    const size = sizeAfter(next);
+    next = rest.find((y) => sizeBefore(y) === size) ?? rest[0];
+  }
+  return out;
+}
+function ordered(rows) {
+  const byTime = /* @__PURE__ */ new Map();
+  for (const r of rows) byTime.set(r.transactionTime, [...byTime.get(r.transactionTime) ?? [], r]);
+  const out = [];
+  for (const t of [...byTime.keys()].sort((a, b) => Number(a) - Number(b))) {
+    const last = out.at(-1);
+    out.push(...chainOrder(byTime.get(t), last ? sizeAfter(last) : null));
+  }
+  return out;
+}
+function expiredAt(symbol, now) {
+  const c = parseOptionSymbol(symbol);
+  if (!c) return null;
+  const day = Date.parse(`${c.expiryDate}T00:00:00Z`);
+  return day + DAY_MS2 <= now ? day + EXPIRY_HOUR_UTC * 36e5 : null;
+}
+function toPosition(symbol, records, closeTime) {
+  const status = sizeBefore(records[0]) !== 0 ? "openedBefore" : closeTime === null ? "open" : "closed";
+  return {
+    symbol,
+    currency: records[0].currency,
+    status,
+    openTime: Number(records[0].transactionTime),
+    closeTime,
+    records: records.length,
+    result: status === "closed" ? records.reduce((sum, r) => sum + Number(r.change), 0) : null,
+    reason: status === "closed" ? null : REASON[status]
+  };
+}
+function optionPositionsFromJournal(rows, now) {
+  const bySymbol = /* @__PURE__ */ new Map();
+  for (const r of rows.filter((x) => x.category === "option")) bySymbol.set(r.symbol, [...bySymbol.get(r.symbol) ?? [], r]);
+  const positions2 = [];
+  for (const [symbol, list] of [...bySymbol.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    let current = [];
+    for (const r of ordered(list)) {
+      current.push(r);
+      if (sizeAfter(r) === 0) {
+        positions2.push(toPosition(symbol, current, Number(r.transactionTime)));
+        current = [];
+      }
+    }
+    if (current.length) positions2.push(toPosition(symbol, current, expiredAt(symbol, now)));
+  }
+  return positions2;
+}
+
+// src/commands/pnl.ts
+var PNL_DEFAULT_DAYS = DEPTH_2Y_DAYS;
+var UNKNOWN_CURRENCY = "\u043D\u0435 \u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0435\u043D\u0430";
+var NOTES2 = {
+  closedPerps: `\u0421\u0443\u043C\u043C\u0430 closedPnl \u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0445 \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0445 \u0438 \u0444\u044C\u044E\u0447\u0435\u0440\u0441\u043E\u0432 (\u0443\u0436\u0435 \u0437\u0430 \u0432\u044B\u0447\u0435\u0442\u043E\u043C \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0439 \u043E\u0442\u043A\u0440\u044B\u0442\u0438\u044F \u0438 \u0437\u0430\u043A\u0440\u044B\u0442\u0438\u044F). \u0412\u0430\u043B\u044E\u0442\u0430 \u2014 \u043F\u043E \u0437\u0430\u043F\u0438\u0441\u0438 \u044D\u0442\u043E\u0433\u043E \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430 \u0432 \u0436\u0443\u0440\u043D\u0430\u043B\u0435; \u043D\u0435\u0442 \u0437\u0430\u043F\u0438\u0441\u0438 \u2014 \xAB${UNKNOWN_CURRENCY}\xBB.`,
+  funding: "\u0421\u0443\u043C\u043C\u0430 funding \u0438\u0437 \u0436\u0443\u0440\u043D\u0430\u043B\u0430 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 \u2014 \u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u043E: \u0444\u0430\u043D\u0434\u0438\u043D\u0433 \u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u0443\u0436\u0435 \u0432\u0445\u043E\u0434\u0438\u0442 \u0432 closedPnl (\u0441\u0432\u0435\u0440\u0435\u043D\u043E \u0432\u0436\u0438\u0432\u0443\u044E 2026-09-27), \u0444\u0430\u043D\u0434\u0438\u043D\u0433 \u043F\u043E \u0435\u0449\u0451 \u043E\u0442\u043A\u0440\u044B\u0442\u044B\u043C \u043F\u043E\u0437\u0438\u0446\u0438\u044F\u043C \u0432 \u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442. \u041F\u043B\u044E\u0441 \u2014 \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u043E, \u043C\u0438\u043D\u0443\u0441 \u2014 \u0443\u043F\u043B\u0430\u0447\u0435\u043D\u043E.",
+  fees: "\u0421\u0443\u043C\u043C\u0430 \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0439 \u0438\u0437 \u0436\u0443\u0440\u043D\u0430\u043B\u0430 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 \u2014 \u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u043E: \u043E\u043D\u0438 \u0443\u0436\u0435 \u0443\u0447\u0442\u0435\u043D\u044B \u0432 closedPnl \u0438 \u0432 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u0435 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432, \u0432 \u0438\u0442\u043E\u0433 \u043F\u043E\u0432\u0442\u043E\u0440\u043D\u043E \u043D\u0435 \u0432\u0445\u043E\u0434\u044F\u0442.",
+  closedOptions: "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0445 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u0434\u0430\u0442\u0435 \u0437\u0430\u043A\u0440\u044B\u0442\u0438\u044F, \u0437\u0430 \u0432\u044B\u0447\u0435\u0442\u043E\u043C \u0432\u0441\u0435\u0445 \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0439, \u0432\u043A\u043B\u044E\u0447\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044E. \u0412 \u043F\u0440\u0435\u0434\u0435\u043B\u0430\u0445 6 \u043C\u0435\u0441\u044F\u0446\u0435\u0432 \u2014 \u0441\u0443\u043C\u043C\u0430 totalPnl \u0431\u0438\u0440\u0436\u0438. \u0413\u043B\u0443\u0431\u0436\u0435 \u2014 \u0438\u0437 \u0436\u0443\u0440\u043D\u0430\u043B\u0430: \u043F\u043E \u043A\u0430\u0436\u0434\u043E\u0439 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 \u0441\u0443\u043C\u043C\u0430 change (\u043F\u0440\u0435\u043C\u0438\u0438, \u0440\u0430\u0441\u0447\u0451\u0442 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438, \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0438); \u0441\u0432\u0435\u0440\u0435\u043D\u043E \u0441 totalPnl \u0431\u0438\u0440\u0436\u0438 \u0434\u043E \u0446\u0435\u043D\u0442\u0430 (2026-09-27). \u041D\u0435 \u0432\u0438\u0434\u043D\u044B \u043F\u043E\u0437\u0438\u0446\u0438\u0438, \u043E\u0442\u043A\u0440\u044B\u0442\u044B\u0435 \u0434\u043E \u043D\u0430\u0447\u0430\u043B\u0430 \u0436\u0443\u0440\u043D\u0430\u043B\u0430 \u0438 \u0438\u0441\u0442\u0451\u043A\u0448\u0438\u0435 \u0432\u043D\u0435 \u0434\u0435\u043D\u0435\u0433: \u0442\u0430\u043A\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F \u0437\u0430\u043F\u0438\u0441\u0435\u0439 \u043D\u0435 \u043E\u0441\u0442\u0430\u0432\u043B\u044F\u0435\u0442.",
+  total: "closedPerps + closedOptions \u043F\u043E \u0432\u0430\u043B\u044E\u0442\u0435. \u041A\u043E\u043C\u0438\u0441\u0441\u0438\u0438 \u0438 \u0444\u0430\u043D\u0434\u0438\u043D\u0433 \u0443\u0436\u0435 \u0432\u043D\u0443\u0442\u0440\u0438 \u043D\u0438\u0445. \u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0439 \u0443\u0436\u0435 \u0432\u0445\u043E\u0434\u0438\u0442 \u0432 closedOptions. \u0421\u043F\u043E\u0442 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442: \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u0441\u0447\u0438\u0442\u0430\u0435\u0442 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0441\u043F\u043E\u0442\u043E\u0432\u044B\u0445 \u0441\u0434\u0435\u043B\u043E\u043A (\u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u043F\u043E \u0441\u043F\u043E\u0442\u0443 \u043D\u0435\u0442)."
+};
+var perpSource = (category) => ({ label: `\u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 ${category}`, path: "/v5/position/closed-pnl", params: { category, limit: "100" }, windowDays: 7, depthDays: DEPTH_2Y_DAYS, depthText: "2 \u043B\u0435\u0442" });
+var OPTION_SOURCE = { label: "\u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0435 \u043E\u043F\u0446\u0438\u043E\u043D\u044B", path: "/v5/position/get-closed-positions", params: { category: "option", limit: "100" }, windowDays: 7, depthDays: DEPTH_6M_DAYS, depthText: "6 \u043C\u0435\u0441\u044F\u0446\u0435\u0432" };
+var inPeriod = (t, p) => t >= p.from && t <= p.to;
+function add(map, key, value) {
+  map.set(key, (map.get(key) ?? 0) + value);
+}
+function optionsByCurrency(exchange, positions2) {
+  const out = /* @__PURE__ */ new Map();
+  if (exchange) for (const o of exchange) add(out, parseOptionSymbol(o.symbol)?.settleCoin ?? UNKNOWN_CURRENCY, Number(o.totalPnl));
+  else for (const p of positions2) if (p.result !== null) add(out, p.currency, p.result);
+  return out;
+}
+function currencies(perps, options, journal) {
+  const currencyOf = new Map(journal.map((r) => [`${r.category}|${r.symbol}`, r.currency]));
+  const perp = /* @__PURE__ */ new Map();
+  for (const p of perps) add(perp, currencyOf.get(`${p.category}|${p.symbol}`) ?? UNKNOWN_CURRENCY, Number(p.closedPnl));
+  const feesFunding = sumFeesFunding(journal);
+  const keys = /* @__PURE__ */ new Set([...perp.keys(), ...options.keys(), ...Object.keys(feesFunding)]);
+  return [...keys].sort().map((currency) => {
+    const closedPerps = perp.get(currency) ?? 0;
+    const funding = feesFunding[currency]?.funding ?? 0;
+    const closedOptions = options.get(currency) ?? 0;
+    return { currency, closedPerps, funding, fees: feesFunding[currency]?.fee ?? 0, closedOptions, total: closedPerps + closedOptions };
+  });
+}
+async function pnl(client2, options, deps) {
+  await requireReadOnlyKey(client2);
+  const { period } = options;
+  const coverage = [];
+  const closedPerps = [];
+  for (const category of ["linear", "inverse"]) {
+    const r = await fetchWindowed(client2, perpSource(category), period, deps);
+    closedPerps.push(...r.rows.map((p) => ({ category, symbol: p.symbol, side: p.side, closedSize: p.closedSize, avgEntryPrice: p.avgEntryPrice, avgExitPrice: p.avgExitPrice, closedPnl: p.closedPnl, updatedTime: p.updatedTime })));
+    coverage.push(r.coverage);
+  }
+  const fromExchange = period.from >= deps.now - DEPTH_6M_DAYS * DAY_MS;
+  const opt = fromExchange ? await fetchWindowed(client2, OPTION_SOURCE, period, deps) : null;
+  if (opt) coverage.push(opt.coverage);
+  const delivered = await fetchDeliveries(client2, period, deps);
+  coverage.push(...delivered.coverage);
+  const journalPeriod = fromExchange ? period : { from: deps.now - DEPTH_2Y_DAYS * DAY_MS, to: period.to };
+  const journal = await fetchWindowed(client2, JOURNAL_SOURCE, journalPeriod, deps);
+  coverage.push(clampToDepth(period, JOURNAL_SOURCE, deps.now).coverage);
+  const inside = journal.rows.filter((r) => inPeriod(Number(r.transactionTime), period));
+  const closedOptions = (opt?.rows ?? []).map((o) => ({ ...o })).sort((a, b) => b.closeTime - a.closeTime);
+  const positions2 = fromExchange ? [] : optionPositionsFromJournal(journal.rows, deps.now).filter((p) => p.closeTime !== null && inPeriod(p.closeTime, period));
+  const excludedCount = positions2.filter((p) => p.status === "openedBefore").length;
+  return {
+    period,
+    coverage,
+    closedPerps: closedPerps.sort((a, b) => Number(b.updatedTime) - Number(a.updatedTime)),
+    closedOptions,
+    deliveries: delivered.deliveries,
+    optionPositions: positions2,
+    computed: {
+      optionsSource: fromExchange ? "exchange" : "journal",
+      currencies: currencies(closedPerps, optionsByCurrency(fromExchange ? closedOptions : null, positions2), inside),
+      excluded: excludedCount ? `${excludedCount} \u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u0437\u0430\u043A\u0440\u044B\u0442\u044B \u0432 \u043F\u0435\u0440\u0438\u043E\u0434\u0435, \u043D\u043E \u043E\u0442\u043A\u0440\u044B\u0442\u044B \u0440\u0430\u043D\u044C\u0448\u0435 \u043D\u0430\u0447\u0430\u043B\u0430 \u0436\u0443\u0440\u043D\u0430\u043B\u0430 \u0431\u0438\u0440\u0436\u0438: \u0438\u0445 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0432 \u0438\u0442\u043E\u0433 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442.` : null
+    },
+    computedNotes: NOTES2
+  };
+}
+function renderPnl(r) {
+  const perps = r.closedPerps.map((p) => [utcTime(p.updatedTime), p.symbol, p.side, p.closedSize, p.avgEntryPrice, p.avgExitPrice, p.closedPnl]);
+  const opts = r.closedOptions.map((o) => [utcTime(o.closeTime), o.symbol, o.side, o.qty, o.avgEntryPrice, o.deliveryPrice || "\u2014", o.totalPnl]);
+  const positions2 = r.optionPositions.map((p) => [p.closeTime === null ? "\u2014" : utcTime(p.closeTime), p.symbol, p.currency, numOrDash(p.result, 8), p.reason ?? ""]);
+  const shown = r.computed.currencies.filter((c) => c.total !== 0);
+  const hidden = r.computed.currencies.length - shown.length;
+  const totals = shown.map((c) => [c.currency, numOrDash(c.closedPerps, 8), numOrDash(c.closedOptions, 8), numOrDash(c.total, 8), numOrDash(c.funding, 8), numOrDash(c.fees, 8)]);
+  const optionsBlock = r.computed.optionsSource === "exchange" ? ["\u0417\u0430\u043A\u0440\u044B\u0442\u044B\u0435 \u043E\u043F\u0446\u0438\u043E\u043D\u044B (\u0431\u0438\u0440\u0436\u0430):", opts.length ? renderTable(["\u0417\u0430\u043A\u0440\u044B\u0442 UTC", "\u041A\u043E\u043D\u0442\u0440\u0430\u043A\u0442", "\u0421\u0442\u043E\u0440\u043E\u043D\u0430", "\u041E\u0431\u044A\u0451\u043C", "\u0412\u0445\u043E\u0434", "\u0426\u0435\u043D\u0430 \u0440\u0430\u0441\u0447\u0451\u0442\u0430", "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442"], opts) : "\u043D\u0435\u0442"] : ["\u0417\u0430\u043A\u0440\u044B\u0442\u044B\u0435 \u043E\u043F\u0446\u0438\u043E\u043D\u044B \u043F\u043E \u0436\u0443\u0440\u043D\u0430\u043B\u0443 [\u0440\u0430\u0441\u0447\u0451\u0442]:", positions2.length ? renderTable(["\u0417\u0430\u043A\u0440\u044B\u0442\u0430 UTC", "\u041A\u043E\u043D\u0442\u0440\u0430\u043A\u0442", "\u0412\u0430\u043B\u044E\u0442\u0430", "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442", "\u041F\u043E\u0447\u0435\u043C\u0443 \u0431\u0435\u0437 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u0430"], positions2) : "\u043D\u0435\u0442"];
+  return [
+    renderPeriod(r.period, r.coverage),
+    "",
+    "\u0417\u0430\u043A\u0440\u044B\u0442\u044B\u0435 \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435 \u0438 \u0444\u044C\u044E\u0447\u0435\u0440\u0441\u044B:",
+    perps.length ? renderTable(["\u0417\u0430\u043A\u0440\u044B\u0442\u0430 UTC", "\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442", "\u0421\u0442\u043E\u0440\u043E\u043D\u0430", "\u041E\u0431\u044A\u0451\u043C", "\u0412\u0445\u043E\u0434", "\u0412\u044B\u0445\u043E\u0434", "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442"], perps) : "\u043D\u0435\u0442",
+    "",
+    ...optionsBlock,
+    "",
+    "\u042D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u0432 \u0434\u0435\u043D\u044C\u0433\u0430\u0445:",
+    renderDeliveryTable(r.deliveries),
+    "",
+    "\u0418\u0442\u043E\u0433 \u043F\u043E \u0432\u0430\u043B\u044E\u0442\u0435 [\u0440\u0430\u0441\u0447\u0451\u0442]:",
+    totals.length ? renderTable(["\u0412\u0430\u043B\u044E\u0442\u0430", "\u0411\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435", "\u041E\u043F\u0446\u0438\u043E\u043D\u044B", "\u0418\u0442\u043E\u0433", "\u0424\u0430\u043D\u0434\u0438\u043D\u0433 (\u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u043E)", "\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u0438 (\u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u043E)"], totals) : "\u043D\u0435\u0442",
+    ...r.computed.excluded ? [`\u041D\u0435 \u0432\u043E\u0448\u043B\u043E: ${r.computed.excluded}`] : [],
+    ...hidden ? [`\u0412\u0430\u043B\u044E\u0442 \u0441 \u043D\u0443\u043B\u0435\u0432\u044B\u043C \u0438\u0442\u043E\u0433\u043E\u043C (\u0442\u043E\u043B\u044C\u043A\u043E \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0438): ${hidden}, \u043F\u043E\u043B\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u2014 \u0432 --json.`] : [],
+    "",
+    `* [\u0440\u0430\u0441\u0447\u0451\u0442] \u0418\u0442\u043E\u0433: ${r.computedNotes.total}`,
+    `* [\u0440\u0430\u0441\u0447\u0451\u0442] \u041E\u043F\u0446\u0438\u043E\u043D\u044B: ${r.computedNotes.closedOptions}`,
+    `* [\u0440\u0430\u0441\u0447\u0451\u0442] \u041A\u043E\u043C\u0438\u0441\u0441\u0438\u0438: ${r.computedNotes.fees}`
+  ].join("\n");
+}
+
+// src/commands/trades.ts
+var TRADES_DEFAULT_DAYS = 30;
+var TRADE_CATEGORIES = ["spot", "linear", "inverse", "option"];
+var UNKNOWN_CURRENCY2 = "\u043D\u0435 \u0443\u043A\u0430\u0437\u0430\u043D\u0430";
+var FEES_NOTE = `\u0421\u0443\u043C\u043C\u0430 execFee \u043F\u043E \u0432\u0430\u043B\u044E\u0442\u0435 \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0438 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434; \u0441\u0442\u0440\u043E\u043A\u0438 \u0444\u0430\u043D\u0434\u0438\u043D\u0433\u0430 \u043D\u0435 \u0432\u0445\u043E\u0434\u044F\u0442. \u041E\u0442\u0440\u0438\u0446\u0430\u0442\u0435\u043B\u044C\u043D\u0430\u044F \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u044F \u2014 \u0432\u043E\u0437\u0432\u0440\u0430\u0442 (\u0440\u0435\u0431\u0435\u0439\u0442). \xAB${UNKNOWN_CURRENCY2}\xBB \u2014 \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u0437\u0430\u043F\u043E\u043B\u043D\u0438\u043B\u0430 feeCurrency.`;
+function toView3(category, e) {
+  return {
+    category,
+    symbol: e.symbol,
+    side: e.side,
+    execPrice: e.execPrice,
+    execQty: e.execQty,
+    execValue: e.execValue,
+    execFee: e.execFee,
+    feeCurrency: e.feeCurrency ?? "",
+    isMaker: e.isMaker,
+    execType: e.execType,
+    execTime: e.execTime,
+    tradeIv: e.tradeIv,
+    markIv: e.markIv,
+    underlyingPrice: e.underlyingPrice,
+    indexPrice: e.indexPrice
+  };
+}
+async function trades(client2, options, deps) {
+  await requireReadOnlyKey(client2);
+  const views = [];
+  const coverage = [];
+  for (const category of options.category ? [options.category] : TRADE_CATEGORIES) {
+    const params = { category, limit: "100", ...options.symbol ? { symbol: options.symbol } : {} };
+    const source = { label: `\u0441\u0434\u0435\u043B\u043A\u0438 ${category}`, path: "/v5/execution/list", params, windowDays: 7, depthDays: DEPTH_2Y_DAYS, depthText: "2 \u043B\u0435\u0442" };
+    const r = await fetchWindowed(client2, source, options.period, deps);
+    views.push(...r.rows.filter((e) => e.execType !== "Funding").map((e) => toView3(category, e)));
+    coverage.push(r.coverage);
+  }
+  views.sort((a, b) => Number(b.execTime) - Number(a.execTime));
+  const feesByCurrency = {};
+  for (const t of views) {
+    const key = t.feeCurrency || UNKNOWN_CURRENCY2;
+    feesByCurrency[key] = (feesByCurrency[key] ?? 0) + Number(t.execFee);
+  }
+  return { period: options.period, coverage, trades: views, computed: { feesByCurrency }, computedNotes: { feesByCurrency: FEES_NOTE } };
+}
+function renderTrades(r) {
+  const rows = r.trades.map((t) => [
+    utcTime(t.execTime),
+    t.symbol,
+    t.side,
+    t.execPrice,
+    t.execQty,
+    `${t.execFee} ${t.feeCurrency}`.trim(),
+    t.isMaker ? "\u043C\u0435\u0439\u043A\u0435\u0440" : "\u0442\u0435\u0439\u043A\u0435\u0440",
+    orDash(t.tradeIv),
+    orDash(t.markIv),
+    orDash(t.underlyingPrice)
+  ]);
+  const fees = Object.entries(r.computed.feesByCurrency).map(([c, v]) => `${v.toFixed(8)} ${c}`);
+  return [
+    renderPeriod(r.period, r.coverage),
+    "",
+    r.trades.length ? renderTable(["\u0412\u0440\u0435\u043C\u044F UTC", "\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442", "\u0421\u0442\u043E\u0440\u043E\u043D\u0430", "\u0426\u0435\u043D\u0430", "\u041E\u0431\u044A\u0451\u043C", "\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u044F", "\u0420\u043E\u043B\u044C", "IV \u0441\u0434\u0435\u043B\u043A\u0438", "IV \u043C\u0430\u0440\u043A\u0438\u0440.", "\u0411\u0430\u0437\u043E\u0432\u044B\u0439"], rows) : "\u0421\u0434\u0435\u043B\u043E\u043A \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 \u043D\u0435\u0442.",
+    "",
+    `\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u0438 [\u0440\u0430\u0441\u0447\u0451\u0442]: ${fees.length ? fees.join(", ") : "\u043D\u0435\u0442"}`,
+    `* [\u0440\u0430\u0441\u0447\u0451\u0442] ${r.computedNotes.feesByCurrency}`
+  ].join("\n");
+}
+
+// src/util/period.ts
+var badPeriod = (userMessage) => new AppError({ code: "APP_BAD_PERIOD", userMessage });
+var dayStart = (date) => Date.parse(`${date}T00:00:00Z`);
+function resolvePeriod(args, defaultDays, now) {
+  if (args.days !== void 0 && (args.from || args.to)) throw badPeriod("\u041F\u0435\u0440\u0438\u043E\u0434 \u0437\u0430\u0434\u0430\u0451\u0442\u0441\u044F \u043B\u0438\u0431\u043E --days, \u043B\u0438\u0431\u043E \u0434\u0430\u0442\u0430\u043C\u0438 --from/--to, \u043D\u0435 \u0432\u043C\u0435\u0441\u0442\u0435.");
+  if (args.days !== void 0) return { from: now - args.days * DAY_MS, to: now };
+  const to = args.to ? Math.min(dayStart(args.to) + DAY_MS - 1, now) : now;
+  const from = args.from ? dayStart(args.from) : to - defaultDays * DAY_MS;
+  if (from > to) throw badPeriod(`\u041D\u0430\u0447\u0430\u043B\u043E \u043F\u0435\u0440\u0438\u043E\u0434\u0430 (${args.from}) \u043F\u043E\u0437\u0436\u0435 \u0435\u0433\u043E \u043A\u043E\u043D\u0446\u0430.`);
+  return { from, to };
+}
+
+// src/cli/register-history.ts
+function parseDaysArg(value) {
+  if (!/^\d+$/.test(value) || Number(value) < 1) throw new InvalidArgumentError("\u0447\u0438\u0441\u043B\u043E \u0434\u043D\u0435\u0439 \u2014 \u0446\u0435\u043B\u043E\u0435 \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0443\u043B\u044F, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 30.");
+  return Number(value);
+}
+function parseDateArg(value) {
+  const ms = Date.parse(`${value}T00:00:00Z`);
+  const ok = /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(ms) && new Date(ms).toISOString().startsWith(value);
+  if (!ok) throw new InvalidArgumentError("\u0434\u0430\u0442\u0430 \u0432 \u0444\u043E\u0440\u043C\u0430\u0442\u0435 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 2026-09-01.");
+  return value;
+}
+function parseCategoryArg(value) {
+  const v = value.toLowerCase();
+  if (!TRADE_CATEGORIES.includes(v)) throw new InvalidArgumentError("\u043A\u0430\u0442\u0435\u0433\u043E\u0440\u0438\u044F: spot, linear, inverse \u0438\u043B\u0438 option.");
+  return v;
+}
+var client = () => new BybitClient({ credentials: loadCredentials(process.env), baseUrl: resolveBaseUrl(process.env) });
+function liveDeps() {
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  return { now: Date.now(), throttle: createThrottle(MIN_REQUEST_INTERVAL_MS, Date.now, sleep), onProgress: progressReporter((line) => process.stderr.write(`${line}
+`)) };
+}
+function withPeriod(cmd, defaultDays, text) {
+  return cmd.option("--days <n>", `\u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 N \u0434\u043D\u0435\u0439 (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E ${text})`, parseDaysArg).option("--from <date>", "\u0441 \u0434\u0430\u0442\u044B \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414 (UTC)", parseDateArg).option("--to <date>", "\u043F\u043E \u0434\u0430\u0442\u0443 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414 \u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E (UTC)", parseDateArg);
+}
+function print(cmd, value, render) {
+  const { json } = cmd.optsWithGlobals();
+  console.log(formatOutput(value, Boolean(json), render));
+}
+function registerHistoryCommands(program2) {
+  withPeriod(program2.command("trades").description("\u0438\u0441\u0442\u043E\u0440\u0438\u044F \u0441\u0434\u0435\u043B\u043E\u043A: \u0446\u0435\u043D\u0430, \u043E\u0431\u044A\u0451\u043C, \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u044F; IV \u0438 \u0431\u0430\u0437\u043E\u0432\u044B\u0439 \u0430\u043A\u0442\u0438\u0432 \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C"), TRADES_DEFAULT_DAYS, "30, \u0434\u043E 2 \u043B\u0435\u0442").option("--category <c>", "spot, linear, inverse \u0438\u043B\u0438 option", parseCategoryArg).option("--symbol <s>", "\u043E\u0434\u0438\u043D \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTCUSDT").action(async (o, cmd) => {
+    const deps = liveDeps();
+    print(cmd, await trades(client(), { period: resolvePeriod(o, TRADES_DEFAULT_DAYS, deps.now), category: o.category, symbol: o.symbol }, deps), renderTrades);
+  });
+  withPeriod(program2.command("operations").description("\u0436\u0443\u0440\u043D\u0430\u043B \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0439 \u0441 \u0438\u0442\u043E\u0433\u0430\u043C\u0438 \u043F\u043E \u0442\u0438\u043F\u0430\u043C"), OPERATIONS_DEFAULT_DAYS, "30, \u0434\u043E 2 \u043B\u0435\u0442").option("--type <t>", "\u0442\u0438\u043F \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 TRADE, SETTLEMENT, DELIVERY").option("--currency <c>", "\u0432\u0430\u043B\u044E\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 USDT").action(async (o, cmd) => {
+    const deps = liveDeps();
+    print(cmd, await operations(client(), { period: resolvePeriod(o, OPERATIONS_DEFAULT_DAYS, deps.now), type: o.type, currency: o.currency }, deps), renderOperations);
+  });
+  withPeriod(program2.command("pnl").description("\u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442: \u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438, \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438, \u0444\u0430\u043D\u0434\u0438\u043D\u0433"), PNL_DEFAULT_DAYS, "\u0432\u0441\u044F \u0433\u043B\u0443\u0431\u0438\u043D\u0430 \u0431\u0438\u0440\u0436\u0438, 2 \u0433\u043E\u0434\u0430").action(
+    async (o, cmd) => {
+      const deps = liveDeps();
+      print(cmd, await pnl(client(), { period: resolvePeriod(o, PNL_DEFAULT_DAYS, deps.now) }, deps), renderPnl);
+    }
+  );
+  withPeriod(program2.command("deliveries").description("\u0438\u0441\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u044F \u043D\u0430 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438: \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442, \u0446\u0435\u043D\u0430 \u0440\u0430\u0441\u0447\u0451\u0442\u0430, \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442"), DELIVERIES_DEFAULT_DAYS, "2 \u0433\u043E\u0434\u0430").option("--coin <coin>", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (o, cmd) => {
+    const deps = liveDeps();
+    print(cmd, await deliveries(client(), { period: resolvePeriod(o, DELIVERIES_DEFAULT_DAYS, deps.now), coin: o.coin }, deps), renderDeliveries);
+  });
+}
+
+// src/options/instruments.ts
+function fetchOptionInstruments(client2, baseCoin) {
+  const base = { category: "option", baseCoin, limit: "1000" };
+  return fetchAllPages(
+    (cursor) => client2.getPublic("/v5/market/instruments-info", cursor ? { ...base, cursor } : base)
+  );
+}
+function utcDate(ms) {
+  return new Date(Number(ms)).toISOString().slice(0, 10);
+}
+function isMonthly(deliveryTime) {
+  const d = new Date(Number(deliveryTime));
+  const weekLater = new Date(d.getTime() + 7 * 864e5);
+  return d.getUTCDay() === 5 && weekLater.getUTCMonth() !== d.getUTCMonth();
+}
+var MONTHLY_RULE = "\u041C\u0435\u0441\u044F\u0447\u043D\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F \u2014 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u043F\u044F\u0442\u043D\u0438\u0446\u0430 \u043C\u0435\u0441\u044F\u0446\u0430 \u043F\u043E \u0434\u0430\u0442\u0435 UTC (\u043F\u0440\u0438\u0437\u043D\u0430\u043A\u0430 \u0443 \u0431\u0438\u0440\u0436\u0438 \u043D\u0435\u0442, \u043F\u0440\u0430\u0432\u0438\u043B\u043E).";
 
 // src/commands/opt-chain.ts
 var STRIKE_NOTE = "\u0421\u0442\u0440\u0430\u0439\u043A \u0440\u0430\u0437\u043E\u0431\u0440\u0430\u043D \u0438\u0437 \u0441\u0438\u043C\u0432\u043E\u043B\u0430 \u043F\u043E \u0444\u043E\u0440\u043C\u0430\u0442\u0443 Bybit (enum symbol): \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u043E\u0433\u043E \u043F\u043E\u043B\u044F \u0443 \u0431\u0438\u0440\u0436\u0438 \u043D\u0435\u0442.";
@@ -4704,11 +5187,11 @@ function pickExpiry(rows, expiry, now, notes) {
 function applyFilters(rows, o) {
   return rows.filter((r) => !o.type || r.optionsType === o.type).filter((r) => o.minStrike === void 0 || r.computed.strike >= o.minStrike).filter((r) => o.maxStrike === void 0 || r.computed.strike <= o.maxStrike).sort((a, b) => a.computed.strike - b.computed.strike || (a.optionsType === "Call" ? -1 : 1));
 }
-async function optChain(client, options) {
+async function optChain(client2, options) {
   const baseCoin = options.coin.toUpperCase();
   const now = options.now ?? Date.now();
-  const { list: tickers } = await client.getPublic("/v5/market/tickers", { category: "option", baseCoin });
-  const instruments = await fetchOptionInstruments(client, baseCoin);
+  const { list: tickers } = await client2.getPublic("/v5/market/tickers", { category: "option", baseCoin });
+  const instruments = await fetchOptionInstruments(client2, baseCoin);
   const notes = [];
   const all = joinRows(tickers, instruments, notes);
   const available = [...new Set(instruments.filter((i) => Number(i.deliveryTime) > now).map((i) => utcDate(i.deliveryTime)))].sort();
@@ -4750,8 +5233,8 @@ function renderOptChain(r) {
 }
 
 // src/commands/opt-expiries.ts
-async function optExpiries(client, options = {}) {
-  const instruments = await fetchOptionInstruments(client, options.coin?.toUpperCase() ?? "All");
+async function optExpiries(client2, options = {}) {
+  const instruments = await fetchOptionInstruments(client2, options.coin?.toUpperCase() ?? "All");
   const groups = /* @__PURE__ */ new Map();
   for (const i of instruments) {
     const key = `${i.baseCoin}|${i.deliveryTime}`;
@@ -4775,11 +5258,11 @@ var SOURCE_NOTES = [
   "Gamma, Vega, Theta \u2014 \u0438\u0437 coin-greeks; \u043D\u0430 \u0436\u0438\u0432\u043E\u043C \u0441\u0447\u0451\u0442\u0435 \u0440\u0430\u0432\u043D\u044B \u0441\u0443\u043C\u043C\u0435 \u0433\u0440\u0435\u043A\u043E\u0432 \u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439.",
   "\u0412\u0441\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F \u0441\u044B\u0440\u044B\u0435, \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u044B \u043E\u0442 \u0431\u0438\u0440\u0436\u0438; \u0441\u043A\u0438\u043B\u043B \u0438\u0445 \u043D\u0435 \u043F\u0435\u0440\u0435\u0441\u0447\u0438\u0442\u044B\u0432\u0430\u0435\u0442."
 ];
-async function optGreeks(client, options = {}) {
-  await requireReadOnlyKey(client);
+async function optGreeks(client2, options = {}) {
+  await requireReadOnlyKey(client2);
   const coin = options.coin?.toUpperCase();
-  const greeks = await client.getPrivate("/v5/asset/coin-greeks", coin ? { baseCoin: coin } : {});
-  const { result: assets } = await client.getPrivate("/v5/account/option-asset-info");
+  const greeks = await client2.getPrivate("/v5/asset/coin-greeks", coin ? { baseCoin: coin } : {});
+  const { result: assets } = await client2.getPrivate("/v5/account/option-asset-info");
   const deltas = new Map(assets.filter((a) => !coin || a.coin === coin).map((a) => [a.coin, a.totalDelta]));
   const byCoin = new Map(greeks.list.map((g) => [g.baseCoin, g]));
   const notes = [...SOURCE_NOTES];
@@ -4848,14 +5331,14 @@ function toCoin(a, accountMM) {
     computedNotes: { shareOfAccountMM: share === null ? "accountMM \u0440\u0430\u0432\u0435\u043D \u043D\u0443\u043B\u044E \u0438\u043B\u0438 \u043F\u0443\u0441\u0442: \u0434\u043E\u043B\u044F \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0430." : SHARE_NOTE, optionLoss: losses.note }
   };
 }
-async function optMargin(client) {
-  await requireReadOnlyKey(client);
-  const { marginMode } = await client.getPrivate("/v5/account/info");
+async function optMargin(client2) {
+  await requireReadOnlyKey(client2);
+  const { marginMode } = await client2.getPrivate("/v5/account/info");
   if (marginMode !== "PORTFOLIO_MARGIN") {
     const note = `\u0420\u0435\u0436\u0438\u043C \u043C\u0430\u0440\u0436\u0438 ${marginMode}, \u043D\u0435 Portfolio Margin: \u043C\u0430\u0440\u0436\u0430 \u0441\u0447\u0438\u0442\u0430\u0435\u0442\u0441\u044F \u043F\u043E \u043A\u0430\u0436\u0434\u043E\u0439 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 \u2014 \u0441\u043C. \u043A\u043E\u043C\u0430\u043D\u0434\u0443 positions (positionIM, positionMM).`;
     return { marginMode, account: null, coins: [], notes: [note] };
   }
-  const pm = await client.getPrivate("/v5/asset/portfolio-margin");
+  const pm = await client2.getPrivate("/v5/asset/portfolio-margin");
   const { equity, marginBalance, accountIM, accountMM, accountIMRate, accountMMRate } = pm.wallet;
   const account = { equity, marginBalance, accountIM, accountMM, accountIMRate, accountMMRate };
   return { marginMode, account, coins: pm.assetPnlRange.map((a) => toCoin(a, Number(accountMM))), notes: [METHOD_NOTE] };
@@ -4891,19 +5374,19 @@ function renderOptMargin(r) {
 }
 
 // src/commands/opt-positions.ts
-var DAY_MS = 864e5;
+var DAY_MS3 = 864e5;
 var CONTRACT_NOTE = "\u0420\u0430\u0437\u043E\u0431\u0440\u0430\u043D\u043E \u0438\u0437 \u0441\u0438\u043C\u0432\u043E\u043B\u0430 \u043F\u043E \u0444\u043E\u0440\u043C\u0430\u0442\u0443 Bybit (enum symbol): \u043C\u043E\u043D\u0435\u0442\u0430-\u0414\u0414\u041C\u041C\u041C\u0413\u0413-\u0441\u0442\u0440\u0430\u0439\u043A-C/P[-\u0440\u0430\u0441\u0447\u0451\u0442\u043D\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430]; \u0431\u0435\u0437 \u0441\u0443\u0444\u0444\u0438\u043A\u0441\u0430 \u2014 USDC.";
 var DAYS_NOTE = "(deliveryTime \u0438\u0437 instruments-info \u2212 \u0442\u0435\u043A\u0443\u0449\u0435\u0435 \u0432\u0440\u0435\u043C\u044F) / 86 400 000, \u0434\u0440\u043E\u0431\u043D\u044B\u0435 \u0441\u0443\u0442\u043A\u0438, \u043E\u043A\u0440\u0443\u0433\u043B\u0435\u043D\u0438\u0435 \u0434\u043E 0.01.";
 var GREEKS_NOTE = "\u0413\u0440\u0435\u043A\u0438 \u2014 \u0441\u044B\u0440\u044B\u0435 \u043F\u043E\u043B\u044F position/list: \u043D\u0430 \u0432\u0441\u044E \u043F\u043E\u0437\u0438\u0446\u0438\u044E, \u0441 \u0443\u0447\u0451\u0442\u043E\u043C \u0441\u0442\u043E\u0440\u043E\u043D\u044B (\u0443 \u043F\u0440\u043E\u0434\u0430\u043D\u043D\u043E\u0439 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 \u0437\u043D\u0430\u043A \u043E\u0431\u0440\u0430\u0442\u043D\u044B\u0439).";
-function fetchOptionPositions(client) {
+function fetchOptionPositions(client2) {
   const base = { category: "option", limit: "200" };
   return fetchAllPages(
-    (cursor) => client.getPrivate("/v5/position/list", cursor ? { ...base, cursor } : base)
+    (cursor) => client2.getPrivate("/v5/position/list", cursor ? { ...base, cursor } : base)
   );
 }
-function toView2(p, deliveryTime, now) {
+function toView4(p, deliveryTime, now) {
   const contract = parseOptionSymbol(p.symbol);
-  const days = deliveryTime === "" ? null : Math.round((Number(deliveryTime) - now) / DAY_MS * 100) / 100;
+  const days = deliveryTime === "" ? null : Math.round((Number(deliveryTime) - now) / DAY_MS3 * 100) / 100;
   return {
     symbol: p.symbol,
     side: p.side,
@@ -4923,13 +5406,13 @@ function toView2(p, deliveryTime, now) {
     }
   };
 }
-async function optPositions(client, options = {}) {
-  await requireReadOnlyKey(client);
-  const raw = await fetchOptionPositions(client);
+async function optPositions(client2, options = {}) {
+  await requireReadOnlyKey(client2);
+  const raw = await fetchOptionPositions(client2);
   if (raw.length === 0) return { positions: [] };
-  const delivery = new Map((await fetchOptionInstruments(client, "All")).map((i) => [i.symbol, i.deliveryTime]));
+  const delivery = new Map((await fetchOptionInstruments(client2, "All")).map((i) => [i.symbol, i.deliveryTime]));
   const now = options.now ?? Date.now();
-  return { positions: raw.map((p) => toView2(p, delivery.get(p.symbol) ?? "", now)) };
+  return { positions: raw.map((p) => toView4(p, delivery.get(p.symbol) ?? "", now)) };
 }
 function renderOptPositions(r) {
   if (r.positions.length === 0) return "\u041E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u043D\u0435\u0442.";
@@ -4978,17 +5461,17 @@ function parseStrikeArg(value) {
 }
 var accountClient = () => new BybitClient({ credentials: loadCredentials(process.env), baseUrl: resolveBaseUrl(process.env) });
 var marketClient = () => new BybitClient({ baseUrl: resolveBaseUrl(process.env) });
-function print(cmd, value, render) {
+function print2(cmd, value, render) {
   const { json } = cmd.optsWithGlobals();
   console.log(formatOutput(value, Boolean(json), render));
 }
 function registerOptionCommands(program2) {
   const opt = program2.command("opt").description("\u043E\u043F\u0446\u0438\u043E\u043D\u044B: \u043F\u043E\u0437\u0438\u0446\u0438\u0438, \u0433\u0440\u0435\u043A\u0438, \u043C\u0430\u0440\u0436\u0430, \u0434\u043E\u0441\u043A\u0430, \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438");
-  opt.command("positions").description("\u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438: \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442, \u0434\u043D\u0438 \u0434\u043E \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438, \u0433\u0440\u0435\u043A\u0438").action(async (_o, cmd) => print(cmd, await optPositions(accountClient()), renderOptPositions));
-  opt.command("greeks").description("\u043D\u0435\u0442\u0442\u043E-\u0433\u0440\u0435\u043A\u0438 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u0431\u0430\u0437\u043E\u0432\u043E\u0439 \u043C\u043E\u043D\u0435\u0442\u0435").option("--coin <coin>", "\u043E\u0434\u043D\u0430 \u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (o, cmd) => print(cmd, await optGreeks(accountClient(), o), renderOptGreeks));
-  opt.command("margin").description("\u043C\u0430\u0440\u0436\u0430 Portfolio Margin \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0430\u043C \u0438 \u0432\u043A\u043B\u0430\u0434 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u0432 \u0445\u0443\u0434\u0448\u0438\u0439 \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0439").action(async (_o, cmd) => print(cmd, await optMargin(accountClient()), renderOptMargin));
-  opt.command("chain").description("\u0434\u043E\u0441\u043A\u0430 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0435; \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E \u0431\u043B\u0438\u0436\u0430\u0439\u0448\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F").argument("<coin>", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").option("--expiry <date>", "\u0434\u0430\u0442\u0430 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414", parseExpiryArg).option("--type <type>", "call \u0438\u043B\u0438 put", parseTypeArg).option("--min-strike <n>", "\u0441\u0442\u0440\u0430\u0439\u043A \u043E\u0442 (\u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E)", parseStrikeArg).option("--max-strike <n>", "\u0441\u0442\u0440\u0430\u0439\u043A \u0434\u043E (\u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E)", parseStrikeArg).action(async (coin, o, cmd) => print(cmd, await optChain(marketClient(), { ...o, coin }), renderOptChain));
-  opt.command("expiries").description("\u0434\u0430\u0442\u044B \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438; \u0431\u0435\u0437 \u043C\u043E\u043D\u0435\u0442\u044B \u2014 \u043F\u043E \u0432\u0441\u0435\u043C \u043C\u043E\u043D\u0435\u0442\u0430\u043C").argument("[coin]", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (coin, _o, cmd) => print(cmd, await optExpiries(marketClient(), { coin }), renderOptExpiries));
+  opt.command("positions").description("\u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438: \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442, \u0434\u043D\u0438 \u0434\u043E \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438, \u0433\u0440\u0435\u043A\u0438").action(async (_o, cmd) => print2(cmd, await optPositions(accountClient()), renderOptPositions));
+  opt.command("greeks").description("\u043D\u0435\u0442\u0442\u043E-\u0433\u0440\u0435\u043A\u0438 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u0431\u0430\u0437\u043E\u0432\u043E\u0439 \u043C\u043E\u043D\u0435\u0442\u0435").option("--coin <coin>", "\u043E\u0434\u043D\u0430 \u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (o, cmd) => print2(cmd, await optGreeks(accountClient(), o), renderOptGreeks));
+  opt.command("margin").description("\u043C\u0430\u0440\u0436\u0430 Portfolio Margin \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0430\u043C \u0438 \u0432\u043A\u043B\u0430\u0434 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u0432 \u0445\u0443\u0434\u0448\u0438\u0439 \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0439").action(async (_o, cmd) => print2(cmd, await optMargin(accountClient()), renderOptMargin));
+  opt.command("chain").description("\u0434\u043E\u0441\u043A\u0430 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0435; \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E \u0431\u043B\u0438\u0436\u0430\u0439\u0448\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F").argument("<coin>", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").option("--expiry <date>", "\u0434\u0430\u0442\u0430 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414", parseExpiryArg).option("--type <type>", "call \u0438\u043B\u0438 put", parseTypeArg).option("--min-strike <n>", "\u0441\u0442\u0440\u0430\u0439\u043A \u043E\u0442 (\u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E)", parseStrikeArg).option("--max-strike <n>", "\u0441\u0442\u0440\u0430\u0439\u043A \u0434\u043E (\u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E)", parseStrikeArg).action(async (coin, o, cmd) => print2(cmd, await optChain(marketClient(), { ...o, coin }), renderOptChain));
+  opt.command("expiries").description("\u0434\u0430\u0442\u044B \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438; \u0431\u0435\u0437 \u043C\u043E\u043D\u0435\u0442\u044B \u2014 \u043F\u043E \u0432\u0441\u0435\u043C \u043C\u043E\u043D\u0435\u0442\u0430\u043C").argument("[coin]", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (coin, _o, cmd) => print2(cmd, await optExpiries(marketClient(), { coin }), renderOptExpiries));
 }
 
 // src/cli/register-session.ts
@@ -4996,8 +5479,8 @@ function registerSessionCommands(program2) {
   const session = program2.command("session").description("\u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0435 \u0434\u043E\u0441\u0442\u0443\u043F\u0430 \u043A \u0431\u0438\u0440\u0436\u0435");
   session.command("status").description("\u043A\u043B\u044E\u0447, \u043F\u0440\u0430\u0432\u0430, \u043E\u043A\u0440\u0443\u0436\u0435\u043D\u0438\u0435, \u0447\u0430\u0441\u044B, \u0441\u0432\u044F\u0437\u044C \u0441 \u0431\u0438\u0440\u0436\u0435\u0439").action(async (_opts, cmd) => {
     const { json } = cmd.optsWithGlobals();
-    const client = new BybitClient({ credentials: readCredentials(process.env), baseUrl: resolveBaseUrl(process.env) });
-    const status = await sessionStatus(client, Date.now);
+    const client2 = new BybitClient({ credentials: readCredentials(process.env), baseUrl: resolveBaseUrl(process.env) });
+    const status = await sessionStatus(client2, Date.now);
     console.log(formatOutput(status, Boolean(json), renderSessionStatus));
   });
 }
@@ -5008,6 +5491,7 @@ function buildProgram() {
   registerSessionCommands(program2);
   registerAccountCommands(program2);
   registerOptionCommands(program2);
+  registerHistoryCommands(program2);
   return program2;
 }
 

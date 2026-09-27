@@ -22,3 +22,15 @@ export function printError(err: unknown): void {
   }
   process.exitCode = 1;
 }
+
+/** Progress of a long collection (NFR-7): a line per 10% of windows, to stderr in the CLI. */
+export function progressReporter(write: (line: string) => void): (label: string, done: number, total: number) => void {
+  let current = { label: '', shown: 0 };
+  return (label, done, total) => {
+    if (label !== current.label) current = { label, shown: 0 };
+    const step = Math.floor((done * 10) / total);
+    if (step <= current.shown) return;
+    current.shown = step;
+    write(`Сбор: ${label} — окно ${done} из ${total}`);
+  };
+}

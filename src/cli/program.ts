@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import { registerAccountCommands } from './register-account.js';
+import { registerHistoryCommands } from './register-history.js';
 import { registerOptionCommands } from './register-options.js';
 import { registerSessionCommands } from './register-session.js';
 
@@ -13,5 +14,6 @@ export function buildProgram(): Command {
   registerSessionCommands(program);
   registerAccountCommands(program);
   registerOptionCommands(program);
+  registerHistoryCommands(program);
   return program;
 }
