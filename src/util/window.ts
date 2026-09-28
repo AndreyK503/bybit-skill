@@ -30,6 +30,8 @@ export interface WindowedSource {
   windowDays: number;
   depthDays: number;
   depthText: string;
+  /** Time filter of one window; default startTime/endTime in ms. */
+  timeParams?: (w: Period) => Record<string, string>;
 }
 
 export interface WindowDeps {
@@ -77,7 +79,8 @@ export async function fetchWindowed<T>(client: BybitClient, source: WindowedSour
   const windows = splitWindows(clamped.period, source.windowDays);
   const rows: T[] = [];
   for (const [i, w] of windows.entries()) {
-    const base = { ...source.params, startTime: String(w.from), endTime: String(w.to) };
+    const time = source.timeParams ? source.timeParams(w) : { startTime: String(w.from), endTime: String(w.to) };
+    const base = { ...source.params, ...time };
     const page = await fetchAllPages(async (cursor) => {
       await deps.throttle?.();
       const r = await client.getPrivate<{ list?: T[]; rows?: T[]; nextPageCursor: string }>(source.path, cursor ? { ...base, cursor } : base);

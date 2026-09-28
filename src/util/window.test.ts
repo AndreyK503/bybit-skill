@@ -137,6 +137,17 @@ describe('fetchWindowed', () => {
     await fetchWindowed(client, SOURCE, { from: NOW - 10 * D, to: NOW }, { now: NOW, throttle: async () => void waits++ });
     expect(waits).toBe(urls.length);
   });
+
+  it('timeParams replaces startTime/endTime (fundinghistory: createTimeFrom/To in seconds)', async () => {
+    const { client, urls } = routedClient({ [SOURCE.path]: () => listPage([]) });
+    const source = { ...SOURCE, timeParams: (w: { from: number; to: number }) => ({ createTimeFrom: String(Math.floor(w.from / 1000)), createTimeTo: String(Math.floor(w.to / 1000)) }) };
+    await fetchWindowed(client, source, { from: NOW - 3 * D, to: NOW }, { now: NOW });
+    expect(urls).toHaveLength(1);
+    expect(urls[0]!.searchParams.get('startTime')).toBeNull();
+    expect(urls[0]!.searchParams.get('createTimeFrom')).toBe(String((NOW - 3 * D) / 1000));
+    expect(urls[0]!.searchParams.get('createTimeTo')).toBe(String(NOW / 1000));
+    expect(urls[0]!.searchParams.get('accountType')).toBe('UNIFIED');
+  });
 });
 
 describe('createThrottle', () => {

@@ -1,5 +1,6 @@
 import { InvalidArgumentError, type Command } from 'commander';
 import { BybitClient } from '../api/client.js';
+import { funds, renderFunds } from '../commands/funds.js';
 import { DELIVERIES_DEFAULT_DAYS, deliveries, renderDeliveries } from '../commands/deliveries.js';
 import { OPERATIONS_DEFAULT_DAYS, operations, renderOperations } from '../commands/operations.js';
 import { PNL_DEFAULT_DAYS, pnl, renderPnl } from '../commands/pnl.js';
@@ -32,10 +33,16 @@ export function parseCategoryArg(value: string): TradeCategory {
 
 const client = () => new BybitClient({ credentials: loadCredentials(process.env), baseUrl: resolveBaseUrl(process.env) });
 
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 /** Real clock, throttle and progress to stderr: stdout stays clean for --json. */
-function liveDeps(): WindowDeps {
-  const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-  return { now: Date.now(), throttle: createThrottle(MIN_REQUEST_INTERVAL_MS, Date.now, sleep), onProgress: progressReporter((line) => process.stderr.write(`${line}\n`)) };
+function liveDeps(): WindowDeps & { throttleFor: (intervalMs: number) => () => Promise<void> } {
+  return {
+    now: Date.now(),
+    throttle: createThrottle(MIN_REQUEST_INTERVAL_MS, Date.now, sleep),
+    throttleFor: (intervalMs) => createThrottle(intervalMs, Date.now, sleep),
+    onProgress: progressReporter((line) => process.stderr.write(`${line}\n`)),
+  };
 }
 
 function withPeriod(cmd: Command, defaultDays: number, text: string): Command {
@@ -50,7 +57,7 @@ function print<T>(cmd: Command, value: T, render: (v: T) => string): void {
   console.log(formatOutput(value, Boolean(json), render));
 }
 
-/** Register `trades`, `operations`, `pnl`, `deliveries` (FR-7, FR-8, FR-9). */
+/** Register `trades`, `operations`, `pnl`, `deliveries`, `funds` (FR-7, FR-8, FR-9, FR-13). */
 export function registerHistoryCommands(program: Command): void {
   withPeriod(program.command('trades').description('история сделок: цена, объём, комиссия; IV и базовый актив по опционам'), TRADES_DEFAULT_DAYS, '30, до 2 лет')
     .option('--category <c>', 'spot, linear, inverse или option', parseCategoryArg)
@@ -77,5 +84,11 @@ export function registerHistoryCommands(program: Command): void {
     .action(async (o: PeriodArgs & { coin?: string }, cmd: Command) => {
       const deps = liveDeps();
       print(cmd, await deliveries(client(), { period: resolvePeriod(o, DELIVERIES_DEFAULT_DAYS, deps.now), coin: o.coin }, deps), renderDeliveries);
+    });
+  program
+    .command('funds')
+    .description('нетто-ввод средств с первой операции (2023-11-20), стоимость счёта и результат')
+    .action(async (_o: unknown, cmd: Command) => {
+      print(cmd, await funds(client(), liveDeps()), renderFunds);
     });
 }

@@ -4652,11 +4652,11 @@ function clampToDepth(period, source, now) {
   const coverage = { source: source.label, requestedFrom: period.from, from, to: period.to, boundary };
   return { period: from <= period.to ? { from, to: period.to } : null, coverage };
 }
-function createThrottle(intervalMs, clock, sleep) {
+function createThrottle(intervalMs, clock, sleep2) {
   let last = null;
   return async () => {
     const wait = last === null ? 0 : last + intervalMs - clock();
-    if (wait > 0) await sleep(wait);
+    if (wait > 0) await sleep2(wait);
     last = clock();
   };
 }
@@ -4666,7 +4666,8 @@ async function fetchWindowed(client2, source, period, deps) {
   const windows = splitWindows(clamped.period, source.windowDays);
   const rows = [];
   for (const [i, w] of windows.entries()) {
-    const base = { ...source.params, startTime: String(w.from), endTime: String(w.to) };
+    const time = source.timeParams ? source.timeParams(w) : { startTime: String(w.from), endTime: String(w.to) };
+    const base = { ...source.params, ...time };
     const page = await fetchAllPages(async (cursor) => {
       await deps.throttle?.();
       const r = await client2.getPrivate(source.path, cursor ? { ...base, cursor } : base);
@@ -4676,6 +4677,293 @@ async function fetchWindowed(client2, source, period, deps) {
     deps.onProgress?.(source.label, i + 1, windows.length);
   }
   return { rows, coverage: clamped.coverage };
+}
+
+// src/valuation/daily-close.ts
+var KLINE_WINDOW_DAYS = 1e3;
+var utcDay = (ms) => ms - ms % DAY_MS;
+var isoDay = (ms) => new Date(ms).toISOString().slice(0, 10);
+async function fetchDailyCloses(client2, pair, period, throttle) {
+  const closes = /* @__PURE__ */ new Map();
+  for (const w of splitWindows({ from: utcDay(period.from), to: period.to }, KLINE_WINDOW_DAYS)) {
+    await throttle?.();
+    const params = { category: "spot", symbol: pair, interval: "D", start: String(w.from), end: String(w.to), limit: String(KLINE_WINDOW_DAYS) };
+    const r = await client2.getPublic("/v5/market/kline", params);
+    for (const k of r.list) closes.set(Number(k[0]), k[4]);
+  }
+  return closes;
+}
+function valueOnDate(coin, amount, time, prices) {
+  if (USD_STABLECOINS.includes(coin)) return { usd: Number(amount), note: "\u0421\u0442\u0435\u0439\u0431\u043B\u043A\u043E\u0438\u043D, \u043F\u0440\u0438\u043D\u044F\u0442 \u0440\u0430\u0432\u043D\u044B\u043C 1 USD: \u0442\u043E\u0447\u043D\u0430\u044F \u043E\u0446\u0435\u043D\u043A\u0430." };
+  const pair = `${coin}USDT`;
+  if (!prices.pairs.has(pair)) return { usd: null, note: `\u041D\u0430 \u0441\u043F\u043E\u0442\u0435 Bybit \u043D\u0435\u0442 \u043F\u0430\u0440\u044B ${pair}: \u043E\u0446\u0435\u043D\u043A\u0430 \u0432 \u0434\u043E\u043B\u043B\u0430\u0440\u0430\u0445 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u0430.` };
+  const day = isoDay(time);
+  const close = prices.closes.get(pair)?.get(utcDay(time));
+  if (close === void 0) return { usd: null, note: `\u041D\u0435\u0442 \u0434\u043D\u0435\u0432\u043D\u043E\u0439 \u0441\u0432\u0435\u0447\u0438 ${pair} \u0437\u0430 ${day}: \u043E\u0446\u0435\u043D\u043A\u0430 \u0432 \u0434\u043E\u043B\u043B\u0430\u0440\u0430\u0445 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u0430.` };
+  const usd = Number(amount) * Number(close);
+  if (prices.now !== void 0 && utcDay(prices.now) === utcDay(time)) {
+    return { usd, note: `\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \xD7 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0446\u0435\u043D\u0430 ${pair} = ${close}: \u0434\u043D\u0435\u0432\u043D\u0430\u044F \u0441\u0432\u0435\u0447\u0430 \u0437\u0430 ${day} (UTC) \u0435\u0449\u0451 \u043D\u0435 \u0437\u0430\u043A\u0440\u044B\u0442\u0430, \u0441\u043F\u043E\u0442 Bybit.` };
+  }
+  return { usd, note: `\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \xD7 \u0446\u0435\u043D\u0430 \u0437\u0430\u043A\u0440\u044B\u0442\u0438\u044F \u0434\u043D\u0435\u0432\u043D\u043E\u0439 \u0441\u0432\u0435\u0447\u0438 ${pair} \u0437\u0430 ${day} (UTC) = ${close}, \u0441\u043F\u043E\u0442 Bybit.` };
+}
+
+// src/commands/funds-flows.ts
+var FUNDS_FROM = Date.parse("2023-11-20T00:00:00Z");
+var ANY_DEPTH = { depthDays: Infinity, depthText: "" };
+var toSeconds = (w) => ({ createTimeFrom: String(Math.floor(w.from / 1e3)), createTimeTo: String(Math.floor(w.to / 1e3)) });
+var FUNDS_SOURCES = {
+  deposit: { label: "\u0432\u0432\u043E\u0434\u044B", path: "/v5/asset/deposit/query-record", params: { limit: "50" }, windowDays: 29, intervalMs: 650, ...ANY_DEPTH },
+  internalDeposit: { label: "\u0432\u0432\u043E\u0434\u044B \u043E\u0442 \u0434\u0440\u0443\u0433\u0438\u0445 UID", path: "/v5/asset/deposit/query-internal-record", params: { limit: "50" }, windowDays: 29, intervalMs: MIN_REQUEST_INTERVAL_MS, ...ANY_DEPTH },
+  withdrawal: { label: "\u0432\u044B\u0432\u043E\u0434\u044B", path: "/v5/asset/withdraw/query-record", params: { withdrawType: "2", limit: "50" }, windowDays: 29, intervalMs: 220, ...ANY_DEPTH },
+  funding: { label: "\u0436\u0443\u0440\u043D\u0430\u043B \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430 \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F", path: "/v5/asset/fundinghistory", params: { limit: "100" }, windowDays: 7, intervalMs: MIN_REQUEST_INTERVAL_MS, timeParams: toSeconds, ...ANY_DEPTH }
+};
+var BOUNDARY = {
+  fundingAccountRecordP2PPurchase: "in",
+  fundingAccountRecordCancelledP2PSale: "in",
+  fundingAccountRecordTransferFromSubAccount: "in",
+  fundingAccountRecordP2PSale: "out",
+  fundingAccountRecordTransferOut2SubAccount: "out"
+};
+var INSIDE_GROUPS = [
+  "fundingAccountRecordEarn",
+  "fundingAccountRecordAirdrop",
+  "fundingAccountRecordConvert",
+  "fundingAccountRecordFixedRateLoans",
+  "fundingAccountRecordTypeDeposit",
+  "fundingAccountRecordTypeWithdraw"
+];
+var INSIDE_TYPES = [
+  "fundingAccountRecordTransferFromTradingAccount",
+  "fundingAccountRecordTransfer2TradingAccount",
+  "fundingAccountRecordPendingDeposit",
+  "fundingAccountRecordFiatGAFreeze",
+  "fundingAccountRecordConfirmedDeposit",
+  "fundingAccountRecordFiatGAUNFreeze"
+];
+function classifyFundingRow(row) {
+  const boundary = BOUNDARY[row.description];
+  if (boundary) return boundary;
+  if (INSIDE_GROUPS.includes(row.showBusiType) || INSIDE_TYPES.includes(row.description)) return "inside";
+  return "unclassified";
+}
+var DEPOSIT_DONE = [3, 70012];
+var DEPOSIT_FAILED = [4, 70011];
+var INTERNAL_FAILED = [3];
+var WITHDRAWAL_FAILED = ["CancelByUser", "Reject", "Fail"];
+var depositFlow = (d) => ({
+  id: `deposit:${d.id}`,
+  source: "deposit",
+  kind: "\u0412\u0432\u043E\u0434 (\u0431\u043B\u043E\u043A\u0447\u0435\u0439\u043D)",
+  direction: "in",
+  coin: d.coin,
+  amount: d.amount,
+  fee: d.depositFee,
+  status: String(d.status),
+  time: Number(d.successAt),
+  counted: DEPOSIT_DONE.includes(d.status),
+  inProgress: !DEPOSIT_DONE.includes(d.status) && !DEPOSIT_FAILED.includes(d.status)
+});
+var internalFlow = (d) => ({
+  id: `internalDeposit:${d.id}`,
+  source: "internalDeposit",
+  kind: "\u0412\u0432\u043E\u0434 \u043E\u0442 \u0434\u0440\u0443\u0433\u043E\u0433\u043E UID",
+  direction: "in",
+  coin: d.coin,
+  amount: d.amount,
+  fee: "",
+  status: String(d.status),
+  time: Number(d.createdTime) * 1e3,
+  counted: d.status === 2,
+  inProgress: d.status !== 2 && !INTERNAL_FAILED.includes(d.status)
+});
+var withdrawalFlow = (w) => ({
+  id: `withdrawal:${w.withdrawId}`,
+  source: "withdrawal",
+  kind: w.withdrawType === 1 ? "\u0412\u044B\u0432\u043E\u0434 \u043D\u0430 \u0434\u0440\u0443\u0433\u043E\u0439 UID" : "\u0412\u044B\u0432\u043E\u0434 (\u0431\u043B\u043E\u043A\u0447\u0435\u0439\u043D)",
+  direction: "out",
+  coin: w.coin,
+  amount: w.amount,
+  fee: w.withdrawFee,
+  status: w.status,
+  time: Number(w.createTime),
+  counted: w.status === "success",
+  inProgress: w.status !== "success" && !WITHDRAWAL_FAILED.includes(w.status)
+});
+var fundingFlow = (r, direction) => ({
+  id: `funding:${r.currcCursor}`,
+  source: "funding",
+  kind: r.descriptionEn.trim(),
+  direction,
+  coin: r.currency,
+  amount: r.txnAmt,
+  fee: "",
+  status: "",
+  time: Number(r.createTime) * 1e3,
+  counted: true,
+  inProgress: false
+});
+var unclassifiedRow = (r) => ({
+  currency: r.currency,
+  ioDirection: r.ioDirection,
+  txnAmt: r.txnAmt,
+  time: Number(r.createTime) * 1e3,
+  showBusiType: r.showBusiType,
+  description: r.description,
+  descriptionEn: r.descriptionEn.trim()
+});
+var uniqueBy = (rows, key) => [...new Map(rows.map((r) => [key(r), r])).values()];
+async function collect(client2, source, period, deps) {
+  return fetchWindowed(client2, source, period, { ...deps, throttle: deps.throttleFor?.(source.intervalMs) ?? deps.throttle });
+}
+async function collectFlows(client2, period, deps) {
+  const dep = await collect(client2, FUNDS_SOURCES.deposit, period, deps);
+  const internal = await collect(client2, FUNDS_SOURCES.internalDeposit, period, deps);
+  const wd = await collect(client2, FUNDS_SOURCES.withdrawal, period, deps);
+  const fund = await collect(client2, FUNDS_SOURCES.funding, period, deps);
+  const flows = [
+    ...uniqueBy(dep.rows, (d) => d.id).map(depositFlow),
+    ...uniqueBy(internal.rows, (d) => d.id).map(internalFlow),
+    ...uniqueBy(wd.rows, (w) => w.withdrawId).map(withdrawalFlow)
+  ];
+  const unclassified = [];
+  for (const r of uniqueBy(fund.rows, (f) => f.currcCursor)) {
+    const cls = classifyFundingRow(r);
+    if (cls === "in" || cls === "out") flows.push(fundingFlow(r, cls));
+    if (cls === "unclassified") unclassified.push(unclassifiedRow(r));
+  }
+  flows.sort((a, b) => a.time - b.time);
+  return { flows, unclassified, coverage: [dep.coverage, internal.coverage, wd.coverage, fund.coverage] };
+}
+
+// src/commands/funds.ts
+var SCOPE = "\u0414\u0432\u0438\u0436\u0435\u043D\u0438\u0435 \u0441\u0440\u0435\u0434\u0441\u0442\u0432 \u0447\u0435\u0440\u0435\u0437 \u0433\u0440\u0430\u043D\u0438\u0446\u0443 \u043E\u0441\u043D\u043E\u0432\u043D\u043E\u0433\u043E \u0441\u0447\u0451\u0442\u0430 \u0441 2023-11-20 (\u043F\u0435\u0440\u0432\u0430\u044F \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u044F \u0441\u0447\u0451\u0442\u0430; \u0440\u0430\u043D\u044C\u0448\u0435 \u0443 \u0431\u0438\u0440\u0436\u0438 \u0437\u0430\u043F\u0438\u0441\u0435\u0439 \u043D\u0435\u0442) \u043F\u043E \u043C\u043E\u043C\u0435\u043D\u0442 \u0437\u0430\u043F\u0440\u043E\u0441\u0430. \u0412\u0432\u043E\u0434: \u0432\u0432\u043E\u0434\u044B \u0438\u0437 \u0431\u043B\u043E\u043A\u0447\u0435\u0439\u043D\u0430 \u0438 \u043E\u0442 \u0434\u0440\u0443\u0433\u0438\u0445 UID, P2P \u043F\u043E\u043A\u0443\u043F\u043A\u0438, \u043E\u0442\u043C\u0435\u043D\u0451\u043D\u043D\u044B\u0435 P2P \u043F\u0440\u043E\u0434\u0430\u0436\u0438, \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u044B \u0441 \u0441\u0443\u0431\u0441\u0447\u0451\u0442\u0430. \u0412\u044B\u0432\u043E\u0434: \u0432\u044B\u0432\u043E\u0434\u044B (\u0441\u0443\u043C\u043C\u0430, \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u043D\u0430\u044F \u043D\u0430 \u0442\u043E\u0439 \u0441\u0442\u043E\u0440\u043E\u043D\u0435; \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u044F \u0432\u044B\u0432\u043E\u0434\u0430 \u0443\u043C\u0435\u043D\u044C\u0448\u0430\u0435\u0442 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442), P2P \u043F\u0440\u043E\u0434\u0430\u0436\u0438, \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u044B \u043D\u0430 \u0441\u0443\u0431\u0441\u0447\u0451\u0442. P2P \u043E\u0446\u0435\u043D\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u043F\u043E \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u043D\u044B\u043C \u0438\u043B\u0438 \u043E\u0442\u0434\u0430\u043D\u043D\u044B\u043C USDT 1:1: \u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0444\u0438\u0430\u0442\u0430 \u0437\u0430\u043F\u043B\u0430\u0447\u0435\u043D\u043E, \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u043E\u0442\u0434\u0430\u0451\u0442, \u0441\u043F\u0440\u0435\u0434 P2P \u0432 \u0440\u0430\u0441\u0447\u0451\u0442 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442. \u041D\u0435 \u0432\u0432\u043E\u0434: \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u044B \u043C\u0435\u0436\u0434\u0443 \u0441\u0432\u043E\u0438\u043C\u0438 \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430\u043C\u0438, \u043D\u0430\u0433\u0440\u0430\u0434\u044B Earn, Launchpool, \u0430\u0438\u0440\u0434\u0440\u043E\u043F\u044B \u2014 \u043E\u043D\u0438 \u043F\u043E\u043F\u0430\u0434\u0430\u044E\u0442 \u0432 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442. \u0417\u0430\u0439\u043C\u044B (Crypto Loans) \u043D\u0435 \u0443\u0447\u0438\u0442\u044B\u0432\u0430\u044E\u0442\u0441\u044F.";
+var TOTALS_METHOD = "\u0421\u0443\u043C\u043C\u0430 \u0434\u043E\u043B\u043B\u0430\u0440\u043E\u0432\u044B\u0445 \u043E\u0446\u0435\u043D\u043E\u043A \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043D\u043D\u044B\u0445 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0439. USDT \u0438 USDC \u2014 1:1; \u043F\u0440\u043E\u0447\u0438\u0435 \u043C\u043E\u043D\u0435\u0442\u044B \u2014 \u043F\u043E \u0446\u0435\u043D\u0435 \u0437\u0430\u043A\u0440\u044B\u0442\u0438\u044F \u0434\u043D\u0435\u0432\u043D\u043E\u0439 \u0441\u0432\u0435\u0447\u0438 \u041C\u041E\u041D\u0415\u0422\u0410USDT \u043D\u0430 \u0441\u043F\u043E\u0442-\u0440\u044B\u043D\u043A\u0435 Bybit \u0437\u0430 \u0434\u0435\u043D\u044C \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438 (UTC): \u043F\u043E\u0433\u0440\u0435\u0448\u043D\u043E\u0441\u0442\u044C \u2014 \u0434\u0432\u0438\u0436\u0435\u043D\u0438\u0435 \u0446\u0435\u043D\u044B \u0432\u043D\u0443\u0442\u0440\u0438 \u0434\u043D\u044F. \u0417\u0430 \u0442\u0435\u043A\u0443\u0449\u0438\u0439 \u0434\u0435\u043D\u044C \u0441\u0432\u0435\u0447\u0430 \u043D\u0435 \u0437\u0430\u043A\u0440\u044B\u0442\u0430 \u2014 \u0431\u0435\u0440\u0451\u0442\u0441\u044F \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0446\u0435\u043D\u0430.";
+async function dailyPrices(client2, flows, deps) {
+  const times = /* @__PURE__ */ new Map();
+  for (const f of flows.filter((x) => x.counted)) if (!USD_STABLECOINS.includes(f.coin)) times.set(f.coin, [...times.get(f.coin) ?? [], f.time]);
+  const prices = { pairs: /* @__PURE__ */ new Set(), closes: /* @__PURE__ */ new Map(), now: deps.now };
+  if (times.size === 0) return prices;
+  const tickers = await client2.getPublic("/v5/market/tickers", { category: "spot" });
+  prices.pairs = new Set(tickers.list.map((t) => t.symbol));
+  const throttle = deps.throttleFor?.(MIN_REQUEST_INTERVAL_MS) ?? deps.throttle;
+  for (const [coin, ts] of times) {
+    const pair = `${coin}USDT`;
+    if (prices.pairs.has(pair)) prices.closes.set(pair, await fetchDailyCloses(client2, pair, { from: Math.min(...ts), to: Math.max(...ts) }, throttle));
+  }
+  return prices;
+}
+function directionTotal(flows, usd, direction) {
+  const values = flows.filter((f) => f.counted && f.direction === direction).map((f) => usd[f.id] ?? null);
+  return values.includes(null) ? null : values.reduce((s, v) => s + (v ?? 0), 0);
+}
+function byKind(flows, usd) {
+  const groups = /* @__PURE__ */ new Map();
+  for (const f of flows.filter((x) => x.counted)) groups.set(`${f.direction}|${f.kind}`, [...groups.get(`${f.direction}|${f.kind}`) ?? [], f]);
+  return [...groups.values()].map((g) => ({ kind: g[0].kind, direction: g[0].direction, count: g.length, usd: directionTotal(g, usd, g[0].direction) }));
+}
+function totalsNote(flows, usd, notes, unclassified) {
+  if (unclassified.length > 0) {
+    const types = [...new Set(unclassified.map((u) => `${u.descriptionEn} (${u.description})`))].join(", ");
+    return `\u0412 \u0436\u0443\u0440\u043D\u0430\u043B\u0435 \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430 \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F \u0435\u0441\u0442\u044C \u0441\u0442\u0440\u043E\u043A\u0438 \u043D\u0435\u0437\u043D\u0430\u043A\u043E\u043C\u043E\u0433\u043E \u0442\u0438\u043F\u0430: ${types}. \u042D\u0442\u043E \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u0432\u0432\u043E\u0434 \u0438\u043B\u0438 \u0432\u044B\u0432\u043E\u0434, \u043F\u043E\u044D\u0442\u043E\u043C\u0443 \u0438\u0442\u043E\u0433\u0438 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u044B.`;
+  }
+  const unvalued = flows.filter((f) => f.counted && usd[f.id] === null).map((f) => `${f.id}: ${notes[f.id]}`);
+  if (unvalued.length > 0) return `${TOTALS_METHOD} \u0418\u0442\u043E\u0433 \u043D\u0430\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u044F \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D, \u0435\u0441\u0442\u044C \u043D\u0435\u043E\u0446\u0435\u043D\u0451\u043D\u043D\u044B\u0435 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438: ${unvalued.join(" ")}`;
+  return TOTALS_METHOD;
+}
+function resultNote(netInput, current, hasFlows, inProgress) {
+  if (!hasFlows) return "\u0412\u0432\u043E\u0434\u043E\u0432 \u0438 \u0432\u044B\u0432\u043E\u0434\u043E\u0432 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E: \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D.";
+  if (inProgress.length > 0) {
+    const list = inProgress.map((f) => `${f.id} (${f.kind}, ${f.amount} ${f.coin}, \u0441\u0442\u0430\u0442\u0443\u0441 ${f.status})`).join(", ");
+    return `\u0415\u0441\u0442\u044C \u043D\u0435\u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043D\u043D\u044B\u0435 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438: ${list}. \u0414\u0435\u043D\u044C\u0433\u0438 \u043F\u043E \u043D\u0438\u043C \u043C\u043E\u0433\u0443\u0442 \u0431\u044B\u0442\u044C \u0443\u0436\u0435 \u0437\u0430\u0447\u0438\u0441\u043B\u0435\u043D\u044B \u0438\u043B\u0438 \u0441\u043F\u0438\u0441\u0430\u043D\u044B, \u0430 \u0432 \u0438\u0442\u043E\u0433\u0438 \u043E\u043D\u0438 \u043D\u0435 \u0432\u0445\u043E\u0434\u044F\u0442: \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D.`;
+  }
+  if (netInput === null) return "\u041D\u0435\u0442\u0442\u043E-\u0432\u0432\u043E\u0434 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D (\u0441\u043C. \u0438\u0442\u043E\u0433\u0438): \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D.";
+  if (current.value === null) return `\u0421\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C \u0441\u0447\u0451\u0442\u0430 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0430: ${current.note}`;
+  return "\u0422\u0435\u043A\u0443\u0449\u0430\u044F \u0441\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C \u0441\u0447\u0451\u0442\u0430 \u043C\u0438\u043D\u0443\u0441 \u043D\u0435\u0442\u0442\u043E-\u0432\u0432\u043E\u0434 (\u0432\u0432\u0435\u0434\u0435\u043D\u043E \u2212 \u0432\u044B\u0432\u0435\u0434\u0435\u043D\u043E).";
+}
+async function funds(client2, deps) {
+  await requireReadOnlyKey(client2);
+  const period = { from: FUNDS_FROM, to: deps.now };
+  const { flows, unclassified, coverage } = await collectFlows(client2, period, deps);
+  const prices = await dailyPrices(client2, flows, deps);
+  const flowsUsd = {};
+  const flowNotes = {};
+  for (const f of flows) {
+    const e = valueOnDate(f.coin, f.amount, f.time, prices);
+    flowsUsd[f.id] = e.usd;
+    flowNotes[f.id] = e.note;
+  }
+  const known = unclassified.length === 0;
+  const deposited = known ? directionTotal(flows, flowsUsd, "in") : null;
+  const withdrawn = known ? directionTotal(flows, flowsUsd, "out") : null;
+  const netInput = deposited === null || withdrawn === null ? null : deposited - withdrawn;
+  const account = await fetchWallet(client2);
+  const overview = await client2.getPrivate("/v5/asset/asset-overview");
+  const current = { unifiedTotalEquity: account.totalEquity, fundingTotalEquity: fundingTotalEquity(overview), earnTotalEquity: earnView(overview).totalEquity };
+  const currentValue = totalUsd(current.unifiedTotalEquity, current.fundingTotalEquity, false, current.earnTotalEquity);
+  const counted = flows.filter((f) => f.counted);
+  const inProgress = flows.filter((f) => f.inProgress);
+  const first = counted.length > 0 ? Math.min(...counted.map((f) => f.time)) : null;
+  const result = counted.length > 0 && inProgress.length === 0 && netInput !== null && currentValue.value !== null ? currentValue.value - netInput : null;
+  return {
+    period,
+    coverage,
+    current,
+    flows,
+    unclassified,
+    computed: {
+      flowsUsd,
+      byKind: byKind(flows, flowsUsd),
+      depositedUsd: deposited,
+      withdrawnUsd: withdrawn,
+      netInputUsd: netInput,
+      currentValueUsd: currentValue.value,
+      resultUsd: result,
+      firstOperationTime: first,
+      days: first === null ? null : Math.floor((deps.now - first) / DAY_MS)
+    },
+    computedNotes: {
+      flowsUsd: flowNotes,
+      totals: totalsNote(flows, flowsUsd, flowNotes, unclassified),
+      currentValueUsd: currentValue.note,
+      resultUsd: resultNote(netInput, currentValue, counted.length > 0, inProgress),
+      scope: SCOPE
+    }
+  };
+}
+var DIRECTION = { in: "\u0432\u0432\u043E\u0434", out: "\u0432\u044B\u0432\u043E\u0434" };
+function renderFunds(r) {
+  const c = r.computed;
+  const usd = (v) => `${numOrDash(v)} USD [\u0440\u0430\u0441\u0447\u0451\u0442]`;
+  const lines = [
+    `\u041F\u0435\u0440\u0438\u043E\u0434: 2023-11-20 \u2014 ${utcTime(r.period.to)} UTC`,
+    `\u041F\u0435\u0440\u0432\u0430\u044F \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u044F: ${c.firstOperationTime === null ? DASH : `${utcTime(c.firstOperationTime)} UTC`}   \u0421\u0440\u043E\u043A: ${c.days ?? DASH} \u0434\u043D. [\u0440\u0430\u0441\u0447\u0451\u0442]`,
+    "",
+    `\u0412\u0432\u0435\u0434\u0435\u043D\u043E:     ${usd(c.depositedUsd)}`,
+    `\u0412\u044B\u0432\u0435\u0434\u0435\u043D\u043E:    ${usd(c.withdrawnUsd)}`,
+    `\u041D\u0435\u0442\u0442\u043E-\u0432\u0432\u043E\u0434:  ${usd(c.netInputUsd)}`,
+    `\u0421\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C \u0441\u0447\u0451\u0442\u0430 \u0441\u0435\u0439\u0447\u0430\u0441: ${usd(c.currentValueUsd)} (\u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 ${r.current.unifiedTotalEquity} + \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435 ${r.current.fundingTotalEquity ?? DASH} + Earn ${r.current.earnTotalEquity ?? DASH})`,
+    `\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442:   ${usd(c.resultUsd)}`,
+    "",
+    c.byKind.length === 0 ? "\u041E\u043F\u0435\u0440\u0430\u0446\u0438\u0439 \u043D\u0435\u0442." : renderTable(["\u0422\u0438\u043F", "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435", "\u041E\u043F\u0435\u0440\u0430\u0446\u0438\u0439", "USD [\u0440\u0430\u0441\u0447\u0451\u0442]"], c.byKind.map((k) => [k.kind, DIRECTION[k.direction], String(k.count), numOrDash(k.usd)]))
+  ];
+  const pending = r.flows.filter((f) => !f.counted);
+  if (pending.length > 0) {
+    lines.push("", "\u041D\u0435 \u0443\u0447\u0442\u0435\u043D\u043E (\u043D\u0435\u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043D\u043D\u044B\u0435 \u0438 \u043D\u0435\u0443\u0441\u043F\u0435\u0448\u043D\u044B\u0435):");
+    lines.push(renderTable(["\u0412\u0440\u0435\u043C\u044F UTC", "\u0422\u0438\u043F", "\u041C\u043E\u043D\u0435\u0442\u0430", "\u0421\u0443\u043C\u043C\u0430", "\u0421\u0442\u0430\u0442\u0443\u0441"], pending.map((f) => [utcTime(f.time), f.kind, f.coin, f.amount, f.status])));
+  }
+  if (r.unclassified.length > 0) {
+    lines.push("", "\u0421\u0442\u0440\u043E\u043A\u0438 \u0436\u0443\u0440\u043D\u0430\u043B\u0430 \u043D\u0435\u0437\u043D\u0430\u043A\u043E\u043C\u043E\u0433\u043E \u0442\u0438\u043F\u0430 (\u043D\u0435 \u0443\u0447\u0442\u0435\u043D\u044B, \u0438\u0442\u043E\u0433\u0438 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u044B):");
+    lines.push(renderTable(["\u0412\u0440\u0435\u043C\u044F UTC", "\u0422\u0438\u043F", "\u041A\u043B\u044E\u0447", "\u041C\u043E\u043D\u0435\u0442\u0430", "\u0421\u0443\u043C\u043C\u0430", "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435"], r.unclassified.map((u) => [utcTime(u.time), u.descriptionEn, u.description, u.currency, u.txnAmt, u.ioDirection])));
+  }
+  lines.push(
+    "",
+    "\u041F\u043E\u044F\u0441\u043D\u0435\u043D\u0438\u044F [\u0440\u0430\u0441\u0447\u0451\u0442]:",
+    `- \u041E\u0445\u0432\u0430\u0442: ${r.computedNotes.scope}`,
+    `- \u0418\u0442\u043E\u0433\u0438: ${r.computedNotes.totals}`,
+    `- \u0421\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C \u0441\u0447\u0451\u0442\u0430: ${r.computedNotes.currentValueUsd}`,
+    `- \u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442: ${r.computedNotes.resultUsd}`
+  );
+  return lines.join("\n");
 }
 
 // src/commands/deliveries.ts
@@ -5079,10 +5367,15 @@ function parseCategoryArg(value) {
   return v;
 }
 var client = () => new BybitClient({ credentials: loadCredentials(process.env), baseUrl: resolveBaseUrl(process.env) });
+var sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 function liveDeps() {
-  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  return { now: Date.now(), throttle: createThrottle(MIN_REQUEST_INTERVAL_MS, Date.now, sleep), onProgress: progressReporter((line) => process.stderr.write(`${line}
-`)) };
+  return {
+    now: Date.now(),
+    throttle: createThrottle(MIN_REQUEST_INTERVAL_MS, Date.now, sleep),
+    throttleFor: (intervalMs) => createThrottle(intervalMs, Date.now, sleep),
+    onProgress: progressReporter((line) => process.stderr.write(`${line}
+`))
+  };
 }
 function withPeriod(cmd, defaultDays, text) {
   return cmd.option("--days <n>", `\u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 N \u0434\u043D\u0435\u0439 (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E ${text})`, parseDaysArg).option("--from <date>", "\u0441 \u0434\u0430\u0442\u044B \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414 (UTC)", parseDateArg).option("--to <date>", "\u043F\u043E \u0434\u0430\u0442\u0443 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414 \u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E (UTC)", parseDateArg);
@@ -5109,6 +5402,9 @@ function registerHistoryCommands(program2) {
   withPeriod(program2.command("deliveries").description("\u0438\u0441\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u044F \u043D\u0430 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438: \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442, \u0446\u0435\u043D\u0430 \u0440\u0430\u0441\u0447\u0451\u0442\u0430, \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442"), DELIVERIES_DEFAULT_DAYS, "2 \u0433\u043E\u0434\u0430").option("--coin <coin>", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (o, cmd) => {
     const deps = liveDeps();
     print(cmd, await deliveries(client(), { period: resolvePeriod(o, DELIVERIES_DEFAULT_DAYS, deps.now), coin: o.coin }, deps), renderDeliveries);
+  });
+  program2.command("funds").description("\u043D\u0435\u0442\u0442\u043E-\u0432\u0432\u043E\u0434 \u0441\u0440\u0435\u0434\u0441\u0442\u0432 \u0441 \u043F\u0435\u0440\u0432\u043E\u0439 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438 (2023-11-20), \u0441\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C \u0441\u0447\u0451\u0442\u0430 \u0438 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442").action(async (_o, cmd) => {
+    print(cmd, await funds(client(), liveDeps()), renderFunds);
   });
 }
 

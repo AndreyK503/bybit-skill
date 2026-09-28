@@ -15,6 +15,10 @@ describe('history commands', () => {
     expect(longs('deliveries')).toEqual(['--coin', '--days', '--from', '--to']);
   });
 
+  it('registers funds without period flags: always from the first operation (2023-11-20)', () => {
+    expect(cmd('funds')?.options.map((o) => o.long)).toEqual([]);
+  });
+
   it('--days: a positive integer', () => {
     expect(parseDaysArg('7')).toBe(7);
     for (const bad of ['0', '-3', '1.5', 'abc', '']) expect(() => parseDaysArg(bad)).toThrow(InvalidArgumentError);
