@@ -10,7 +10,7 @@ export function buildProgram(): Command {
   const program = new Command()
     .name('bybit')
     .description('Read-only access to a Bybit account')
-    .version('0.1.0')
+    .version('1.0.0')
     .option('--json', 'машинный вывод (JSON)');
   registerSessionCommands(program);
   registerAccountCommands(program);

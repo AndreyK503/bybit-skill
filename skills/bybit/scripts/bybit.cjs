@@ -3582,10 +3582,10 @@ var require_dist = __commonJS({
         return o && k(o.fast) ? oe(e) : re(e);
       }
       function T(e) {
-        console.log(`\u2506 ${e}`);
+        console.log(`┆ ${e}`);
       }
       function se(e) {
-        console.error(`\u25C7 ${e}`);
+        console.error(`◇ ${e}`);
       }
       function V(e) {
         return e[0] === "~" ? j.join(z.homedir(), e.slice(1)) : e;
@@ -3754,7 +3754,7 @@ var require_dist = __commonJS({
             let l = R.parse(he.readFileSync(i, { encoding: e.encoding }), { fast: e.fast });
             R.populate(o, l, n), t.push(s);
           } catch (l) {
-            if (e.debug && console.log(`\u2506 failed to load ${s} ${l.message}`), !(e.defaultPath && l.code === "ENOENT")) throw l;
+            if (e.debug && console.log(`┆ failed to load ${s} ${l.message}`), !(e.defaultPath && l.code === "ENOENT")) throw l;
           }
         }
         return { injected: R.populate(process.env, o, n), loadedPaths: t };
@@ -3786,7 +3786,7 @@ var require_dist = __commonJS({
         try {
           let c = be(n);
           if (!n.quiet) {
-            let a = `\u25C7 injected env (${Object.keys(c.injected).length})`;
+            let a = `◇ injected env (${Object.keys(c.injected).length})`;
             c.loadedPaths.length > 0 && (a += ` from ${c.loadedPaths.join(", ")}`), console.error(a);
           }
         } catch (c) {
@@ -3916,13 +3916,13 @@ var PRINTABLE = /^[\x21\x23-\x26\x28-\x7E]+$/;
 function keyMalformedError() {
   return new AppError({
     code: "APP_KEY_MALFORMED",
-    userMessage: `BYBIT_API_KEY \u0438\u043B\u0438 BYBIT_API_SECRET \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u0442 \u043F\u0440\u043E\u0431\u0435\u043B, \u043A\u0430\u0432\u044B\u0447\u043A\u0443, \u043F\u0435\u0440\u0435\u0432\u043E\u0434 \u0441\u0442\u0440\u043E\u043A\u0438 \u0438\u043B\u0438 \u0434\u0440\u0443\u0433\u043E\u0439 \u043D\u0435\u0434\u043E\u043F\u0443\u0441\u0442\u0438\u043C\u044B\u0439 \u0441\u0438\u043C\u0432\u043E\u043B. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u0441\u0442\u0440\u043E\u043A\u0438 \u0432 ${ENV_PATH}: \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435 \u0431\u0435\u0437 \u043A\u0430\u0432\u044B\u0447\u0435\u043A \u0438 \u043F\u0440\u043E\u0431\u0435\u043B\u043E\u0432, \u043A\u0430\u043A \u043E\u043D\u043E \u0441\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043E \u0441 Bybit.`
+    userMessage: `BYBIT_API_KEY или BYBIT_API_SECRET содержит пробел, кавычку, перевод строки или другой недопустимый символ. Проверьте строки в ${ENV_PATH}: значение без кавычек и пробелов, как оно скопировано с Bybit.`
   });
 }
 function keyMissingError() {
   return new AppError({
     code: "APP_KEY_MISSING",
-    userMessage: `\u041A\u043B\u044E\u0447 API \u043D\u0435 \u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043D. \u0421\u043E\u0437\u0434\u0430\u0439\u0442\u0435 \u043D\u0430 Bybit \u043A\u043B\u044E\u0447 \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430 \u0447\u0442\u0435\u043D\u0438\u0435 (Read-Only) \u0438 \u0437\u0430\u043F\u0438\u0448\u0438\u0442\u0435 \u0432 ${ENV_PATH} \u0441\u0442\u0440\u043E\u043A\u0438 BYBIT_API_KEY=<\u043A\u043B\u044E\u0447> \u0438 BYBIT_API_SECRET=<\u0441\u0435\u043A\u0440\u0435\u0442>.`
+    userMessage: `Ключ API не настроен. Создайте на Bybit ключ только на чтение (Read-Only) и запишите в ${ENV_PATH} строки BYBIT_API_KEY=<ключ> и BYBIT_API_SECRET=<секрет>.`
   });
 }
 function resolveBaseUrl(env) {
@@ -3931,7 +3931,7 @@ function resolveBaseUrl(env) {
   if (ALLOWED_BASE_URLS.includes(url)) return url;
   throw new AppError({
     code: "APP_CONFIG_INVALID",
-    userMessage: `BYBIT_BASE_URL=${url} \u043D\u0435 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442\u0441\u044F. \u0414\u043E\u043F\u0443\u0441\u0442\u0438\u043C\u044B\u0435 \u0430\u0434\u0440\u0435\u0441\u0430 \u043E\u0441\u043D\u043E\u0432\u043D\u043E\u0439 \u0441\u0435\u0442\u0438: ${ALLOWED_BASE_URLS.join(", ")}.`
+    userMessage: `BYBIT_BASE_URL=${url} не поддерживается. Допустимые адреса основной сети: ${ALLOWED_BASE_URLS.join(", ")}.`
   });
 }
 
@@ -3939,27 +3939,27 @@ function resolveBaseUrl(env) {
 var KIND = {
   keyRejected: () => new AppError({
     code: "APP_KEY_REJECTED",
-    userMessage: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u043F\u0440\u0438\u043D\u044F\u043B\u0430 \u043A\u043B\u044E\u0447 API: \u043E\u043D \u043D\u0435\u0432\u0435\u0440\u043D\u044B\u0439, \u043E\u0442\u043E\u0437\u0432\u0430\u043D \u0438\u043B\u0438 \u0438\u0441\u0442\u0451\u043A, \u043B\u0438\u0431\u043E \u0441\u0435\u043A\u0440\u0435\u0442 \u043D\u0435 \u0441\u043E\u043E\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0443\u0435\u0442 \u043A\u043B\u044E\u0447\u0443. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 BYBIT_API_KEY \u0438 BYBIT_API_SECRET \u0438\u043B\u0438 \u043F\u0435\u0440\u0435\u0441\u043E\u0437\u0434\u0430\u0439\u0442\u0435 \u043A\u043B\u044E\u0447 \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430 \u0447\u0442\u0435\u043D\u0438\u0435."
+    userMessage: "Биржа не приняла ключ API: он неверный, отозван или истёк, либо секрет не соответствует ключу. Проверьте BYBIT_API_KEY и BYBIT_API_SECRET или пересоздайте ключ только на чтение."
   }),
   ipMismatch: () => new AppError({
     code: "APP_KEY_IP_MISMATCH",
-    userMessage: "\u041A\u043B\u044E\u0447 API \u043F\u0440\u0438\u0432\u044F\u0437\u0430\u043D \u043A \u0434\u0440\u0443\u0433\u0438\u043C IP-\u0430\u0434\u0440\u0435\u0441\u0430\u043C. \u0414\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u0442\u0435\u043A\u0443\u0449\u0438\u0439 IP \u0432 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430\u0445 \u043A\u043B\u044E\u0447\u0430 \u043D\u0430 Bybit \u0438\u043B\u0438 \u0441\u043D\u0438\u043C\u0438\u0442\u0435 \u043F\u0440\u0438\u0432\u044F\u0437\u043A\u0443."
+    userMessage: "Ключ API привязан к другим IP-адресам. Добавьте текущий IP в настройках ключа на Bybit или снимите привязку."
   }),
   permissionDenied: (path4) => new AppError({
     code: "APP_PERMISSION_DENIED",
-    userMessage: `\u0423 \u043A\u043B\u044E\u0447\u0430 API \u043D\u0435\u0442 \u043F\u0440\u0430\u0432\u0430 \u043D\u0430 \u0437\u0430\u043F\u0440\u043E\u0441 ${path4}. \u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0441\u043E\u043E\u0431\u0449\u0430\u0435\u0442, \u043A\u0430\u043A\u043E\u0435 \u043F\u0440\u0430\u0432\u043E \u043D\u0443\u0436\u043D\u043E: \u0441\u0432\u0435\u0440\u044C\u0442\u0435 \u043F\u0440\u0430\u0432\u0430 \u043A\u043B\u044E\u0447\u0430 (session status) \u0441 \u0440\u0430\u0437\u0434\u0435\u043B\u043E\u043C \u0434\u0430\u043D\u043D\u044B\u0445 \u0438 \u0434\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u043D\u0443\u0436\u043D\u043E\u0435 \u043F\u0440\u0430\u0432\u043E \u043D\u0430 \u0447\u0442\u0435\u043D\u0438\u0435.`
+    userMessage: `У ключа API нет права на запрос ${path4}. Биржа не сообщает, какое право нужно: сверьте права ключа (session status) с разделом данных и добавьте нужное право на чтение.`
   }),
   regionBlocked: () => new AppError({
     code: "APP_REGION_BLOCKED",
-    userMessage: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u043E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u0435\u0442 \u0437\u0430\u043F\u0440\u043E\u0441\u044B \u0441 \u044D\u0442\u043E\u0433\u043E \u0430\u0434\u0440\u0435\u0441\u0430: \u0434\u043E\u0441\u0442\u0443\u043F \u043E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D \u0434\u043B\u044F \u0432\u0430\u0448\u0435\u0433\u043E \u0440\u0435\u0433\u0438\u043E\u043D\u0430 (\u0432 \u0442\u043E\u043C \u0447\u0438\u0441\u043B\u0435 \u0421\u0428\u0410 \u0438 \u043C\u0430\u0442\u0435\u0440\u0438\u043A\u043E\u0432\u044B\u0439 \u041A\u0438\u0442\u0430\u0439)."
+    userMessage: "Биржа не обслуживает запросы с этого адреса: доступ ограничен для вашего региона (в том числе США и материковый Китай)."
   }),
   rateLimit: (resetTimestamp) => new AppError({
     code: "APP_RATE_LIMIT",
-    userMessage: "\u041B\u0438\u043C\u0438\u0442 \u0437\u0430\u043F\u0440\u043E\u0441\u043E\u0432 \u043A \u0431\u0438\u0440\u0436\u0435 \u0438\u0441\u0447\u0435\u0440\u043F\u0430\u043D. " + (resetTimestamp === void 0 ? "\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u0437\u0430\u043F\u0440\u043E\u0441 \u043F\u043E\u0437\u0436\u0435." : `\u041B\u0438\u043C\u0438\u0442 \u043E\u0441\u0432\u043E\u0431\u043E\u0434\u0438\u0442\u0441\u044F \u0432 ${new Date(resetTimestamp).toISOString()}.`)
+    userMessage: "Лимит запросов к бирже исчерпан. " + (resetTimestamp === void 0 ? "Повторите запрос позже." : `Лимит освободится в ${new Date(resetTimestamp).toISOString()}.`)
   }),
   unavailable: (details) => new AppError({
     code: "APP_UNAVAILABLE",
-    userMessage: "\u0412\u0440\u0435\u043C\u0435\u043D\u043D\u044B\u0439 \u043E\u0442\u043A\u0430\u0437 \u0431\u0438\u0440\u0436\u0438. \u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u0437\u0430\u043F\u0440\u043E\u0441 \u043F\u043E\u0437\u0436\u0435.",
+    userMessage: "Временный отказ биржи. Повторите запрос позже.",
     details
   })
 };
@@ -3984,7 +3984,7 @@ function mapRetCode(retCode, retMsg, ctx) {
     default:
       return new AppError({
         code: "APP_BYBIT_ERROR",
-        userMessage: `\u0411\u0438\u0440\u0436\u0430 \u043E\u0442\u043A\u043B\u043E\u043D\u0438\u043B\u0430 \u0437\u0430\u043F\u0440\u043E\u0441 ${ctx.path}: \u043A\u043E\u0434 ${retCode}, \xAB${retMsg}\xBB.`,
+        userMessage: `Биржа отклонила запрос ${ctx.path}: код ${retCode}, «${retMsg}».`,
         details: { path: ctx.path, retCode }
       });
   }
@@ -3995,25 +3995,25 @@ function mapHttpStatus(status, ctx) {
   if (status === 403) {
     return new AppError({
       code: "APP_REGION_BLOCKED",
-      userMessage: "\u0411\u0438\u0440\u0436\u0430 \u043E\u0442\u043A\u0430\u0437\u0430\u043B\u0430 \u0432 \u0434\u043E\u0441\u0442\u0443\u043F\u0435 (HTTP 403). \u0412\u043E\u0437\u043C\u043E\u0436\u043D\u044B\u0435 \u043F\u0440\u0438\u0447\u0438\u043D\u044B: \u0437\u0430\u043F\u0440\u043E\u0441 \u0438\u0437 \u0440\u0435\u0433\u0438\u043E\u043D\u0430, \u043A\u043E\u0442\u043E\u0440\u044B\u0439 Bybit \u043D\u0435 \u043E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u0435\u0442 (\u0421\u0428\u0410, \u043C\u0430\u0442\u0435\u0440\u0438\u043A\u043E\u0432\u044B\u0439 \u041A\u0438\u0442\u0430\u0439), \u0438\u043B\u0438 \u043F\u0440\u0435\u0432\u044B\u0448\u0435\u043D \u043B\u0438\u043C\u0438\u0442 \u0437\u0430\u043F\u0440\u043E\u0441\u043E\u0432 \u0441 \u044D\u0442\u043E\u0433\u043E IP \u2014 \u0442\u043E\u0433\u0434\u0430 \u043F\u043E\u0434\u043E\u0436\u0434\u0438\u0442\u0435 \u043D\u0435 \u043C\u0435\u043D\u044C\u0448\u0435 10 \u043C\u0438\u043D\u0443\u0442.",
+      userMessage: "Биржа отказала в доступе (HTTP 403). Возможные причины: запрос из региона, который Bybit не обслуживает (США, материковый Китай), или превышен лимит запросов с этого IP — тогда подождите не меньше 10 минут.",
       details: { path: ctx.path, status }
     });
   }
   if (status >= 500) return KIND.unavailable({ path: ctx.path, status });
   return new AppError({
     code: "APP_BYBIT_ERROR",
-    userMessage: `\u0411\u0438\u0440\u0436\u0430 \u043E\u0442\u043A\u043B\u043E\u043D\u0438\u043B\u0430 \u0437\u0430\u043F\u0440\u043E\u0441 ${ctx.path}: HTTP ${status}.`,
+    userMessage: `Биржа отклонила запрос ${ctx.path}: HTTP ${status}.`,
     details: { path: ctx.path, status }
   });
 }
 function formatDrift(driftMs) {
-  return `${driftMs >= 0 ? "+" : "-"}${(Math.abs(driftMs) / 1e3).toFixed(1)} \u0441`;
+  return `${driftMs >= 0 ? "+" : "-"}${(Math.abs(driftMs) / 1e3).toFixed(1)} с`;
 }
 function clockSkewError(driftMs) {
-  const measured = driftMs === null ? "\u0412\u0440\u0435\u043C\u044F \u0431\u0438\u0440\u0436\u0438 \u043F\u043E\u043B\u0443\u0447\u0438\u0442\u044C \u043D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C, \u0432\u0435\u043B\u0438\u0447\u0438\u043D\u0443 \u0440\u0430\u0441\u0445\u043E\u0436\u0434\u0435\u043D\u0438\u044F \u043D\u0430\u0437\u0432\u0430\u0442\u044C \u043D\u0435\u043B\u044C\u0437\u044F." : `\u041B\u043E\u043A\u0430\u043B\u044C\u043D\u043E\u0435 \u0432\u0440\u0435\u043C\u044F \u0440\u0430\u0441\u0445\u043E\u0434\u0438\u0442\u0441\u044F \u0441 \u0431\u0438\u0440\u0436\u0435\u0439 \u043D\u0430 ${formatDrift(driftMs)}.`;
+  const measured = driftMs === null ? "Время биржи получить не удалось, величину расхождения назвать нельзя." : `Локальное время расходится с биржей на ${formatDrift(driftMs)}.`;
   return new AppError({
     code: "APP_CLOCK_SKEW",
-    userMessage: `\u0411\u0438\u0440\u0436\u0430 \u043E\u0442\u0432\u0435\u0440\u0433\u043B\u0430 \u0437\u0430\u043F\u0440\u043E\u0441 \u0438\u0437-\u0437\u0430 \u0440\u0430\u0441\u0445\u043E\u0436\u0434\u0435\u043D\u0438\u044F \u0441\u0438\u0441\u0442\u0435\u043C\u043D\u044B\u0445 \u0447\u0430\u0441\u043E\u0432. ${measured} \u0421\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u0443\u0439\u0442\u0435 \u0447\u0430\u0441\u044B (NTP).`,
+    userMessage: `Биржа отвергла запрос из-за расхождения системных часов. ${measured} Синхронизируйте часы (NTP).`,
     details: { driftMs }
   });
 }
@@ -4097,7 +4097,7 @@ var BybitClient = class {
       const reason = cause instanceof DOMException && cause.name === "TimeoutError" ? "timeout" : "network";
       throw new AppError({
         code: "APP_UNAVAILABLE",
-        userMessage: `\u0411\u0438\u0440\u0436\u0430 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u0430 (${reason === "timeout" ? "\u043D\u0435\u0442 \u043E\u0442\u0432\u0435\u0442\u0430 \u0437\u0430 \u043E\u0442\u0432\u0435\u0434\u0451\u043D\u043D\u043E\u0435 \u0432\u0440\u0435\u043C\u044F" : "\u043D\u0435\u0442 \u0441\u043E\u0435\u0434\u0438\u043D\u0435\u043D\u0438\u044F"}). \u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u0437\u0430\u043F\u0440\u043E\u0441 \u043F\u043E\u0437\u0436\u0435.`,
+        userMessage: `Биржа недоступна (${reason === "timeout" ? "нет ответа за отведённое время" : "нет соединения"}). Повторите запрос позже.`,
         // The fetch error itself is not kept: its message may echo a header value, i.e. the key (D-10).
         details: { path: path4, reason, error: cause instanceof Error ? cause.name : typeof cause }
       });
@@ -4117,7 +4117,7 @@ async function parseEnvelope(response, path4) {
   } catch (cause) {
     throw new AppError({
       code: "APP_UNAVAILABLE",
-      userMessage: "\u0411\u0438\u0440\u0436\u0430 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u043E\u0442\u0432\u0435\u0442 \u0432 \u043D\u0435\u043E\u0436\u0438\u0434\u0430\u043D\u043D\u043E\u043C \u0444\u043E\u0440\u043C\u0430\u0442\u0435 (\u043D\u0435 JSON). \u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u0437\u0430\u043F\u0440\u043E\u0441 \u043F\u043E\u0437\u0436\u0435.",
+      userMessage: "Биржа вернула ответ в неожиданном формате (не JSON). Повторите запрос позже.",
       details: { path: path4, status: response.status },
       cause
     });
@@ -4134,7 +4134,7 @@ function renderTable(headers, rows) {
 }
 
 // src/format/values.ts
-var DASH = "\u2014";
+var DASH = "—";
 function orDash(value2) {
   return value2 === "" ? DASH : value2;
 }
@@ -4148,11 +4148,11 @@ function isUnvaluedCoin(coin) {
   return Number(coin.equity) !== 0 && Number(coin.usdValue) === 0 && !coin.marginCollateral;
 }
 function estimateUsd(coin, amount, spotLastPrice) {
-  if (USD_STABLECOINS.includes(coin)) return { usd: Number(amount), note: "\u0421\u0442\u0435\u0439\u0431\u043B\u043A\u043E\u0438\u043D, \u043F\u0440\u0438\u043D\u044F\u0442 \u0440\u0430\u0432\u043D\u044B\u043C 1 USD: \u0442\u043E\u0447\u043D\u0430\u044F \u043E\u0446\u0435\u043D\u043A\u0430." };
+  if (USD_STABLECOINS.includes(coin)) return { usd: Number(amount), note: "Стейблкоин, принят равным 1 USD: точная оценка." };
   const pair = `${coin}USDT`;
   const price = spotLastPrice.get(pair);
-  if (price === void 0) return { usd: null, note: `\u041D\u0430 Bybit \u043D\u0435\u0442 \u0441\u043F\u043E\u0442\u043E\u0432\u043E\u0439 \u043F\u0430\u0440\u044B ${pair}: \u043E\u0446\u0435\u043D\u043A\u0430 \u0432 \u0434\u043E\u043B\u043B\u0430\u0440\u0430\u0445 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u0430.` };
-  return { usd: Number(amount) * Number(price), note: `\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \xD7 lastPrice ${pair} = ${price} (\u0441\u043F\u043E\u0442 Bybit, \u043D\u0430 \u043C\u043E\u043C\u0435\u043D\u0442 \u0437\u0430\u043F\u0440\u043E\u0441\u0430).` };
+  if (price === void 0) return { usd: null, note: `На Bybit нет спотовой пары ${pair}: оценка в долларах невозможна.` };
+  return { usd: Number(amount) * Number(price), note: `Количество × lastPrice ${pair} = ${price} (спот Bybit, на момент запроса).` };
 }
 
 // src/commands/session-status.ts
@@ -4163,7 +4163,7 @@ function maskKey(apiKey) {
 function notReadOnlyError() {
   return new AppError({
     code: "APP_KEY_NOT_READONLY",
-    userMessage: "\u041A\u043B\u044E\u0447 API \u0438\u043C\u0435\u0435\u0442 \u043F\u0440\u0430\u0432\u0430 \u043D\u0430 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0435 \u0441\u0447\u0451\u0442\u0430. \u0421\u043A\u0438\u043B\u043B \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442 \u0442\u043E\u043B\u044C\u043A\u043E \u0441 \u043A\u043B\u044E\u0447\u043E\u043C \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430 \u0447\u0442\u0435\u043D\u0438\u0435: \u0441\u043E\u0437\u0434\u0430\u0439\u0442\u0435 \u043D\u0430 Bybit \u043A\u043B\u044E\u0447 Read-Only \u0438 \u0437\u0430\u043C\u0435\u043D\u0438\u0442\u0435 \u0438\u043C \u0442\u0435\u043A\u0443\u0449\u0438\u0439."
+    userMessage: "Ключ API имеет права на изменение счёта. Скилл работает только с ключом только на чтение: создайте на Bybit ключ Read-Only и замените им текущий."
   });
 }
 async function requireReadOnlyKey(client3) {
@@ -4194,20 +4194,20 @@ function toKeyView(info) {
   };
 }
 function driftNote(driftMs, rttMs, error) {
-  if (driftMs === null) return `\u0412\u0440\u0435\u043C\u044F \u0431\u0438\u0440\u0436\u0438 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E, \u0440\u0430\u0441\u0445\u043E\u0436\u0434\u0435\u043D\u0438\u0435 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u043E: ${error ?? "\u043D\u0435\u0442 \u043E\u0442\u0432\u0435\u0442\u0430"}`;
-  return `\u041B\u043E\u043A\u0430\u043B\u044C\u043D\u043E\u0435 \u0432\u0440\u0435\u043C\u044F \u0432 \u0441\u0435\u0440\u0435\u0434\u0438\u043D\u0435 \u0437\u0430\u043F\u0440\u043E\u0441\u0430 \u043C\u0438\u043D\u0443\u0441 \u0432\u0440\u0435\u043C\u044F \u0431\u0438\u0440\u0436\u0438 (/v5/market/time, timeNano), \u043C\u0441. \u041F\u043E\u043B\u043E\u0436\u0438\u0442\u0435\u043B\u044C\u043D\u043E\u0435 \u2014 \u043B\u043E\u043A\u0430\u043B\u044C\u043D\u044B\u0435 \u0447\u0430\u0441\u044B \u0441\u043F\u0435\u0448\u0430\u0442. \u041F\u043E\u0433\u0440\u0435\u0448\u043D\u043E\u0441\u0442\u044C \xB1${rttMs / 2} \u043C\u0441 (\u043F\u043E\u043B\u043E\u0432\u0438\u043D\u0430 \u0432\u0440\u0435\u043C\u0435\u043D\u0438 \u043E\u0442\u0432\u0435\u0442\u0430 ${rttMs} \u043C\u0441).`;
+  if (driftMs === null) return `Время биржи недоступно, расхождение не вычислено: ${error ?? "нет ответа"}`;
+  return `Локальное время в середине запроса минус время биржи (/v5/market/time, timeNano), мс. Положительное — локальные часы спешат. Погрешность ±${rttMs / 2} мс (половина времени ответа ${rttMs} мс).`;
 }
 function clockSkewMessage(driftMs) {
-  const drift = `\u041B\u043E\u043A\u0430\u043B\u044C\u043D\u043E\u0435 \u0432\u0440\u0435\u043C\u044F \u0440\u0430\u0441\u0445\u043E\u0434\u0438\u0442\u0441\u044F \u0441 \u0431\u0438\u0440\u0436\u0435\u0439 \u043D\u0430 ${formatDrift(driftMs)}`;
-  if (driftMs > 0) return `${drift}: \u0447\u0430\u0441\u044B \u0441\u043F\u0435\u0448\u0430\u0442, \u0431\u0438\u0440\u0436\u0430 \u043E\u0442\u0432\u0435\u0440\u0433\u0430\u0435\u0442 \u043F\u043E\u0434\u043F\u0438\u0441\u0430\u043D\u043D\u044B\u0435 \u0437\u0430\u043F\u0440\u043E\u0441\u044B \u043F\u0440\u0438 \u043E\u043F\u0435\u0440\u0435\u0436\u0435\u043D\u0438\u0438 \u0431\u043E\u043B\u044C\u0448\u0435 1 \u0441. \u0421\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u0443\u0439\u0442\u0435 \u0447\u0430\u0441\u044B (NTP).`;
+  const drift = `Локальное время расходится с биржей на ${formatDrift(driftMs)}`;
+  if (driftMs > 0) return `${drift}: часы спешат, биржа отвергает подписанные запросы при опережении больше 1 с. Синхронизируйте часы (NTP).`;
   if (-driftMs >= RECV_WINDOW_MS) {
-    return `${drift}: \u0447\u0430\u0441\u044B \u043E\u0442\u0441\u0442\u0430\u044E\u0442 \u0431\u043E\u043B\u044C\u0448\u0435 \u043E\u043A\u043D\u0430 ${RECV_WINDOW_MS / 1e3} \u0441, \u0431\u0438\u0440\u0436\u0430 \u043E\u0442\u0432\u0435\u0440\u0433\u0430\u0435\u0442 \u043F\u043E\u0434\u043F\u0438\u0441\u0430\u043D\u043D\u044B\u0435 \u0437\u0430\u043F\u0440\u043E\u0441\u044B. \u0421\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u0443\u0439\u0442\u0435 \u0447\u0430\u0441\u044B (NTP).`;
+    return `${drift}: часы отстают больше окна ${RECV_WINDOW_MS / 1e3} с, биржа отвергает подписанные запросы. Синхронизируйте часы (NTP).`;
   }
-  return `${drift}: \u0447\u0430\u0441\u044B \u043E\u0442\u0441\u0442\u0430\u044E\u0442; \u043F\u043E\u043A\u0430 \u044D\u0442\u043E \u0432 \u043F\u0440\u0435\u0434\u0435\u043B\u0430\u0445 \u043E\u043A\u043D\u0430 ${RECV_WINDOW_MS / 1e3} \u0441 \u0438 \u0437\u0430\u043F\u0440\u043E\u0441\u044B \u043F\u0440\u043E\u0445\u043E\u0434\u044F\u0442, \u043D\u043E \u0437\u0430\u043F\u0430\u0441 \u043C\u0430\u043B. \u0421\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u0443\u0439\u0442\u0435 \u0447\u0430\u0441\u044B (NTP).`;
+  return `${drift}: часы отстают; пока это в пределах окна ${RECV_WINDOW_MS / 1e3} с и запросы проходят, но запас мал. Синхронизируйте часы (NTP).`;
 }
 function unifiedNote(isUnified) {
-  if (isUnified === null) return "\u0420\u0435\u0436\u0438\u043C \u0441\u0447\u0451\u0442\u0430 \u043D\u0435 \u043F\u043E\u043B\u0443\u0447\u0435\u043D, \u043F\u0440\u0438\u0437\u043D\u0430\u043A UTA \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D.";
-  return "\u041F\u043E unifiedMarginStatus \u0438\u0437 /v5/account/info: 3\u20136 \u2014 \u0435\u0434\u0438\u043D\u044B\u0439 \u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 (UTA), 1 \u2014 \u043A\u043B\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043A\u0438\u0439 (docs /v5/enum).";
+  if (isUnified === null) return "Режим счёта не получен, признак UTA не вычислен.";
+  return "По unifiedMarginStatus из /v5/account/info: 3–6 — единый торговый счёт (UTA), 1 — классический (docs /v5/enum).";
 }
 async function sessionStatus(client3, now) {
   const problems = [];
@@ -4247,7 +4247,7 @@ async function sessionStatus(client3, now) {
   if (isUnified === false) {
     problems.push({
       code: "APP_ACCOUNT_NOT_UTA",
-      message: "\u0421\u0447\u0451\u0442 \u043D\u0435 \u0435\u0434\u0438\u043D\u044B\u0439 \u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 (UTA). \u041E\u043F\u0446\u0438\u043E\u043D\u044B \u0438 \u0434\u0430\u043D\u043D\u044B\u0435 \u0441\u043A\u0438\u043B\u043B\u0430 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u044B \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430 UTA: \u043F\u0435\u0440\u0435\u0432\u0435\u0434\u0438\u0442\u0435 \u0441\u0447\u0451\u0442 \u0432 UTA \u043D\u0430 Bybit."
+      message: "Счёт не единый торговый (UTA). Опционы и данные скилла доступны только на UTA: переведите счёт в UTA на Bybit."
     });
   }
   return {
@@ -4263,42 +4263,42 @@ async function sessionStatus(client3, now) {
 }
 function permissionsLine(permissions) {
   const granted = Object.entries(permissions).filter(([, list]) => list.length > 0);
-  return granted.length === 0 ? "\u043D\u0435\u0442" : granted.map(([group, list]) => `${group}: ${list.join(", ")}`).join("; ");
+  return granted.length === 0 ? "нет" : granted.map(([group, list]) => `${group}: ${list.join(", ")}`).join("; ");
 }
 function renderSessionStatus(s) {
   const lines = [];
   if (s.key) {
-    lines.push(`\u041A\u043B\u044E\u0447:        ${s.key.masked} \xAB${s.key.note}\xBB, \u0442\u043E\u043B\u044C\u043A\u043E \u0447\u0442\u0435\u043D\u0438\u0435: ${s.key.readOnly === 1 ? "\u0434\u0430" : "\u041D\u0415\u0422"}`);
-    lines.push(`\u041F\u0440\u0430\u0432\u0430:       ${permissionsLine(s.key.permissions)}`);
-    lines.push(`IP:          ${s.key.ips.length === 0 ? "\u0431\u0435\u0437 \u043F\u0440\u0438\u0432\u044F\u0437\u043A\u0438" : s.key.ips.join(", ")}`);
-    lines.push(`\u0421\u0440\u043E\u043A:        expiredAt ${s.key.expiredAt}, deadlineDay ${s.key.deadlineDay}`);
+    lines.push(`Ключ:        ${s.key.masked} «${s.key.note}», только чтение: ${s.key.readOnly === 1 ? "да" : "НЕТ"}`);
+    lines.push(`Права:       ${permissionsLine(s.key.permissions)}`);
+    lines.push(`IP:          ${s.key.ips.length === 0 ? "без привязки" : s.key.ips.join(", ")}`);
+    lines.push(`Срок:        expiredAt ${s.key.expiredAt}, deadlineDay ${s.key.deadlineDay}`);
   } else {
-    lines.push(`\u041A\u043B\u044E\u0447:        ${s.configured ? "\u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043D, \u0434\u0430\u043D\u043D\u044B\u0435 \u043E \u043A\u043B\u044E\u0447\u0435 \u043D\u0435 \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u044B" : "\u043D\u0435 \u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043D"}`);
+    lines.push(`Ключ:        ${s.configured ? "настроен, данные о ключе не получены" : "не настроен"}`);
   }
-  lines.push(`\u041E\u043A\u0440\u0443\u0436\u0435\u043D\u0438\u0435:   ${s.environment.network}, ${s.environment.baseUrl}`);
+  lines.push(`Окружение:   ${s.environment.network}, ${s.environment.baseUrl}`);
   lines.push(
-    `\u0421\u0432\u044F\u0437\u044C:       ${s.connectivity.ok ? `\u0435\u0441\u0442\u044C, \u0432\u0440\u0435\u043C\u044F \u0431\u0438\u0440\u0436\u0438 ${new Date(s.connectivity.serverTimeMs ?? 0).toISOString()}` : `\u043D\u0435\u0442 \u2014 ${s.connectivity.error}`}`
+    `Связь:       ${s.connectivity.ok ? `есть, время биржи ${new Date(s.connectivity.serverTimeMs ?? 0).toISOString()}` : `нет — ${s.connectivity.error}`}`
   );
-  if (s.account) lines.push(`\u0421\u0447\u0451\u0442:        unifiedMarginStatus ${s.account.unifiedMarginStatus}, ${s.account.marginMode}`);
-  const uta = s.computed.isUnified === null ? "\u2014" : s.computed.isUnified ? "\u0434\u0430" : "\u043D\u0435\u0442";
-  const drift = s.computed.clockDriftMs === null ? "\u2014" : formatDrift(s.computed.clockDriftMs);
-  lines.push(`UTA:         ${uta} [\u0440\u0430\u0441\u0447\u0451\u0442]`);
-  lines.push(`\u0427\u0430\u0441\u044B:        ${drift} [\u0440\u0430\u0441\u0447\u0451\u0442]`);
-  lines.push("", s.problems.length === 0 ? "\u041F\u0440\u043E\u0431\u043B\u0435\u043C \u043D\u0435\u0442." : "\u041F\u0440\u043E\u0431\u043B\u0435\u043C\u044B:");
+  if (s.account) lines.push(`Счёт:        unifiedMarginStatus ${s.account.unifiedMarginStatus}, ${s.account.marginMode}`);
+  const uta = s.computed.isUnified === null ? "—" : s.computed.isUnified ? "да" : "нет";
+  const drift = s.computed.clockDriftMs === null ? "—" : formatDrift(s.computed.clockDriftMs);
+  lines.push(`UTA:         ${uta} [расчёт]`);
+  lines.push(`Часы:        ${drift} [расчёт]`);
+  lines.push("", s.problems.length === 0 ? "Проблем нет." : "Проблемы:");
   for (const p of s.problems) lines.push(`- ${p.message} [${p.code}]`);
-  lines.push("", "[\u0440\u0430\u0441\u0447\u0451\u0442] \u2014 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u043E \u0441\u043A\u0438\u043B\u043B\u043E\u043C:", `- UTA: ${s.computedNotes.isUnified}`, `- \u0427\u0430\u0441\u044B: ${s.computedNotes.clockDriftMs}`);
+  lines.push("", "[расчёт] — вычислено скиллом:", `- UTA: ${s.computedNotes.isUnified}`, `- Часы: ${s.computedNotes.clockDriftMs}`);
   return lines.join("\n");
 }
 
 // src/commands/balance.ts
-var UNVALUED_NOTE = "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u043E\u0446\u0435\u043D\u0438\u0432\u0430\u0435\u0442 \u0432 \u0434\u043E\u043B\u043B\u0430\u0440\u0430\u0445 \u043C\u043E\u043D\u0435\u0442\u0443, \u043A\u043E\u0442\u043E\u0440\u0430\u044F \u043D\u0435 \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u0437\u0430\u043B\u043E\u0433\u043E\u043C (marginCollateral=false): usdValue \u043F\u0440\u0438\u0445\u043E\u0434\u0438\u0442 0. \u041E\u0446\u0435\u043D\u043A\u0430 \u043D\u0435 \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442\u0441\u044F, \u0447\u0442\u043E\u0431\u044B \u043D\u0435 \u0432\u044B\u0434\u0430\u0432\u0430\u0442\u044C 0 \u0437\u0430 \u0441\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C (docs WebSocket wallet, usdValue).";
+var UNVALUED_NOTE = "Биржа не оценивает в долларах монету, которая не может быть залогом (marginCollateral=false): usdValue приходит 0. Оценка не показывается, чтобы не выдавать 0 за стоимость (docs WebSocket wallet, usdValue).";
 async function fetchWallet(client3) {
   const wallet = await client3.getPrivate("/v5/account/wallet-balance", { accountType: "UNIFIED" });
   const account = wallet.list[0];
   if (!account) {
     throw new AppError({
       code: "APP_ACCOUNT_NOT_UTA",
-      userMessage: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0435\u0434\u0438\u043D\u044B\u0439 \u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 (UTA). \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u0440\u0435\u0436\u0438\u043C \u0441\u0447\u0451\u0442\u0430: session status."
+      userMessage: "Биржа не вернула единый торговый счёт (UTA). Проверьте режим счёта: session status."
     });
   }
   return account;
@@ -4320,13 +4320,13 @@ function earnView(overview) {
   return { totalEquity: earn.totalEquity, coins };
 }
 function totalUsd(unified, funding, fundingEmpty, earn) {
-  const scope = "\u0421\u0443\u043C\u043C\u0430 totalEquity \u0442\u043E\u0440\u0433\u043E\u0432\u043E\u0433\u043E \u0441\u0447\u0451\u0442\u0430 (wallet-balance), \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430 \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F \u0438 Earn (asset-overview). \u0411\u043E\u0442\u044B, \u0437\u0430\u0439\u043C\u044B \u0438 \u043F\u0440\u043E\u0447\u0438\u0435 \u0441\u0447\u0435\u0442\u0430 \u043D\u0435 \u0432\u0445\u043E\u0434\u044F\u0442 (A-2).";
+  const scope = "Сумма totalEquity торгового счёта (wallet-balance), кошелька финансирования и Earn (asset-overview). Боты, займы и прочие счета не входят (A-2).";
   if (funding === null && !fundingEmpty) {
-    return { value: null, note: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0438\u0442\u043E\u0433 \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430 \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F (asset-overview), \u0445\u043E\u0442\u044F \u0432 \u043D\u0451\u043C \u0435\u0441\u0442\u044C \u043C\u043E\u043D\u0435\u0442\u044B: \u0441\u0443\u043C\u043C\u0430 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0430." };
+    return { value: null, note: "Биржа не вернула итог кошелька финансирования (asset-overview), хотя в нём есть монеты: сумма не вычислена." };
   }
   const notes = [scope];
-  if (funding === null) notes.push("\u041A\u043E\u0448\u0435\u043B\u0451\u043A \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F \u043F\u0443\u0441\u0442.");
-  if (earn === null) notes.push("Earn: \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0441\u0447\u0451\u0442, \u0432 \u0441\u0443\u043C\u043C\u0443 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442.");
+  if (funding === null) notes.push("Кошелёк финансирования пуст.");
+  if (earn === null) notes.push("Earn: биржа не вернула счёт, в сумму не входит.");
   return { value: Number(unified) + Number(funding ?? 0) + Number(earn ?? 0), note: notes.join(" ") };
 }
 async function balance(client3) {
@@ -4362,26 +4362,26 @@ function renderBalance(r) {
     c.walletBalance,
     c.locked,
     c.borrowAmount,
-    unvalued.has(c.coin) ? `${DASH} (\u043D\u0435 \u043E\u0446\u0435\u043D\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u0431\u0438\u0440\u0436\u0435\u0439)` : c.usdValue
+    unvalued.has(c.coin) ? `${DASH} (не оценивается биржей)` : c.usdValue
   ]);
   const fundRows = r.funding.coins.map((c) => [c.coin, c.walletBalance, c.transferBalance, numOrDash(r.computed.fundingUsd[c.coin])]);
   const lines = [
-    `\u0422\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 (UTA): ${r.unified.totalEquity} USD`,
-    renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "Equity", "\u041A\u043E\u0448\u0435\u043B\u0451\u043A", "\u0417\u0430\u0431\u043B\u043E\u043A.", "\u0414\u043E\u043B\u0433", "USD"], utaRows),
+    `Торговый счёт (UTA): ${r.unified.totalEquity} USD`,
+    renderTable(["Монета", "Equity", "Кошелёк", "Заблок.", "Долг", "USD"], utaRows),
     "",
-    `\u041A\u043E\u0448\u0435\u043B\u0451\u043A \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F: ${r.funding.totalEquity ?? DASH} USD`,
-    fundRows.length ? renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "\u041A\u043E\u0448\u0435\u043B\u0451\u043A", "\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u043A \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u0443", "USD [\u0440\u0430\u0441\u0447\u0451\u0442]"], fundRows) : "\u041F\u0443\u0441\u0442\u043E.",
+    `Кошелёк финансирования: ${r.funding.totalEquity ?? DASH} USD`,
+    fundRows.length ? renderTable(["Монета", "Кошелёк", "Доступно к переводу", "USD [расчёт]"], fundRows) : "Пусто.",
     "",
     `Earn: ${r.earn.totalEquity ?? DASH} USD`,
-    r.earn.coins.length ? renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E", "\u041F\u0440\u043E\u0434\u0443\u043A\u0442"], r.earn.coins.map((c) => [c.coin, c.equity, c.category])) : "\u041F\u0443\u0441\u0442\u043E.",
+    r.earn.coins.length ? renderTable(["Монета", "Количество", "Продукт"], r.earn.coins.map((c) => [c.coin, c.equity, c.category])) : "Пусто.",
     "",
-    `\u0418\u0442\u043E\u0433\u043E, \u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 + \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435 + Earn: ${numOrDash(r.computed.totalUsd)} USD [\u0440\u0430\u0441\u0447\u0451\u0442]`,
+    `Итого, торговый счёт + финансирование + Earn: ${numOrDash(r.computed.totalUsd)} USD [расчёт]`,
     "",
-    "[\u0440\u0430\u0441\u0447\u0451\u0442] \u2014 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u043E \u0441\u043A\u0438\u043B\u043B\u043E\u043C:",
-    `- \u0418\u0442\u043E\u0433\u043E: ${r.computedNotes.totalUsd}`,
+    "[расчёт] — вычислено скиллом:",
+    `- Итого: ${r.computedNotes.totalUsd}`,
     ...Object.entries(r.computedNotes.fundingUsd).map(([coin, note]) => `- ${coin}: ${note}`)
   ];
-  if (unvalued.size > 0) lines.push(`- \u0411\u0435\u0437 \u043E\u0446\u0435\u043D\u043A\u0438 (${[...unvalued].join(", ")}): ${r.computedNotes.unvaluedCoins}`);
+  if (unvalued.size > 0) lines.push(`- Без оценки (${[...unvalued].join(", ")}): ${r.computedNotes.unvaluedCoins}`);
   return lines.join("\n");
 }
 
@@ -4398,7 +4398,7 @@ async function fetchAllPages(fetchPage) {
     if (cursor && seen.has(cursor)) {
       throw new AppError({
         code: "APP_PAGINATION_LOOP",
-        userMessage: "\u0411\u0438\u0440\u0436\u0430 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0443\u0436\u0435 \u043F\u0440\u043E\u0439\u0434\u0435\u043D\u043D\u0443\u044E \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0443. \u0421\u0431\u043E\u0440 \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D, \u0447\u0442\u043E\u0431\u044B \u043D\u0435 \u0437\u0430\u0434\u0432\u043E\u0438\u0442\u044C \u0437\u0430\u043F\u0438\u0441\u0438. \u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u0437\u0430\u043F\u0440\u043E\u0441 \u043F\u043E\u0437\u0436\u0435."
+        userMessage: "Биржа вернула уже пройденную страницу. Сбор остановлен, чтобы не задвоить записи. Повторите запрос позже."
       });
     }
   } while (cursor);
@@ -4413,12 +4413,12 @@ var QUERIES = [
   { category: "inverse" }
 ];
 var EMPTIABLE = ["leverage", "liqPrice", "positionIM", "positionMM"];
-var PM_NOTE = "Portfolio Margin: \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u0440\u0430\u0441\u0441\u0447\u0438\u0442\u044B\u0432\u0430\u0435\u0442 \u044D\u0442\u043E \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u0435 \u043F\u043E \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u043E\u0439 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 (docs /v5/position/list).";
+var PM_NOTE = "Portfolio Margin: биржа не рассчитывает это значение по отдельной позиции (docs /v5/position/list).";
 var EMPTY_NOTE = {
-  leverage: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u043F\u043B\u0435\u0447\u043E \u043F\u043E \u043F\u043E\u0437\u0438\u0446\u0438\u0438.",
-  liqPrice: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0446\u0435\u043D\u0443 \u043B\u0438\u043A\u0432\u0438\u0434\u0430\u0446\u0438\u0438: \u043E\u043D\u0430 \u0432\u043D\u0435 \u0434\u043E\u043F\u0443\u0441\u0442\u0438\u043C\u043E\u0433\u043E \u0434\u0438\u0430\u043F\u0430\u0437\u043E\u043D\u0430 \u0446\u0435\u043D \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430 (docs /v5/position/list).",
-  positionIM: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u043D\u0430\u0447\u0430\u043B\u044C\u043D\u0443\u044E \u043C\u0430\u0440\u0436\u0443 \u043F\u043E \u043F\u043E\u0437\u0438\u0446\u0438\u0438.",
-  positionMM: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u044E\u0449\u0443\u044E \u043C\u0430\u0440\u0436\u0443 \u043F\u043E \u043F\u043E\u0437\u0438\u0446\u0438\u0438."
+  leverage: "Биржа не вернула плечо по позиции.",
+  liqPrice: "Биржа не вернула цену ликвидации: она вне допустимого диапазона цен инструмента (docs /v5/position/list).",
+  positionIM: "Биржа не вернула начальную маржу по позиции.",
+  positionMM: "Биржа не вернула поддерживающую маржу по позиции."
 };
 function toView(category, p) {
   return {
@@ -4461,7 +4461,7 @@ async function positions(client3) {
   return { marginMode, positions: views, fieldNotes: fieldNotes(marginMode, views) };
 }
 function renderPositions(result) {
-  if (result.positions.length === 0) return `\u041E\u0442\u043A\u0440\u044B\u0442\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u043D\u0435\u0442. \u0420\u0435\u0436\u0438\u043C \u043C\u0430\u0440\u0436\u0438: ${result.marginMode}.`;
+  if (result.positions.length === 0) return `Открытых позиций нет. Режим маржи: ${result.marginMode}.`;
   const rows = result.positions.map((p) => [
     p.symbol,
     p.category,
@@ -4475,31 +4475,31 @@ function renderPositions(result) {
     orDash(p.positionIM),
     orDash(p.positionMM)
   ]);
-  const table = renderTable(["\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442", "\u0422\u0438\u043F", "\u0421\u0442\u043E\u0440\u043E\u043D\u0430", "\u0420\u0430\u0437\u043C\u0435\u0440", "\u0412\u0445\u043E\u0434", "\u041C\u0430\u0440\u043A\u0438\u0440\u043E\u0432\u043A\u0430", "\u041D\u0435\u0440\u0435\u0430\u043B\u0438\u0437.", "\u041F\u043B\u0435\u0447\u043E", "\u041B\u0438\u043A\u0432\u0438\u0434\u0430\u0446\u0438\u044F", "IM", "MM"], rows);
-  const notes = Object.entries(result.fieldNotes).map(([f, note]) => `\u2014 ${f}: ${note}`);
-  return [`\u0420\u0435\u0436\u0438\u043C \u043C\u0430\u0440\u0436\u0438: ${result.marginMode}`, "", table, ...notes.length ? ["", ...notes] : []].join("\n");
+  const table = renderTable(["Инструмент", "Тип", "Сторона", "Размер", "Вход", "Маркировка", "Нереализ.", "Плечо", "Ликвидация", "IM", "MM"], rows);
+  const notes = Object.entries(result.fieldNotes).map(([f, note]) => `— ${f}: ${note}`);
+  return [`Режим маржи: ${result.marginMode}`, "", table, ...notes.length ? ["", ...notes] : []].join("\n");
 }
 
 // src/commands/portfolio.ts
-var REALISED_NOTE = "cumRealisedPnl \u2014 \u043D\u0430\u043A\u043E\u043F\u043B\u0435\u043D\u043D\u044B\u0439 \u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0435 \u0437\u0430 \u0432\u0441\u0451 \u0432\u0440\u0435\u043C\u044F, \u0432 \u0435\u0434\u0438\u043D\u0438\u0446\u0430\u0445 \u043C\u043E\u043D\u0435\u0442\u044B (\u0441\u044B\u0440\u043E\u0435 \u043F\u043E\u043B\u0435 wallet-balance). totalRPL \u2014 \u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C (option-asset-info). \u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 \u2014 \u043A\u043E\u043C\u0430\u043D\u0434\u0430 pnl.";
+var REALISED_NOTE = "cumRealisedPnl — накопленный реализованный результат по монете за всё время, в единицах монеты (сырое поле wallet-balance). totalRPL — реализованный результат по опционам (option-asset-info). Результат за период — команда pnl.";
 function unrealisedTotal(perpUpl, options) {
-  if (perpUpl === "") return { value: null, note: "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 totalPerpUPL: \u0441\u0443\u043C\u043C\u0430 \u043D\u0435\u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u043E\u0433\u043E \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u0430 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0430." };
+  if (perpUpl === "") return { value: null, note: "Биржа не вернула totalPerpUPL: сумма нереализованного результата не вычислена." };
   const missing = options.filter((o) => o.totalUPL === "").map((o) => o.coin);
   if (missing.length > 0) {
-    return { value: null, note: `\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 totalUPL \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C ${missing.join(", ")}: \u0441\u0443\u043C\u043C\u0430 \u043D\u0435\u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u043E\u0433\u043E \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u0430 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0430.` };
+    return { value: null, note: `Биржа не вернула totalUPL по опционам ${missing.join(", ")}: сумма нереализованного результата не вычислена.` };
   }
   const optionsUpl = options.reduce((sum, o) => sum + Number(o.totalUPL), 0);
-  const base = "\u0421\u0443\u043C\u043C\u0430 totalPerpUPL (\u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435 \u0438 \u0444\u044C\u044E\u0447\u0435\u0440\u0441\u044B, wallet-balance) \u0438 totalUPL \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C (option-asset-info), USD.";
-  return { value: Number(perpUpl) + optionsUpl, note: options.length === 0 ? `${base} \u041E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043D\u0435\u0442.` : base };
+  const base = "Сумма totalPerpUPL (бессрочные и фьючерсы, wallet-balance) и totalUPL по опционам (option-asset-info), USD.";
+  return { value: Number(perpUpl) + optionsUpl, note: options.length === 0 ? `${base} Опционов нет.` : base };
 }
 function coinShares(coins, unvalued) {
   const valued = coins.filter((c) => !unvalued.has(c.coin) && Number(c.usdValue) !== 0);
   const sum = valued.reduce((s, c) => s + Number(c.usdValue), 0);
-  if (sum <= 0) return { shares: {}, note: "\u0421\u0443\u043C\u043C\u0430 \u0434\u043E\u043B\u043B\u0430\u0440\u043E\u0432\u044B\u0445 \u043E\u0446\u0435\u043D\u043E\u043A \u043C\u043E\u043D\u0435\u0442 \u043D\u0435 \u043F\u043E\u043B\u043E\u0436\u0438\u0442\u0435\u043B\u044C\u043D\u0430: \u0434\u043E\u043B\u0438 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u044B." };
+  if (sum <= 0) return { shares: {}, note: "Сумма долларовых оценок монет не положительна: доли не вычислены." };
   const shares = Object.fromEntries(valued.map((c) => [c.coin, Number(c.usdValue) / sum]));
   return {
     shares,
-    note: "\u0414\u043E\u043B\u044F usdValue \u043C\u043E\u043D\u0435\u0442\u044B \u043E\u0442 \u0441\u0443\u043C\u043C\u044B usdValue \u0432\u0441\u0435\u0445 \u043E\u0446\u0435\u043D\u0451\u043D\u043D\u044B\u0445 \u043C\u043E\u043D\u0435\u0442 \u0442\u043E\u0440\u0433\u043E\u0432\u043E\u0433\u043E \u0441\u0447\u0451\u0442\u0430. \u041C\u043E\u043D\u0435\u0442\u0430 \u0432 \u0434\u043E\u043B\u0433\u0435 \u0438\u043C\u0435\u0435\u0442 \u043E\u0442\u0440\u0438\u0446\u0430\u0442\u0435\u043B\u044C\u043D\u044B\u0439 usdValue \u0438 \u043E\u0442\u0440\u0438\u0446\u0430\u0442\u0435\u043B\u044C\u043D\u0443\u044E \u0434\u043E\u043B\u044E."
+    note: "Доля usdValue монеты от суммы usdValue всех оценённых монет торгового счёта. Монета в долге имеет отрицательный usdValue и отрицательную долю."
   };
 }
 async function portfolio(client3) {
@@ -4555,25 +4555,25 @@ function renderPortfolio(r) {
   const coinRows = r.coins.map((c) => [c.coin, c.equity, r.computed.unvaluedCoins.includes(c.coin) ? DASH : c.usdValue, share(c.coin), c.unrealisedPnl, c.cumRealisedPnl]);
   const optionRows = r.options.map((o) => [o.coin, o.totalUPL, o.totalRPL, o.totalDelta, o.assetIM, o.assetMM]);
   return [
-    `\u0412\u0441\u0435\u0433\u043E (\u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 + \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435 + Earn): ${numOrDash(r.computed.totalValueUsd)} USD [\u0440\u0430\u0441\u0447\u0451\u0442]`,
-    `\u0422\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442: ${a.totalEquity} USD   \u041A\u043E\u0448\u0435\u043B\u0451\u043A \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F: ${r.fundingTotalEquity ?? DASH} USD   Earn: ${r.earnTotalEquity ?? DASH} USD`,
-    `\u0421\u0432\u043E\u0431\u043E\u0434\u043D\u043E: ${a.totalAvailableBalance} USD   \u0420\u0435\u0436\u0438\u043C \u043C\u0430\u0440\u0436\u0438: ${a.marginMode}`,
-    `\u0411\u0430\u043B\u0430\u043D\u0441 \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430: ${a.totalWalletBalance}   \u041C\u0430\u0440\u0436\u0438\u043D\u0430\u043B\u044C\u043D\u044B\u0439 \u0431\u0430\u043B\u0430\u043D\u0441: ${a.totalMarginBalance}`,
+    `Всего (торговый счёт + финансирование + Earn): ${numOrDash(r.computed.totalValueUsd)} USD [расчёт]`,
+    `Торговый счёт: ${a.totalEquity} USD   Кошелёк финансирования: ${r.fundingTotalEquity ?? DASH} USD   Earn: ${r.earnTotalEquity ?? DASH} USD`,
+    `Свободно: ${a.totalAvailableBalance} USD   Режим маржи: ${a.marginMode}`,
+    `Баланс кошелька: ${a.totalWalletBalance}   Маржинальный баланс: ${a.totalMarginBalance}`,
     `IM: ${a.totalInitialMargin} (${a.accountIMRate})   MM: ${a.totalMaintenanceMargin} (${a.accountMMRate})`,
     "",
-    `\u041F\u043E\u0437\u0438\u0446\u0438\u0438: \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435/\u0444\u044C\u044E\u0447\u0435\u0440\u0441\u044B ${r.positionCounts.linear}, \u0438\u043D\u0432\u0435\u0440\u0441\u043D\u044B\u0435 ${r.positionCounts.inverse}, \u043E\u043F\u0446\u0438\u043E\u043D\u044B ${r.positionCounts.option}`,
-    `\u041D\u0435\u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442: \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435 ${orDash(a.totalPerpUPL)}, \u0432\u0441\u0435\u0433\u043E ${numOrDash(r.computed.unrealisedPnlTotal)} USD [\u0440\u0430\u0441\u0447\u0451\u0442]`,
+    `Позиции: бессрочные/фьючерсы ${r.positionCounts.linear}, инверсные ${r.positionCounts.inverse}, опционы ${r.positionCounts.option}`,
+    `Нереализованный результат: бессрочные ${orDash(a.totalPerpUPL)}, всего ${numOrDash(r.computed.unrealisedPnlTotal)} USD [расчёт]`,
     "",
-    renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "Equity", "USD", "\u0414\u043E\u043B\u044F [\u0440\u0430\u0441\u0447\u0451\u0442]", "\u041D\u0435\u0440\u0435\u0430\u043B\u0438\u0437.", "\u0420\u0435\u0430\u043B\u0438\u0437. \u0432\u0441\u0435\u0433\u043E"], coinRows),
+    renderTable(["Монета", "Equity", "USD", "Доля [расчёт]", "Нереализ.", "Реализ. всего"], coinRows),
     "",
-    r.options.length ? renderTable(["\u041E\u043F\u0446\u0438\u043E\u043D\u044B", "\u041D\u0435\u0440\u0435\u0430\u043B\u0438\u0437.", "\u0420\u0435\u0430\u043B\u0438\u0437.", "\u0414\u0435\u043B\u044C\u0442\u0430", "IM", "MM"], optionRows) : "\u041E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043D\u0435\u0442.",
+    r.options.length ? renderTable(["Опционы", "Нереализ.", "Реализ.", "Дельта", "IM", "MM"], optionRows) : "Опционов нет.",
     "",
-    "[\u0440\u0430\u0441\u0447\u0451\u0442] \u2014 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u043E \u0441\u043A\u0438\u043B\u043B\u043E\u043C:",
-    `- \u0412\u0441\u0435\u0433\u043E: ${r.computedNotes.totalValueUsd}`,
-    `- \u0412\u0441\u0435\u0433\u043E \u043D\u0435\u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439: ${r.computedNotes.unrealisedPnlTotal}`,
-    `- \u0414\u043E\u043B\u044F: ${r.computedNotes.coinShares}`,
-    ...r.computed.unvaluedCoins.length ? [`- \u0411\u0435\u0437 \u043E\u0446\u0435\u043D\u043A\u0438 (${r.computed.unvaluedCoins.join(", ")}): ${r.computedNotes.unvaluedCoins}`] : [],
-    `\u0420\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442: ${r.computedNotes.realised}`
+    "[расчёт] — вычислено скиллом:",
+    `- Всего: ${r.computedNotes.totalValueUsd}`,
+    `- Всего нереализованный: ${r.computedNotes.unrealisedPnlTotal}`,
+    `- Доля: ${r.computedNotes.coinShares}`,
+    ...r.computed.unvaluedCoins.length ? [`- Без оценки (${r.computed.unvaluedCoins.join(", ")}): ${r.computedNotes.unvaluedCoins}`] : [],
+    `Реализованный результат: ${r.computedNotes.realised}`
   ].join("\n");
 }
 
@@ -4586,10 +4586,10 @@ function formatOutput(value2, json, render) {
 }
 function printError(err) {
   if (err instanceof AppError) {
-    console.error(`\u041E\u0448\u0438\u0431\u043A\u0430: ${err.userMessage} [${err.code}]`);
-    if (process.env.BYBIT_DEBUG) console.error("\u0414\u0435\u0442\u0430\u043B\u0438:", JSON.stringify(err.details ?? null));
+    console.error(`Ошибка: ${err.userMessage} [${err.code}]`);
+    if (process.env.BYBIT_DEBUG) console.error("Детали:", JSON.stringify(err.details ?? null));
   } else {
-    console.error("\u041E\u0448\u0438\u0431\u043A\u0430: \u043D\u0435\u043F\u0440\u0435\u0434\u0432\u0438\u0434\u0435\u043D\u043D\u0430\u044F \u043E\u0448\u0438\u0431\u043A\u0430 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u044F \u043A\u043E\u043C\u0430\u043D\u0434\u044B. \u0417\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u0435 \u0441 BYBIT_DEBUG=1 \u0434\u043B\u044F \u0434\u0435\u0442\u0430\u043B\u0435\u0439. [APP_UNEXPECTED]");
+    console.error("Ошибка: непредвиденная ошибка выполнения команды. Запустите с BYBIT_DEBUG=1 для деталей. [APP_UNEXPECTED]");
     if (process.env.BYBIT_DEBUG) console.error(err);
   }
   process.exitCode = 1;
@@ -4601,7 +4601,7 @@ function progressReporter(write) {
     const step = Math.floor(done * 10 / total);
     if (step <= current.shown) return;
     current.shown = step;
-    write(`\u0421\u0431\u043E\u0440: ${label} \u2014 \u043E\u043A\u043D\u043E ${done} \u0438\u0437 ${total}`);
+    write(`Сбор: ${label} — окно ${done} из ${total}`);
   };
 }
 
@@ -4616,9 +4616,9 @@ function register(program2, name, description, run, render) {
   });
 }
 function registerAccountCommands(program2) {
-  register(program2, "portfolio", "\u0441\u0432\u043E\u0434\u043A\u0430 \u0441\u0447\u0451\u0442\u0430: \u043A\u0430\u043F\u0438\u0442\u0430\u043B, \u043C\u0430\u0440\u0436\u0430, \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442, \u0440\u0430\u0441\u043F\u0440\u0435\u0434\u0435\u043B\u0435\u043D\u0438\u0435", portfolio, renderPortfolio);
-  register(program2, "balance", "\u043E\u0441\u0442\u0430\u0442\u043A\u0438 \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0430\u043C: \u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 \u0438 \u043A\u043E\u0448\u0435\u043B\u0451\u043A \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F", balance, renderBalance);
-  register(program2, "positions", "\u043E\u0442\u043A\u0440\u044B\u0442\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438: \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435, \u0438\u043D\u0432\u0435\u0440\u0441\u043D\u044B\u0435, \u043E\u043F\u0446\u0438\u043E\u043D\u044B", positions, renderPositions);
+  register(program2, "portfolio", "сводка счёта: капитал, маржа, результат, распределение", portfolio, renderPortfolio);
+  register(program2, "balance", "остатки по монетам: торговый счёт и кошелёк финансирования", balance, renderBalance);
+  register(program2, "positions", "открытые позиции: бессрочные, инверсные, опционы", positions, renderPositions);
 }
 
 // src/format/history.ts
@@ -4626,8 +4626,8 @@ function utcTime(ms) {
   return new Date(Number(ms)).toISOString().slice(0, 16).replace("T", " ");
 }
 function renderPeriod(period, coverage) {
-  const lines = [`\u041F\u0435\u0440\u0438\u043E\u0434: ${utcTime(period.from)} \u2014 ${utcTime(period.to)} UTC`];
-  for (const c of coverage) if (c.boundary) lines.push(`\u0413\u0440\u0430\u043D\u0438\u0446\u0430 \u0434\u0430\u043D\u043D\u044B\u0445: ${c.boundary}`);
+  const lines = [`Период: ${utcTime(period.from)} — ${utcTime(period.to)} UTC`];
+  for (const c of coverage) if (c.boundary) lines.push(`Граница данных: ${c.boundary}`);
   return lines.join("\n");
 }
 function sumStrings(values) {
@@ -4649,7 +4649,7 @@ function splitWindows(period, windowDays) {
 function clampToDepth(period, source, now) {
   const minFrom = now - source.depthDays * DAY_MS;
   const from = Math.max(period.from, minFrom);
-  const boundary2 = period.from < minFrom ? `\u0411\u0438\u0440\u0436\u0430 \u043E\u0442\u0434\u0430\u0451\u0442 ${source.label} \u043D\u0435 \u0433\u043B\u0443\u0431\u0436\u0435 ${source.depthText}: \u0434\u0430\u043D\u043D\u044B\u0435 \u0441 ${isoDate(minFrom)}, \u0437\u0430\u043F\u0440\u043E\u0448\u0435\u043D\u043E \u0441 ${isoDate(period.from)}.` : null;
+  const boundary2 = period.from < minFrom ? `Биржа отдаёт ${source.label} не глубже ${source.depthText}: данные с ${isoDate(minFrom)}, запрошено с ${isoDate(period.from)}.` : null;
   const coverage = { source: source.label, requestedFrom: period.from, from, to: period.to, boundary: boundary2 };
   return { period: from <= period.to ? { from, to: period.to } : null, coverage };
 }
@@ -4695,17 +4695,17 @@ async function fetchDailyCloses(client3, pair, period, throttle) {
   return closes;
 }
 function valueOnDate(coin, amount, time, prices) {
-  if (USD_STABLECOINS.includes(coin)) return { usd: Number(amount), note: "\u0421\u0442\u0435\u0439\u0431\u043B\u043A\u043E\u0438\u043D, \u043F\u0440\u0438\u043D\u044F\u0442 \u0440\u0430\u0432\u043D\u044B\u043C 1 USD: \u0442\u043E\u0447\u043D\u0430\u044F \u043E\u0446\u0435\u043D\u043A\u0430." };
+  if (USD_STABLECOINS.includes(coin)) return { usd: Number(amount), note: "Стейблкоин, принят равным 1 USD: точная оценка." };
   const pair = `${coin}USDT`;
-  if (!prices.pairs.has(pair)) return { usd: null, note: `\u041D\u0430 \u0441\u043F\u043E\u0442\u0435 Bybit \u043D\u0435\u0442 \u043F\u0430\u0440\u044B ${pair}: \u043E\u0446\u0435\u043D\u043A\u0430 \u0432 \u0434\u043E\u043B\u043B\u0430\u0440\u0430\u0445 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u0430.` };
+  if (!prices.pairs.has(pair)) return { usd: null, note: `На споте Bybit нет пары ${pair}: оценка в долларах невозможна.` };
   const day = isoDay(time);
   const close = prices.closes.get(pair)?.get(utcDay(time));
-  if (close === void 0) return { usd: null, note: `\u041D\u0435\u0442 \u0434\u043D\u0435\u0432\u043D\u043E\u0439 \u0441\u0432\u0435\u0447\u0438 ${pair} \u0437\u0430 ${day}: \u043E\u0446\u0435\u043D\u043A\u0430 \u0432 \u0434\u043E\u043B\u043B\u0430\u0440\u0430\u0445 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u043D\u0430.` };
+  if (close === void 0) return { usd: null, note: `Нет дневной свечи ${pair} за ${day}: оценка в долларах невозможна.` };
   const usd = Number(amount) * Number(close);
   if (prices.now !== void 0 && utcDay(prices.now) === utcDay(time)) {
-    return { usd, note: `\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \xD7 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0446\u0435\u043D\u0430 ${pair} = ${close}: \u0434\u043D\u0435\u0432\u043D\u0430\u044F \u0441\u0432\u0435\u0447\u0430 \u0437\u0430 ${day} (UTC) \u0435\u0449\u0451 \u043D\u0435 \u0437\u0430\u043A\u0440\u044B\u0442\u0430, \u0441\u043F\u043E\u0442 Bybit.` };
+    return { usd, note: `Количество × последняя цена ${pair} = ${close}: дневная свеча за ${day} (UTC) ещё не закрыта, спот Bybit.` };
   }
-  return { usd, note: `\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \xD7 \u0446\u0435\u043D\u0430 \u0437\u0430\u043A\u0440\u044B\u0442\u0438\u044F \u0434\u043D\u0435\u0432\u043D\u043E\u0439 \u0441\u0432\u0435\u0447\u0438 ${pair} \u0437\u0430 ${day} (UTC) = ${close}, \u0441\u043F\u043E\u0442 Bybit.` };
+  return { usd, note: `Количество × цена закрытия дневной свечи ${pair} за ${day} (UTC) = ${close}, спот Bybit.` };
 }
 
 // src/commands/funds-flows.ts
@@ -4713,10 +4713,10 @@ var FUNDS_FROM = Date.parse("2023-11-20T00:00:00Z");
 var ANY_DEPTH = { depthDays: Infinity, depthText: "" };
 var toSeconds = (w) => ({ createTimeFrom: String(Math.floor(w.from / 1e3)), createTimeTo: String(Math.floor(w.to / 1e3)) });
 var FUNDS_SOURCES = {
-  deposit: { label: "\u0432\u0432\u043E\u0434\u044B", path: "/v5/asset/deposit/query-record", params: { limit: "50" }, windowDays: 29, intervalMs: 650, ...ANY_DEPTH },
-  internalDeposit: { label: "\u0432\u0432\u043E\u0434\u044B \u043E\u0442 \u0434\u0440\u0443\u0433\u0438\u0445 UID", path: "/v5/asset/deposit/query-internal-record", params: { limit: "50" }, windowDays: 29, intervalMs: MIN_REQUEST_INTERVAL_MS, ...ANY_DEPTH },
-  withdrawal: { label: "\u0432\u044B\u0432\u043E\u0434\u044B", path: "/v5/asset/withdraw/query-record", params: { withdrawType: "2", limit: "50" }, windowDays: 29, intervalMs: 220, ...ANY_DEPTH },
-  funding: { label: "\u0436\u0443\u0440\u043D\u0430\u043B \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430 \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F", path: "/v5/asset/fundinghistory", params: { limit: "100" }, windowDays: 7, intervalMs: MIN_REQUEST_INTERVAL_MS, timeParams: toSeconds, ...ANY_DEPTH }
+  deposit: { label: "вводы", path: "/v5/asset/deposit/query-record", params: { limit: "50" }, windowDays: 29, intervalMs: 650, ...ANY_DEPTH },
+  internalDeposit: { label: "вводы от других UID", path: "/v5/asset/deposit/query-internal-record", params: { limit: "50" }, windowDays: 29, intervalMs: MIN_REQUEST_INTERVAL_MS, ...ANY_DEPTH },
+  withdrawal: { label: "выводы", path: "/v5/asset/withdraw/query-record", params: { withdrawType: "2", limit: "50" }, windowDays: 29, intervalMs: 220, ...ANY_DEPTH },
+  funding: { label: "журнал кошелька финансирования", path: "/v5/asset/fundinghistory", params: { limit: "100" }, windowDays: 7, intervalMs: MIN_REQUEST_INTERVAL_MS, timeParams: toSeconds, ...ANY_DEPTH }
 };
 var BOUNDARY = {
   fundingAccountRecordP2PPurchase: "in",
@@ -4754,7 +4754,7 @@ var WITHDRAWAL_FAILED = ["CancelByUser", "Reject", "Fail"];
 var depositFlow = (d) => ({
   id: `deposit:${d.id}`,
   source: "deposit",
-  kind: "\u0412\u0432\u043E\u0434 (\u0431\u043B\u043E\u043A\u0447\u0435\u0439\u043D)",
+  kind: "Ввод (блокчейн)",
   direction: "in",
   coin: d.coin,
   amount: d.amount,
@@ -4767,7 +4767,7 @@ var depositFlow = (d) => ({
 var internalFlow = (d) => ({
   id: `internalDeposit:${d.id}`,
   source: "internalDeposit",
-  kind: "\u0412\u0432\u043E\u0434 \u043E\u0442 \u0434\u0440\u0443\u0433\u043E\u0433\u043E UID",
+  kind: "Ввод от другого UID",
   direction: "in",
   coin: d.coin,
   amount: d.amount,
@@ -4780,7 +4780,7 @@ var internalFlow = (d) => ({
 var withdrawalFlow = (w) => ({
   id: `withdrawal:${w.withdrawId}`,
   source: "withdrawal",
-  kind: w.withdrawType === 1 ? "\u0412\u044B\u0432\u043E\u0434 \u043D\u0430 \u0434\u0440\u0443\u0433\u043E\u0439 UID" : "\u0412\u044B\u0432\u043E\u0434 (\u0431\u043B\u043E\u043A\u0447\u0435\u0439\u043D)",
+  kind: w.withdrawType === 1 ? "Вывод на другой UID" : "Вывод (блокчейн)",
   direction: "out",
   coin: w.coin,
   amount: w.amount,
@@ -4837,8 +4837,8 @@ async function collectFlows(client3, period, deps2) {
 }
 
 // src/commands/funds.ts
-var SCOPE = "\u0414\u0432\u0438\u0436\u0435\u043D\u0438\u0435 \u0441\u0440\u0435\u0434\u0441\u0442\u0432 \u0447\u0435\u0440\u0435\u0437 \u0433\u0440\u0430\u043D\u0438\u0446\u0443 \u043E\u0441\u043D\u043E\u0432\u043D\u043E\u0433\u043E \u0441\u0447\u0451\u0442\u0430 \u0441 2023-11-20 (\u043F\u0435\u0440\u0432\u0430\u044F \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u044F \u0441\u0447\u0451\u0442\u0430; \u0440\u0430\u043D\u044C\u0448\u0435 \u0443 \u0431\u0438\u0440\u0436\u0438 \u0437\u0430\u043F\u0438\u0441\u0435\u0439 \u043D\u0435\u0442) \u043F\u043E \u043C\u043E\u043C\u0435\u043D\u0442 \u0437\u0430\u043F\u0440\u043E\u0441\u0430. \u0412\u0432\u043E\u0434: \u0432\u0432\u043E\u0434\u044B \u0438\u0437 \u0431\u043B\u043E\u043A\u0447\u0435\u0439\u043D\u0430 \u0438 \u043E\u0442 \u0434\u0440\u0443\u0433\u0438\u0445 UID, P2P \u043F\u043E\u043A\u0443\u043F\u043A\u0438, \u043E\u0442\u043C\u0435\u043D\u0451\u043D\u043D\u044B\u0435 P2P \u043F\u0440\u043E\u0434\u0430\u0436\u0438, \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u044B \u0441 \u0441\u0443\u0431\u0441\u0447\u0451\u0442\u0430. \u0412\u044B\u0432\u043E\u0434: \u0432\u044B\u0432\u043E\u0434\u044B (\u0441\u0443\u043C\u043C\u0430, \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u043D\u0430\u044F \u043D\u0430 \u0442\u043E\u0439 \u0441\u0442\u043E\u0440\u043E\u043D\u0435; \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u044F \u0432\u044B\u0432\u043E\u0434\u0430 \u0443\u043C\u0435\u043D\u044C\u0448\u0430\u0435\u0442 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442), P2P \u043F\u0440\u043E\u0434\u0430\u0436\u0438, \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u044B \u043D\u0430 \u0441\u0443\u0431\u0441\u0447\u0451\u0442. P2P \u043E\u0446\u0435\u043D\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u043F\u043E \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u043D\u044B\u043C \u0438\u043B\u0438 \u043E\u0442\u0434\u0430\u043D\u043D\u044B\u043C USDT 1:1: \u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0444\u0438\u0430\u0442\u0430 \u0437\u0430\u043F\u043B\u0430\u0447\u0435\u043D\u043E, \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u043E\u0442\u0434\u0430\u0451\u0442, \u0441\u043F\u0440\u0435\u0434 P2P \u0432 \u0440\u0430\u0441\u0447\u0451\u0442 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442. \u041D\u0435 \u0432\u0432\u043E\u0434: \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u044B \u043C\u0435\u0436\u0434\u0443 \u0441\u0432\u043E\u0438\u043C\u0438 \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430\u043C\u0438, \u043D\u0430\u0433\u0440\u0430\u0434\u044B Earn, Launchpool, \u0430\u0438\u0440\u0434\u0440\u043E\u043F\u044B \u2014 \u043E\u043D\u0438 \u043F\u043E\u043F\u0430\u0434\u0430\u044E\u0442 \u0432 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442. \u0417\u0430\u0439\u043C\u044B (Crypto Loans) \u043D\u0435 \u0443\u0447\u0438\u0442\u044B\u0432\u0430\u044E\u0442\u0441\u044F.";
-var TOTALS_METHOD = "\u0421\u0443\u043C\u043C\u0430 \u0434\u043E\u043B\u043B\u0430\u0440\u043E\u0432\u044B\u0445 \u043E\u0446\u0435\u043D\u043E\u043A \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043D\u043D\u044B\u0445 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0439. USDT \u0438 USDC \u2014 1:1; \u043F\u0440\u043E\u0447\u0438\u0435 \u043C\u043E\u043D\u0435\u0442\u044B \u2014 \u043F\u043E \u0446\u0435\u043D\u0435 \u0437\u0430\u043A\u0440\u044B\u0442\u0438\u044F \u0434\u043D\u0435\u0432\u043D\u043E\u0439 \u0441\u0432\u0435\u0447\u0438 \u041C\u041E\u041D\u0415\u0422\u0410USDT \u043D\u0430 \u0441\u043F\u043E\u0442-\u0440\u044B\u043D\u043A\u0435 Bybit \u0437\u0430 \u0434\u0435\u043D\u044C \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438 (UTC): \u043F\u043E\u0433\u0440\u0435\u0448\u043D\u043E\u0441\u0442\u044C \u2014 \u0434\u0432\u0438\u0436\u0435\u043D\u0438\u0435 \u0446\u0435\u043D\u044B \u0432\u043D\u0443\u0442\u0440\u0438 \u0434\u043D\u044F. \u0417\u0430 \u0442\u0435\u043A\u0443\u0449\u0438\u0439 \u0434\u0435\u043D\u044C \u0441\u0432\u0435\u0447\u0430 \u043D\u0435 \u0437\u0430\u043A\u0440\u044B\u0442\u0430 \u2014 \u0431\u0435\u0440\u0451\u0442\u0441\u044F \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0446\u0435\u043D\u0430.";
+var SCOPE = "Движение средств через границу основного счёта с 2023-11-20 (первая операция счёта; раньше у биржи записей нет) по момент запроса. Ввод: вводы из блокчейна и от других UID, P2P покупки, отменённые P2P продажи, переводы с субсчёта. Вывод: выводы (сумма, полученная на той стороне; комиссия вывода уменьшает результат), P2P продажи, переводы на субсчёт. P2P оценивается по полученным или отданным USDT 1:1: сколько фиата заплачено, биржа не отдаёт, спред P2P в расчёт не входит. Не ввод: переводы между своими кошельками, награды Earn, Launchpool, аирдропы — они попадают в результат. Займы (Crypto Loans) не учитываются.";
+var TOTALS_METHOD = "Сумма долларовых оценок завершённых операций. USDT и USDC — 1:1; прочие монеты — по цене закрытия дневной свечи МОНЕТАUSDT на спот-рынке Bybit за день операции (UTC): погрешность — движение цены внутри дня. За текущий день свеча не закрыта — берётся последняя цена.";
 async function dailyPrices(client3, flows, deps2) {
   const times = /* @__PURE__ */ new Map();
   for (const f of flows.filter((x) => x.counted)) if (!USD_STABLECOINS.includes(f.coin)) times.set(f.coin, [...times.get(f.coin) ?? [], f.time]);
@@ -4865,21 +4865,21 @@ function byKind(flows, usd) {
 function totalsNote(flows, usd, notes, unclassified) {
   if (unclassified.length > 0) {
     const types = [...new Set(unclassified.map((u) => `${u.descriptionEn} (${u.description})`))].join(", ");
-    return `\u0412 \u0436\u0443\u0440\u043D\u0430\u043B\u0435 \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430 \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u044F \u0435\u0441\u0442\u044C \u0441\u0442\u0440\u043E\u043A\u0438 \u043D\u0435\u0437\u043D\u0430\u043A\u043E\u043C\u043E\u0433\u043E \u0442\u0438\u043F\u0430: ${types}. \u042D\u0442\u043E \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u0432\u0432\u043E\u0434 \u0438\u043B\u0438 \u0432\u044B\u0432\u043E\u0434, \u043F\u043E\u044D\u0442\u043E\u043C\u0443 \u0438\u0442\u043E\u0433\u0438 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u044B.`;
+    return `В журнале кошелька финансирования есть строки незнакомого типа: ${types}. Это может быть ввод или вывод, поэтому итоги не вычислены.`;
   }
   const unvalued = flows.filter((f) => f.counted && usd[f.id] === null).map((f) => `${f.id}: ${notes[f.id]}`);
-  if (unvalued.length > 0) return `${TOTALS_METHOD} \u0418\u0442\u043E\u0433 \u043D\u0430\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u044F \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D, \u0435\u0441\u0442\u044C \u043D\u0435\u043E\u0446\u0435\u043D\u0451\u043D\u043D\u044B\u0435 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438: ${unvalued.join(" ")}`;
+  if (unvalued.length > 0) return `${TOTALS_METHOD} Итог направления не вычислен, есть неоценённые операции: ${unvalued.join(" ")}`;
   return TOTALS_METHOD;
 }
 function resultNote(netInput, current, hasFlows, inProgress) {
-  if (!hasFlows) return "\u0412\u0432\u043E\u0434\u043E\u0432 \u0438 \u0432\u044B\u0432\u043E\u0434\u043E\u0432 \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E: \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D.";
+  if (!hasFlows) return "Вводов и выводов не найдено: результат не вычислен.";
   if (inProgress.length > 0) {
-    const list = inProgress.map((f) => `${f.id} (${f.kind}, ${f.amount} ${f.coin}, \u0441\u0442\u0430\u0442\u0443\u0441 ${f.status})`).join(", ");
-    return `\u0415\u0441\u0442\u044C \u043D\u0435\u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043D\u043D\u044B\u0435 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438: ${list}. \u0414\u0435\u043D\u044C\u0433\u0438 \u043F\u043E \u043D\u0438\u043C \u043C\u043E\u0433\u0443\u0442 \u0431\u044B\u0442\u044C \u0443\u0436\u0435 \u0437\u0430\u0447\u0438\u0441\u043B\u0435\u043D\u044B \u0438\u043B\u0438 \u0441\u043F\u0438\u0441\u0430\u043D\u044B, \u0430 \u0432 \u0438\u0442\u043E\u0433\u0438 \u043E\u043D\u0438 \u043D\u0435 \u0432\u0445\u043E\u0434\u044F\u0442: \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D.`;
+    const list = inProgress.map((f) => `${f.id} (${f.kind}, ${f.amount} ${f.coin}, статус ${f.status})`).join(", ");
+    return `Есть незавершённые операции: ${list}. Деньги по ним могут быть уже зачислены или списаны, а в итоги они не входят: результат не вычислен.`;
   }
-  if (netInput === null) return "\u041D\u0435\u0442\u0442\u043E-\u0432\u0432\u043E\u0434 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D (\u0441\u043C. \u0438\u0442\u043E\u0433\u0438): \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D.";
-  if (current.value === null) return `\u0421\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C \u0441\u0447\u0451\u0442\u0430 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0430: ${current.note}`;
-  return "\u0422\u0435\u043A\u0443\u0449\u0430\u044F \u0441\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C \u0441\u0447\u0451\u0442\u0430 \u043C\u0438\u043D\u0443\u0441 \u043D\u0435\u0442\u0442\u043E-\u0432\u0432\u043E\u0434 (\u0432\u0432\u0435\u0434\u0435\u043D\u043E \u2212 \u0432\u044B\u0432\u0435\u0434\u0435\u043D\u043E).";
+  if (netInput === null) return "Нетто-ввод не вычислен (см. итоги): результат не вычислен.";
+  if (current.value === null) return `Стоимость счёта не вычислена: ${current.note}`;
+  return "Текущая стоимость счёта минус нетто-ввод (введено − выведено).";
 }
 async function funds(client3, deps2) {
   await requireReadOnlyKey(client3);
@@ -4931,38 +4931,38 @@ async function funds(client3, deps2) {
     }
   };
 }
-var DIRECTION = { in: "\u0432\u0432\u043E\u0434", out: "\u0432\u044B\u0432\u043E\u0434" };
+var DIRECTION = { in: "ввод", out: "вывод" };
 function renderFunds(r) {
   const c = r.computed;
-  const usd = (v) => `${numOrDash(v)} USD [\u0440\u0430\u0441\u0447\u0451\u0442]`;
+  const usd = (v) => `${numOrDash(v)} USD [расчёт]`;
   const lines = [
-    `\u041F\u0435\u0440\u0438\u043E\u0434: 2023-11-20 \u2014 ${utcTime(r.period.to)} UTC`,
-    `\u041F\u0435\u0440\u0432\u0430\u044F \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u044F: ${c.firstOperationTime === null ? DASH : `${utcTime(c.firstOperationTime)} UTC`}   \u0421\u0440\u043E\u043A: ${c.days ?? DASH} \u0434\u043D. [\u0440\u0430\u0441\u0447\u0451\u0442]`,
+    `Период: 2023-11-20 — ${utcTime(r.period.to)} UTC`,
+    `Первая операция: ${c.firstOperationTime === null ? DASH : `${utcTime(c.firstOperationTime)} UTC`}   Срок: ${c.days ?? DASH} дн. [расчёт]`,
     "",
-    `\u0412\u0432\u0435\u0434\u0435\u043D\u043E:     ${usd(c.depositedUsd)}`,
-    `\u0412\u044B\u0432\u0435\u0434\u0435\u043D\u043E:    ${usd(c.withdrawnUsd)}`,
-    `\u041D\u0435\u0442\u0442\u043E-\u0432\u0432\u043E\u0434:  ${usd(c.netInputUsd)}`,
-    `\u0421\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C \u0441\u0447\u0451\u0442\u0430 \u0441\u0435\u0439\u0447\u0430\u0441: ${usd(c.currentValueUsd)} (\u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 ${r.current.unifiedTotalEquity} + \u0444\u0438\u043D\u0430\u043D\u0441\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435 ${r.current.fundingTotalEquity ?? DASH} + Earn ${r.current.earnTotalEquity ?? DASH})`,
-    `\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442:   ${usd(c.resultUsd)}`,
+    `Введено:     ${usd(c.depositedUsd)}`,
+    `Выведено:    ${usd(c.withdrawnUsd)}`,
+    `Нетто-ввод:  ${usd(c.netInputUsd)}`,
+    `Стоимость счёта сейчас: ${usd(c.currentValueUsd)} (торговый ${r.current.unifiedTotalEquity} + финансирование ${r.current.fundingTotalEquity ?? DASH} + Earn ${r.current.earnTotalEquity ?? DASH})`,
+    `Результат:   ${usd(c.resultUsd)}`,
     "",
-    c.byKind.length === 0 ? "\u041E\u043F\u0435\u0440\u0430\u0446\u0438\u0439 \u043D\u0435\u0442." : renderTable(["\u0422\u0438\u043F", "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435", "\u041E\u043F\u0435\u0440\u0430\u0446\u0438\u0439", "USD [\u0440\u0430\u0441\u0447\u0451\u0442]"], c.byKind.map((k) => [k.kind, DIRECTION[k.direction], String(k.count), numOrDash(k.usd)]))
+    c.byKind.length === 0 ? "Операций нет." : renderTable(["Тип", "Направление", "Операций", "USD [расчёт]"], c.byKind.map((k) => [k.kind, DIRECTION[k.direction], String(k.count), numOrDash(k.usd)]))
   ];
   const pending = r.flows.filter((f) => !f.counted);
   if (pending.length > 0) {
-    lines.push("", "\u041D\u0435 \u0443\u0447\u0442\u0435\u043D\u043E (\u043D\u0435\u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043D\u043D\u044B\u0435 \u0438 \u043D\u0435\u0443\u0441\u043F\u0435\u0448\u043D\u044B\u0435):");
-    lines.push(renderTable(["\u0412\u0440\u0435\u043C\u044F UTC", "\u0422\u0438\u043F", "\u041C\u043E\u043D\u0435\u0442\u0430", "\u0421\u0443\u043C\u043C\u0430", "\u0421\u0442\u0430\u0442\u0443\u0441"], pending.map((f) => [utcTime(f.time), f.kind, f.coin, f.amount, f.status])));
+    lines.push("", "Не учтено (незавершённые и неуспешные):");
+    lines.push(renderTable(["Время UTC", "Тип", "Монета", "Сумма", "Статус"], pending.map((f) => [utcTime(f.time), f.kind, f.coin, f.amount, f.status])));
   }
   if (r.unclassified.length > 0) {
-    lines.push("", "\u0421\u0442\u0440\u043E\u043A\u0438 \u0436\u0443\u0440\u043D\u0430\u043B\u0430 \u043D\u0435\u0437\u043D\u0430\u043A\u043E\u043C\u043E\u0433\u043E \u0442\u0438\u043F\u0430 (\u043D\u0435 \u0443\u0447\u0442\u0435\u043D\u044B, \u0438\u0442\u043E\u0433\u0438 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u044B):");
-    lines.push(renderTable(["\u0412\u0440\u0435\u043C\u044F UTC", "\u0422\u0438\u043F", "\u041A\u043B\u044E\u0447", "\u041C\u043E\u043D\u0435\u0442\u0430", "\u0421\u0443\u043C\u043C\u0430", "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435"], r.unclassified.map((u) => [utcTime(u.time), u.descriptionEn, u.description, u.currency, u.txnAmt, u.ioDirection])));
+    lines.push("", "Строки журнала незнакомого типа (не учтены, итоги не вычислены):");
+    lines.push(renderTable(["Время UTC", "Тип", "Ключ", "Монета", "Сумма", "Направление"], r.unclassified.map((u) => [utcTime(u.time), u.descriptionEn, u.description, u.currency, u.txnAmt, u.ioDirection])));
   }
   lines.push(
     "",
-    "\u041F\u043E\u044F\u0441\u043D\u0435\u043D\u0438\u044F [\u0440\u0430\u0441\u0447\u0451\u0442]:",
-    `- \u041E\u0445\u0432\u0430\u0442: ${r.computedNotes.scope}`,
-    `- \u0418\u0442\u043E\u0433\u0438: ${r.computedNotes.totals}`,
-    `- \u0421\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C \u0441\u0447\u0451\u0442\u0430: ${r.computedNotes.currentValueUsd}`,
-    `- \u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442: ${r.computedNotes.resultUsd}`
+    "Пояснения [расчёт]:",
+    `- Охват: ${r.computedNotes.scope}`,
+    `- Итоги: ${r.computedNotes.totals}`,
+    `- Стоимость счёта: ${r.computedNotes.currentValueUsd}`,
+    `- Результат: ${r.computedNotes.resultUsd}`
   );
   return lines.join("\n");
 }
@@ -4974,7 +4974,7 @@ async function fetchDeliveries(client3, period, deps2) {
   const views = [];
   const coverage = [];
   for (const category of CATEGORIES) {
-    const source = { label: `\u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 ${category}`, path: "/v5/asset/delivery-record", params: { category, limit: "50" }, windowDays: 30, depthDays: DEPTH_2Y_DAYS, depthText: "2 \u043B\u0435\u0442" };
+    const source = { label: `экспирации ${category}`, path: "/v5/asset/delivery-record", params: { category, limit: "50" }, windowDays: 30, depthDays: DEPTH_2Y_DAYS, depthText: "2 лет" };
     const r = await fetchWindowed(client3, source, period, deps2);
     views.push(...r.rows.map((d) => ({ category, symbol: d.symbol, side: d.side, position: d.position, entryPrice: d.entryPrice ?? "", strike: d.strike, deliveryPrice: d.deliveryPrice, fee: d.fee, deliveryRpl: d.deliveryRpl, deliveryTime: d.deliveryTime })));
     coverage.push(r.coverage);
@@ -4989,9 +4989,9 @@ async function deliveries(client3, options, deps2) {
   return { period: options.period, coverage: r.coverage, deliveries: coin ? r.deliveries.filter((d) => d.symbol.startsWith(coin)) : r.deliveries };
 }
 function renderDeliveryTable(list) {
-  if (list.length === 0) return "\u042D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0439 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 \u043D\u0435\u0442.";
+  if (list.length === 0) return "Экспираций за период нет.";
   const rows = list.map((d) => [utcTime(d.deliveryTime), d.symbol, d.side, d.position, orDash(d.entryPrice), d.deliveryPrice, d.fee, d.deliveryRpl]);
-  return renderTable(["\u0412\u0440\u0435\u043C\u044F UTC", "\u041A\u043E\u043D\u0442\u0440\u0430\u043A\u0442", "\u0421\u0442\u043E\u0440\u043E\u043D\u0430", "\u041E\u0431\u044A\u0451\u043C", "\u0412\u0445\u043E\u0434", "\u0426\u0435\u043D\u0430 \u0440\u0430\u0441\u0447\u0451\u0442\u0430", "\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u044F", "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442"], rows);
+  return renderTable(["Время UTC", "Контракт", "Сторона", "Объём", "Вход", "Цена расчёта", "Комиссия", "Результат"], rows);
 }
 function renderDeliveries(r) {
   return [renderPeriod(r.period, r.coverage), "", renderDeliveryTable(r.deliveries)].join("\n");
@@ -5000,16 +5000,16 @@ function renderDeliveries(r) {
 // src/commands/operations.ts
 var OPERATIONS_DEFAULT_DAYS = 30;
 var JOURNAL_SOURCE = {
-  label: "\u0436\u0443\u0440\u043D\u0430\u043B \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0439",
+  label: "журнал операций",
   path: "/v5/account/transaction-log",
   params: { accountType: "UNIFIED", limit: "50" },
   windowDays: 7,
   depthDays: DEPTH_2Y_DAYS,
-  depthText: "2 \u043B\u0435\u0442"
+  depthText: "2 лет"
 };
 var NOTES = {
-  totals: "\u0421\u0443\u043C\u043C\u044B \u0441\u044B\u0440\u044B\u0445 \u043F\u043E\u043B\u0435\u0439 \u043F\u043E \u0442\u0438\u043F\u0443 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438 \u0438 \u0432\u0430\u043B\u044E\u0442\u0435 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434. change = cashFlow + funding \u2212 fee (\u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0446\u0438\u044F Bybit).",
-  feesFunding: "\u0421\u0443\u043C\u043C\u0430 fee (\u043F\u043B\u044E\u0441 \u2014 \u0440\u0430\u0441\u0445\u043E\u0434, \u043C\u0438\u043D\u0443\u0441 \u2014 \u0432\u043E\u0437\u0432\u0440\u0430\u0442) \u0438 funding (\u043F\u043B\u044E\u0441 \u2014 \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u043E, \u043C\u0438\u043D\u0443\u0441 \u2014 \u0443\u043F\u043B\u0430\u0447\u0435\u043D\u043E) \u043F\u043E \u0432\u0430\u043B\u044E\u0442\u0435 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434."
+  totals: "Суммы сырых полей по типу операции и валюте за период. change = cashFlow + funding − fee (документация Bybit).",
+  feesFunding: "Сумма fee (плюс — расход, минус — возврат) и funding (плюс — получено, минус — уплачено) по валюте за период."
 };
 function groupBy(rows, key) {
   const groups = /* @__PURE__ */ new Map();
@@ -5073,12 +5073,12 @@ function renderOperations(r) {
   return [
     renderPeriod(r.period, r.coverage),
     "",
-    r.operations.length ? renderTable(["\u0412\u0440\u0435\u043C\u044F UTC", "\u0422\u0438\u043F", "\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442", "\u0412\u0430\u043B\u044E\u0442\u0430", "cashFlow", "\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u044F", "\u0424\u0430\u043D\u0434\u0438\u043D\u0433", "\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0435"], rows) : "\u041E\u043F\u0435\u0440\u0430\u0446\u0438\u0439 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 \u043D\u0435\u0442.",
+    r.operations.length ? renderTable(["Время UTC", "Тип", "Инструмент", "Валюта", "cashFlow", "Комиссия", "Фандинг", "Изменение"], rows) : "Операций за период нет.",
     "",
-    "\u0418\u0442\u043E\u0433\u0438 \u043F\u043E \u0442\u0438\u043F\u0430\u043C [\u0440\u0430\u0441\u0447\u0451\u0442]:",
-    totals.length ? renderTable(["\u0422\u0438\u043F", "\u0412\u0430\u043B\u044E\u0442\u0430", "\u0417\u0430\u043F\u0438\u0441\u0435\u0439", "cashFlow", "\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u044F", "\u0424\u0430\u043D\u0434\u0438\u043D\u0433", "\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0435"], totals) : "\u043D\u0435\u0442",
+    "Итоги по типам [расчёт]:",
+    totals.length ? renderTable(["Тип", "Валюта", "Записей", "cashFlow", "Комиссия", "Фандинг", "Изменение"], totals) : "нет",
     "",
-    `* [\u0440\u0430\u0441\u0447\u0451\u0442] ${r.computedNotes.totals}`
+    `* [расчёт] ${r.computedNotes.totals}`
   ].join("\n");
 }
 
@@ -5105,8 +5105,8 @@ function parseOptionSymbol(symbol) {
 var DAY_MS2 = 864e5;
 var EXPIRY_HOUR_UTC = 8;
 var REASON = {
-  openedBefore: "\u041F\u043E\u0437\u0438\u0446\u0438\u044F \u043E\u0442\u043A\u0440\u044B\u0442\u0430 \u0440\u0430\u043D\u044C\u0448\u0435, \u0447\u0435\u043C \u043D\u0430\u0447\u0438\u043D\u0430\u0435\u0442\u0441\u044F \u0436\u0443\u0440\u043D\u0430\u043B \u0431\u0438\u0440\u0436\u0438 (2 \u0433\u043E\u0434\u0430): \u0435\u0451 \u043D\u0430\u0447\u0430\u043B\u0430 \u0432 \u0434\u0430\u043D\u043D\u044B\u0445 \u043D\u0435\u0442.",
-  open: "\u041F\u043E\u0437\u0438\u0446\u0438\u044F \u0435\u0449\u0451 \u043E\u0442\u043A\u0440\u044B\u0442\u0430: \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043D\u0435 \u0437\u0430\u0444\u0438\u043A\u0441\u0438\u0440\u043E\u0432\u0430\u043D."
+  openedBefore: "Позиция открыта раньше, чем начинается журнал биржи (2 года): её начала в данных нет.",
+  open: "Позиция ещё открыта: результат не зафиксирован."
 };
 var round8 = (v) => Math.round(v * 1e8) / 1e8;
 var sizeAfter = (r) => round8(Number(r.size));
@@ -5172,16 +5172,16 @@ function optionPositionsFromJournal(rows, now) {
 
 // src/commands/pnl.ts
 var PNL_DEFAULT_DAYS = DEPTH_2Y_DAYS;
-var UNKNOWN_CURRENCY = "\u043D\u0435 \u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0435\u043D\u0430";
+var UNKNOWN_CURRENCY = "не определена";
 var NOTES2 = {
-  closedPerps: `\u0421\u0443\u043C\u043C\u0430 closedPnl \u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0445 \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0445 \u0438 \u0444\u044C\u044E\u0447\u0435\u0440\u0441\u043E\u0432 (\u0443\u0436\u0435 \u0437\u0430 \u0432\u044B\u0447\u0435\u0442\u043E\u043C \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0439 \u043E\u0442\u043A\u0440\u044B\u0442\u0438\u044F \u0438 \u0437\u0430\u043A\u0440\u044B\u0442\u0438\u044F). \u0412\u0430\u043B\u044E\u0442\u0430 \u2014 \u043F\u043E \u0437\u0430\u043F\u0438\u0441\u0438 \u044D\u0442\u043E\u0433\u043E \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430 \u0432 \u0436\u0443\u0440\u043D\u0430\u043B\u0435; \u043D\u0435\u0442 \u0437\u0430\u043F\u0438\u0441\u0438 \u2014 \xAB${UNKNOWN_CURRENCY}\xBB.`,
-  funding: "\u0421\u0443\u043C\u043C\u0430 funding \u0438\u0437 \u0436\u0443\u0440\u043D\u0430\u043B\u0430 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 \u2014 \u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u043E: \u0444\u0430\u043D\u0434\u0438\u043D\u0433 \u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u0443\u0436\u0435 \u0432\u0445\u043E\u0434\u0438\u0442 \u0432 closedPnl (\u0441\u0432\u0435\u0440\u0435\u043D\u043E \u0432\u0436\u0438\u0432\u0443\u044E 2026-09-27), \u0444\u0430\u043D\u0434\u0438\u043D\u0433 \u043F\u043E \u0435\u0449\u0451 \u043E\u0442\u043A\u0440\u044B\u0442\u044B\u043C \u043F\u043E\u0437\u0438\u0446\u0438\u044F\u043C \u0432 \u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442. \u041F\u043B\u044E\u0441 \u2014 \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u043E, \u043C\u0438\u043D\u0443\u0441 \u2014 \u0443\u043F\u043B\u0430\u0447\u0435\u043D\u043E.",
-  fees: "\u0421\u0443\u043C\u043C\u0430 \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0439 \u0438\u0437 \u0436\u0443\u0440\u043D\u0430\u043B\u0430 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 \u2014 \u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u043E: \u043E\u043D\u0438 \u0443\u0436\u0435 \u0443\u0447\u0442\u0435\u043D\u044B \u0432 closedPnl \u0438 \u0432 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u0435 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432, \u0432 \u0438\u0442\u043E\u0433 \u043F\u043E\u0432\u0442\u043E\u0440\u043D\u043E \u043D\u0435 \u0432\u0445\u043E\u0434\u044F\u0442.",
-  closedOptions: "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0445 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u0434\u0430\u0442\u0435 \u0437\u0430\u043A\u0440\u044B\u0442\u0438\u044F, \u0437\u0430 \u0432\u044B\u0447\u0435\u0442\u043E\u043C \u0432\u0441\u0435\u0445 \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0439, \u0432\u043A\u043B\u044E\u0447\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044E. \u0412 \u043F\u0440\u0435\u0434\u0435\u043B\u0430\u0445 6 \u043C\u0435\u0441\u044F\u0446\u0435\u0432 \u2014 \u0441\u0443\u043C\u043C\u0430 totalPnl \u0431\u0438\u0440\u0436\u0438. \u0413\u043B\u0443\u0431\u0436\u0435 \u2014 \u0438\u0437 \u0436\u0443\u0440\u043D\u0430\u043B\u0430: \u043F\u043E \u043A\u0430\u0436\u0434\u043E\u0439 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 \u0441\u0443\u043C\u043C\u0430 change (\u043F\u0440\u0435\u043C\u0438\u0438, \u0440\u0430\u0441\u0447\u0451\u0442 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438, \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0438); \u0441\u0432\u0435\u0440\u0435\u043D\u043E \u0441 totalPnl \u0431\u0438\u0440\u0436\u0438 \u0434\u043E \u0446\u0435\u043D\u0442\u0430 (2026-09-27). \u041D\u0435 \u0432\u0438\u0434\u043D\u044B \u043F\u043E\u0437\u0438\u0446\u0438\u0438, \u043E\u0442\u043A\u0440\u044B\u0442\u044B\u0435 \u0434\u043E \u043D\u0430\u0447\u0430\u043B\u0430 \u0436\u0443\u0440\u043D\u0430\u043B\u0430 \u0438 \u0438\u0441\u0442\u0451\u043A\u0448\u0438\u0435 \u0432\u043D\u0435 \u0434\u0435\u043D\u0435\u0433: \u0442\u0430\u043A\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F \u0437\u0430\u043F\u0438\u0441\u0435\u0439 \u043D\u0435 \u043E\u0441\u0442\u0430\u0432\u043B\u044F\u0435\u0442.",
-  total: "closedPerps + closedOptions \u043F\u043E \u0432\u0430\u043B\u044E\u0442\u0435. \u041A\u043E\u043C\u0438\u0441\u0441\u0438\u0438 \u0438 \u0444\u0430\u043D\u0434\u0438\u043D\u0433 \u0443\u0436\u0435 \u0432\u043D\u0443\u0442\u0440\u0438 \u043D\u0438\u0445. \u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0439 \u0443\u0436\u0435 \u0432\u0445\u043E\u0434\u0438\u0442 \u0432 closedOptions. \u0421\u043F\u043E\u0442 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442: \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u0441\u0447\u0438\u0442\u0430\u0435\u0442 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0441\u043F\u043E\u0442\u043E\u0432\u044B\u0445 \u0441\u0434\u0435\u043B\u043E\u043A (\u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u043F\u043E \u0441\u043F\u043E\u0442\u0443 \u043D\u0435\u0442). \u041F\u043E\u043B\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0437\u0430 \u0432\u0441\u0451 \u0432\u0440\u0435\u043C\u044F, \u0432\u043A\u043B\u044E\u0447\u0430\u044F \u0441\u043F\u043E\u0442, \u2014 \u043A\u043E\u043C\u0430\u043D\u0434\u0430 funds."
+  closedPerps: `Сумма closedPnl закрытых бессрочных и фьючерсов (уже за вычетом комиссий открытия и закрытия). Валюта — по записи этого инструмента в журнале; нет записи — «${UNKNOWN_CURRENCY}».`,
+  funding: "Сумма funding из журнала за период — справочно: фандинг закрытых позиций уже входит в closedPnl (сверено вживую 2026-09-27), фандинг по ещё открытым позициям в реализованный результат не входит. Плюс — получено, минус — уплачено.",
+  fees: "Сумма комиссий из журнала за период — справочно: они уже учтены в closedPnl и в результате опционов, в итог повторно не входят.",
+  closedOptions: "Результат закрытых опционов по дате закрытия, за вычетом всех комиссий, включая экспирацию. В пределах 6 месяцев — сумма totalPnl биржи. Глубже — из журнала: по каждой позиции сумма change (премии, расчёт экспирации, комиссии); сверено с totalPnl биржи до цента (2026-09-27). Не видны позиции, открытые до начала журнала и истёкшие вне денег: такая экспирация записей не оставляет.",
+  total: "closedPerps + closedOptions по валюте. Комиссии и фандинг уже внутри них. Результат экспираций уже входит в closedOptions. Спот не входит: биржа не считает результат спотовых сделок (закрытых позиций по споту нет). Полный результат за всё время, включая спот, — команда funds."
 };
-var perpSource = (category) => ({ label: `\u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 ${category}`, path: "/v5/position/closed-pnl", params: { category, limit: "100" }, windowDays: 7, depthDays: DEPTH_2Y_DAYS, depthText: "2 \u043B\u0435\u0442" });
-var OPTION_SOURCE = { label: "\u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0435 \u043E\u043F\u0446\u0438\u043E\u043D\u044B", path: "/v5/position/get-closed-positions", params: { category: "option", limit: "100" }, windowDays: 7, depthDays: DEPTH_6M_DAYS, depthText: "6 \u043C\u0435\u0441\u044F\u0446\u0435\u0432" };
+var perpSource = (category) => ({ label: `закрытые позиции ${category}`, path: "/v5/position/closed-pnl", params: { category, limit: "100" }, windowDays: 7, depthDays: DEPTH_2Y_DAYS, depthText: "2 лет" });
+var OPTION_SOURCE = { label: "закрытые опционы", path: "/v5/position/get-closed-positions", params: { category: "option", limit: "100" }, windowDays: 7, depthDays: DEPTH_6M_DAYS, depthText: "6 месяцев" };
 var inPeriod = (t, p) => t >= p.from && t <= p.to;
 function add(map, key, value2) {
   map.set(key, (map.get(key) ?? 0) + value2);
@@ -5237,46 +5237,46 @@ async function pnl(client3, options, deps2) {
     computed: {
       optionsSource: fromExchange ? "exchange" : "journal",
       currencies: currencies(closedPerps, optionsByCurrency(fromExchange ? closedOptions : null, positions2), inside),
-      excluded: excludedCount ? `${excludedCount} \u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u0437\u0430\u043A\u0440\u044B\u0442\u044B \u0432 \u043F\u0435\u0440\u0438\u043E\u0434\u0435, \u043D\u043E \u043E\u0442\u043A\u0440\u044B\u0442\u044B \u0440\u0430\u043D\u044C\u0448\u0435 \u043D\u0430\u0447\u0430\u043B\u0430 \u0436\u0443\u0440\u043D\u0430\u043B\u0430 \u0431\u0438\u0440\u0436\u0438: \u0438\u0445 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0432 \u0438\u0442\u043E\u0433 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442.` : null
+      excluded: excludedCount ? `${excludedCount} опционных позиций закрыты в периоде, но открыты раньше начала журнала биржи: их результат в итог не входит.` : null
     },
     computedNotes: NOTES2
   };
 }
 function renderPnl(r) {
   const perps = r.closedPerps.map((p) => [utcTime(p.updatedTime), p.symbol, p.side, p.closedSize, p.avgEntryPrice, p.avgExitPrice, p.closedPnl]);
-  const opts = r.closedOptions.map((o) => [utcTime(o.closeTime), o.symbol, o.side, o.qty, o.avgEntryPrice, o.deliveryPrice || "\u2014", o.totalPnl]);
-  const positions2 = r.optionPositions.map((p) => [p.closeTime === null ? "\u2014" : utcTime(p.closeTime), p.symbol, p.currency, numOrDash(p.result, 8), p.reason ?? ""]);
+  const opts = r.closedOptions.map((o) => [utcTime(o.closeTime), o.symbol, o.side, o.qty, o.avgEntryPrice, o.deliveryPrice || "—", o.totalPnl]);
+  const positions2 = r.optionPositions.map((p) => [p.closeTime === null ? "—" : utcTime(p.closeTime), p.symbol, p.currency, numOrDash(p.result, 8), p.reason ?? ""]);
   const shown = r.computed.currencies.filter((c) => c.total !== 0);
   const hidden = r.computed.currencies.length - shown.length;
   const totals = shown.map((c) => [c.currency, numOrDash(c.closedPerps, 8), numOrDash(c.closedOptions, 8), numOrDash(c.total, 8), numOrDash(c.funding, 8), numOrDash(c.fees, 8)]);
-  const optionsBlock = r.computed.optionsSource === "exchange" ? ["\u0417\u0430\u043A\u0440\u044B\u0442\u044B\u0435 \u043E\u043F\u0446\u0438\u043E\u043D\u044B (\u0431\u0438\u0440\u0436\u0430):", opts.length ? renderTable(["\u0417\u0430\u043A\u0440\u044B\u0442 UTC", "\u041A\u043E\u043D\u0442\u0440\u0430\u043A\u0442", "\u0421\u0442\u043E\u0440\u043E\u043D\u0430", "\u041E\u0431\u044A\u0451\u043C", "\u0412\u0445\u043E\u0434", "\u0426\u0435\u043D\u0430 \u0440\u0430\u0441\u0447\u0451\u0442\u0430", "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442"], opts) : "\u043D\u0435\u0442"] : ["\u0417\u0430\u043A\u0440\u044B\u0442\u044B\u0435 \u043E\u043F\u0446\u0438\u043E\u043D\u044B \u043F\u043E \u0436\u0443\u0440\u043D\u0430\u043B\u0443 [\u0440\u0430\u0441\u0447\u0451\u0442]:", positions2.length ? renderTable(["\u0417\u0430\u043A\u0440\u044B\u0442\u0430 UTC", "\u041A\u043E\u043D\u0442\u0440\u0430\u043A\u0442", "\u0412\u0430\u043B\u044E\u0442\u0430", "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442", "\u041F\u043E\u0447\u0435\u043C\u0443 \u0431\u0435\u0437 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u0430"], positions2) : "\u043D\u0435\u0442"];
+  const optionsBlock = r.computed.optionsSource === "exchange" ? ["Закрытые опционы (биржа):", opts.length ? renderTable(["Закрыт UTC", "Контракт", "Сторона", "Объём", "Вход", "Цена расчёта", "Результат"], opts) : "нет"] : ["Закрытые опционы по журналу [расчёт]:", positions2.length ? renderTable(["Закрыта UTC", "Контракт", "Валюта", "Результат", "Почему без результата"], positions2) : "нет"];
   return [
     renderPeriod(r.period, r.coverage),
     "",
-    "\u0417\u0430\u043A\u0440\u044B\u0442\u044B\u0435 \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435 \u0438 \u0444\u044C\u044E\u0447\u0435\u0440\u0441\u044B:",
-    perps.length ? renderTable(["\u0417\u0430\u043A\u0440\u044B\u0442\u0430 UTC", "\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442", "\u0421\u0442\u043E\u0440\u043E\u043D\u0430", "\u041E\u0431\u044A\u0451\u043C", "\u0412\u0445\u043E\u0434", "\u0412\u044B\u0445\u043E\u0434", "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442"], perps) : "\u043D\u0435\u0442",
+    "Закрытые бессрочные и фьючерсы:",
+    perps.length ? renderTable(["Закрыта UTC", "Инструмент", "Сторона", "Объём", "Вход", "Выход", "Результат"], perps) : "нет",
     "",
     ...optionsBlock,
     "",
-    "\u042D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u0432 \u0434\u0435\u043D\u044C\u0433\u0430\u0445:",
+    "Экспирации в деньгах:",
     renderDeliveryTable(r.deliveries),
     "",
-    "\u0418\u0442\u043E\u0433 \u043F\u043E \u0432\u0430\u043B\u044E\u0442\u0435 [\u0440\u0430\u0441\u0447\u0451\u0442]:",
-    totals.length ? renderTable(["\u0412\u0430\u043B\u044E\u0442\u0430", "\u0411\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435", "\u041E\u043F\u0446\u0438\u043E\u043D\u044B", "\u0418\u0442\u043E\u0433", "\u0424\u0430\u043D\u0434\u0438\u043D\u0433 (\u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u043E)", "\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u0438 (\u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u043E)"], totals) : "\u043D\u0435\u0442",
-    ...r.computed.excluded ? [`\u041D\u0435 \u0432\u043E\u0448\u043B\u043E: ${r.computed.excluded}`] : [],
-    ...hidden ? [`\u0412\u0430\u043B\u044E\u0442 \u0441 \u043D\u0443\u043B\u0435\u0432\u044B\u043C \u0438\u0442\u043E\u0433\u043E\u043C (\u0442\u043E\u043B\u044C\u043A\u043E \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0438): ${hidden}, \u043F\u043E\u043B\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u2014 \u0432 --json.`] : [],
+    "Итог по валюте [расчёт]:",
+    totals.length ? renderTable(["Валюта", "Бессрочные", "Опционы", "Итог", "Фандинг (справочно)", "Комиссии (справочно)"], totals) : "нет",
+    ...r.computed.excluded ? [`Не вошло: ${r.computed.excluded}`] : [],
+    ...hidden ? [`Валют с нулевым итогом (только комиссии): ${hidden}, полный список — в --json.`] : [],
     "",
-    `* [\u0440\u0430\u0441\u0447\u0451\u0442] \u0418\u0442\u043E\u0433: ${r.computedNotes.total}`,
-    `* [\u0440\u0430\u0441\u0447\u0451\u0442] \u041E\u043F\u0446\u0438\u043E\u043D\u044B: ${r.computedNotes.closedOptions}`,
-    `* [\u0440\u0430\u0441\u0447\u0451\u0442] \u041A\u043E\u043C\u0438\u0441\u0441\u0438\u0438: ${r.computedNotes.fees}`
+    `* [расчёт] Итог: ${r.computedNotes.total}`,
+    `* [расчёт] Опционы: ${r.computedNotes.closedOptions}`,
+    `* [расчёт] Комиссии: ${r.computedNotes.fees}`
   ].join("\n");
 }
 
 // src/commands/trades.ts
 var TRADES_DEFAULT_DAYS = 30;
 var TRADE_CATEGORIES = ["spot", "linear", "inverse", "option"];
-var UNKNOWN_CURRENCY2 = "\u043D\u0435 \u0443\u043A\u0430\u0437\u0430\u043D\u0430";
-var FEES_NOTE = `\u0421\u0443\u043C\u043C\u0430 execFee \u043F\u043E \u0432\u0430\u043B\u044E\u0442\u0435 \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0438 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434; \u0441\u0442\u0440\u043E\u043A\u0438 \u0444\u0430\u043D\u0434\u0438\u043D\u0433\u0430 \u043D\u0435 \u0432\u0445\u043E\u0434\u044F\u0442. \u041E\u0442\u0440\u0438\u0446\u0430\u0442\u0435\u043B\u044C\u043D\u0430\u044F \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u044F \u2014 \u0432\u043E\u0437\u0432\u0440\u0430\u0442 (\u0440\u0435\u0431\u0435\u0439\u0442). \xAB${UNKNOWN_CURRENCY2}\xBB \u2014 \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u0437\u0430\u043F\u043E\u043B\u043D\u0438\u043B\u0430 feeCurrency.`;
+var UNKNOWN_CURRENCY2 = "не указана";
+var FEES_NOTE = `Сумма execFee по валюте комиссии за период; строки фандинга не входят. Отрицательная комиссия — возврат (ребейт). «${UNKNOWN_CURRENCY2}» — биржа не заполнила feeCurrency.`;
 function toView3(category, e) {
   return {
     category,
@@ -5302,7 +5302,7 @@ async function trades(client3, options, deps2) {
   const coverage = [];
   for (const category of options.category ? [options.category] : TRADE_CATEGORIES) {
     const params = { category, limit: "100", ...options.symbol ? { symbol: options.symbol } : {} };
-    const source = { label: `\u0441\u0434\u0435\u043B\u043A\u0438 ${category}`, path: "/v5/execution/list", params, windowDays: 7, depthDays: DEPTH_2Y_DAYS, depthText: "2 \u043B\u0435\u0442" };
+    const source = { label: `сделки ${category}`, path: "/v5/execution/list", params, windowDays: 7, depthDays: DEPTH_2Y_DAYS, depthText: "2 лет" };
     const r = await fetchWindowed(client3, source, options.period, deps2);
     views.push(...r.rows.filter((e) => e.execType !== "Funding").map((e) => toView3(category, e)));
     coverage.push(r.coverage);
@@ -5323,7 +5323,7 @@ function renderTrades(r) {
     t.execPrice,
     t.execQty,
     `${t.execFee} ${t.feeCurrency}`.trim(),
-    t.isMaker ? "\u043C\u0435\u0439\u043A\u0435\u0440" : "\u0442\u0435\u0439\u043A\u0435\u0440",
+    t.isMaker ? "мейкер" : "тейкер",
     orDash(t.tradeIv),
     orDash(t.markIv),
     orDash(t.underlyingPrice)
@@ -5332,10 +5332,10 @@ function renderTrades(r) {
   return [
     renderPeriod(r.period, r.coverage),
     "",
-    r.trades.length ? renderTable(["\u0412\u0440\u0435\u043C\u044F UTC", "\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442", "\u0421\u0442\u043E\u0440\u043E\u043D\u0430", "\u0426\u0435\u043D\u0430", "\u041E\u0431\u044A\u0451\u043C", "\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u044F", "\u0420\u043E\u043B\u044C", "IV \u0441\u0434\u0435\u043B\u043A\u0438", "IV \u043C\u0430\u0440\u043A\u0438\u0440.", "\u0411\u0430\u0437\u043E\u0432\u044B\u0439"], rows) : "\u0421\u0434\u0435\u043B\u043E\u043A \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 \u043D\u0435\u0442.",
+    r.trades.length ? renderTable(["Время UTC", "Инструмент", "Сторона", "Цена", "Объём", "Комиссия", "Роль", "IV сделки", "IV маркир.", "Базовый"], rows) : "Сделок за период нет.",
     "",
-    `\u041A\u043E\u043C\u0438\u0441\u0441\u0438\u0438 [\u0440\u0430\u0441\u0447\u0451\u0442]: ${fees.length ? fees.join(", ") : "\u043D\u0435\u0442"}`,
-    `* [\u0440\u0430\u0441\u0447\u0451\u0442] ${r.computedNotes.feesByCurrency}`
+    `Комиссии [расчёт]: ${fees.length ? fees.join(", ") : "нет"}`,
+    `* [расчёт] ${r.computedNotes.feesByCurrency}`
   ].join("\n");
 }
 
@@ -5343,28 +5343,28 @@ function renderTrades(r) {
 var badPeriod = (userMessage) => new AppError({ code: "APP_BAD_PERIOD", userMessage });
 var dayStart = (date) => Date.parse(`${date}T00:00:00Z`);
 function resolvePeriod(args, defaultDays, now) {
-  if (args.days !== void 0 && (args.from || args.to)) throw badPeriod("\u041F\u0435\u0440\u0438\u043E\u0434 \u0437\u0430\u0434\u0430\u0451\u0442\u0441\u044F \u043B\u0438\u0431\u043E --days, \u043B\u0438\u0431\u043E \u0434\u0430\u0442\u0430\u043C\u0438 --from/--to, \u043D\u0435 \u0432\u043C\u0435\u0441\u0442\u0435.");
+  if (args.days !== void 0 && (args.from || args.to)) throw badPeriod("Период задаётся либо --days, либо датами --from/--to, не вместе.");
   if (args.days !== void 0) return { from: now - args.days * DAY_MS, to: now };
   const to = args.to ? Math.min(dayStart(args.to) + DAY_MS - 1, now) : now;
   const from = args.from ? dayStart(args.from) : to - defaultDays * DAY_MS;
-  if (from > to) throw badPeriod(`\u041D\u0430\u0447\u0430\u043B\u043E \u043F\u0435\u0440\u0438\u043E\u0434\u0430 (${args.from}) \u043F\u043E\u0437\u0436\u0435 \u0435\u0433\u043E \u043A\u043E\u043D\u0446\u0430.`);
+  if (from > to) throw badPeriod(`Начало периода (${args.from}) позже его конца.`);
   return { from, to };
 }
 
 // src/cli/register-history.ts
 function parseDaysArg(value2) {
-  if (!/^\d+$/.test(value2) || Number(value2) < 1) throw new InvalidArgumentError("\u0447\u0438\u0441\u043B\u043E \u0434\u043D\u0435\u0439 \u2014 \u0446\u0435\u043B\u043E\u0435 \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0443\u043B\u044F, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 30.");
+  if (!/^\d+$/.test(value2) || Number(value2) < 1) throw new InvalidArgumentError("число дней — целое больше нуля, например 30.");
   return Number(value2);
 }
 function parseDateArg(value2) {
   const ms = Date.parse(`${value2}T00:00:00Z`);
   const ok = /^\d{4}-\d{2}-\d{2}$/.test(value2) && !Number.isNaN(ms) && new Date(ms).toISOString().startsWith(value2);
-  if (!ok) throw new InvalidArgumentError("\u0434\u0430\u0442\u0430 \u0432 \u0444\u043E\u0440\u043C\u0430\u0442\u0435 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 2026-09-01.");
+  if (!ok) throw new InvalidArgumentError("дата в формате ГГГГ-ММ-ДД, например 2026-09-01.");
   return value2;
 }
 function parseCategoryArg(value2) {
   const v = value2.toLowerCase();
-  if (!TRADE_CATEGORIES.includes(v)) throw new InvalidArgumentError("\u043A\u0430\u0442\u0435\u0433\u043E\u0440\u0438\u044F: spot, linear, inverse \u0438\u043B\u0438 option.");
+  if (!TRADE_CATEGORIES.includes(v)) throw new InvalidArgumentError("категория: spot, linear, inverse или option.");
   return v;
 }
 var client = () => new BybitClient({ credentials: loadCredentials(process.env), baseUrl: resolveBaseUrl(process.env) });
@@ -5379,32 +5379,32 @@ function liveDeps() {
   };
 }
 function withPeriod(cmd, defaultDays, text) {
-  return cmd.option("--days <n>", `\u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 N \u0434\u043D\u0435\u0439 (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E ${text})`, parseDaysArg).option("--from <date>", "\u0441 \u0434\u0430\u0442\u044B \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414 (UTC)", parseDateArg).option("--to <date>", "\u043F\u043E \u0434\u0430\u0442\u0443 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414 \u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E (UTC)", parseDateArg);
+  return cmd.option("--days <n>", `последние N дней (по умолчанию ${text})`, parseDaysArg).option("--from <date>", "с даты ГГГГ-ММ-ДД (UTC)", parseDateArg).option("--to <date>", "по дату ГГГГ-ММ-ДД включительно (UTC)", parseDateArg);
 }
 function print(cmd, value2, render) {
   const { json } = cmd.optsWithGlobals();
   console.log(formatOutput(value2, Boolean(json), render));
 }
 function registerHistoryCommands(program2) {
-  withPeriod(program2.command("trades").description("\u0438\u0441\u0442\u043E\u0440\u0438\u044F \u0441\u0434\u0435\u043B\u043E\u043A: \u0446\u0435\u043D\u0430, \u043E\u0431\u044A\u0451\u043C, \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u044F; IV \u0438 \u0431\u0430\u0437\u043E\u0432\u044B\u0439 \u0430\u043A\u0442\u0438\u0432 \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C"), TRADES_DEFAULT_DAYS, "30, \u0434\u043E 2 \u043B\u0435\u0442").option("--category <c>", "spot, linear, inverse \u0438\u043B\u0438 option", parseCategoryArg).option("--symbol <s>", "\u043E\u0434\u0438\u043D \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTCUSDT").action(async (o, cmd) => {
+  withPeriod(program2.command("trades").description("история сделок: цена, объём, комиссия; IV и базовый актив по опционам"), TRADES_DEFAULT_DAYS, "30, до 2 лет").option("--category <c>", "spot, linear, inverse или option", parseCategoryArg).option("--symbol <s>", "один инструмент, например BTCUSDT").action(async (o, cmd) => {
     const deps2 = liveDeps();
     print(cmd, await trades(client(), { period: resolvePeriod(o, TRADES_DEFAULT_DAYS, deps2.now), category: o.category, symbol: o.symbol }, deps2), renderTrades);
   });
-  withPeriod(program2.command("operations").description("\u0436\u0443\u0440\u043D\u0430\u043B \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0439 \u0441 \u0438\u0442\u043E\u0433\u0430\u043C\u0438 \u043F\u043E \u0442\u0438\u043F\u0430\u043C"), OPERATIONS_DEFAULT_DAYS, "30, \u0434\u043E 2 \u043B\u0435\u0442").option("--type <t>", "\u0442\u0438\u043F \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 TRADE, SETTLEMENT, DELIVERY").option("--currency <c>", "\u0432\u0430\u043B\u044E\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 USDT").action(async (o, cmd) => {
+  withPeriod(program2.command("operations").description("журнал операций с итогами по типам"), OPERATIONS_DEFAULT_DAYS, "30, до 2 лет").option("--type <t>", "тип операции, например TRADE, SETTLEMENT, DELIVERY").option("--currency <c>", "валюта, например USDT").action(async (o, cmd) => {
     const deps2 = liveDeps();
     print(cmd, await operations(client(), { period: resolvePeriod(o, OPERATIONS_DEFAULT_DAYS, deps2.now), type: o.type, currency: o.currency }, deps2), renderOperations);
   });
-  withPeriod(program2.command("pnl").description("\u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442: \u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438, \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438, \u0444\u0430\u043D\u0434\u0438\u043D\u0433"), PNL_DEFAULT_DAYS, "\u0432\u0441\u044F \u0433\u043B\u0443\u0431\u0438\u043D\u0430 \u0431\u0438\u0440\u0436\u0438, 2 \u0433\u043E\u0434\u0430").action(
+  withPeriod(program2.command("pnl").description("реализованный результат: закрытые позиции, экспирации, фандинг"), PNL_DEFAULT_DAYS, "вся глубина биржи, 2 года").action(
     async (o, cmd) => {
       const deps2 = liveDeps();
       print(cmd, await pnl(client(), { period: resolvePeriod(o, PNL_DEFAULT_DAYS, deps2.now) }, deps2), renderPnl);
     }
   );
-  withPeriod(program2.command("deliveries").description("\u0438\u0441\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u044F \u043D\u0430 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438: \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442, \u0446\u0435\u043D\u0430 \u0440\u0430\u0441\u0447\u0451\u0442\u0430, \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442"), DELIVERIES_DEFAULT_DAYS, "2 \u0433\u043E\u0434\u0430").option("--coin <coin>", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (o, cmd) => {
+  withPeriod(program2.command("deliveries").description("исполнения на экспирации: контракт, цена расчёта, результат"), DELIVERIES_DEFAULT_DAYS, "2 года").option("--coin <coin>", "базовая монета, например BTC").action(async (o, cmd) => {
     const deps2 = liveDeps();
     print(cmd, await deliveries(client(), { period: resolvePeriod(o, DELIVERIES_DEFAULT_DAYS, deps2.now), coin: o.coin }, deps2), renderDeliveries);
   });
-  program2.command("funds").description("\u043D\u0435\u0442\u0442\u043E-\u0432\u0432\u043E\u0434 \u0441\u0440\u0435\u0434\u0441\u0442\u0432 \u0441 \u043F\u0435\u0440\u0432\u043E\u0439 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438 (2023-11-20), \u0441\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C \u0441\u0447\u0451\u0442\u0430 \u0438 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442").action(async (_o, cmd) => {
+  program2.command("funds").description("нетто-ввод средств с первой операции (2023-11-20), стоимость счёта и результат").action(async (_o, cmd) => {
     print(cmd, await funds(client(), liveDeps()), renderFunds);
   });
 }
@@ -5421,7 +5421,7 @@ function readVersionedCache(filePath, schemaVersion, warn) {
   try {
     parsed = JSON.parse(import_node_fs.default.readFileSync(filePath, "utf8"));
   } catch {
-    warn(`\u041A\u044D\u0448 \u043F\u043E\u0432\u0440\u0435\u0436\u0434\u0451\u043D \u0438 \u0431\u0443\u0434\u0435\u0442 \u043F\u0435\u0440\u0435\u0437\u0430\u043F\u0438\u0441\u0430\u043D: ${filePath}`);
+    warn(`Кэш повреждён и будет перезаписан: ${filePath}`);
     return null;
   }
   const envelope = parsed;
@@ -5468,10 +5468,10 @@ async function fetchCategory(client3, category) {
 
 // src/catalog/resolve.ts
 function instrumentNotFound(symbol, category) {
-  const where = category ? ` \u0432 \u0440\u0430\u0437\u0434\u0435\u043B\u0435 ${category}` : "";
+  const where = category ? ` в разделе ${category}` : "";
   const option = parseOptionSymbol(symbol);
-  const hint = option ? `\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u044B\u0435 \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u044B \u2014 opt chain ${option.baseCoin} (--expiry ${option.expiryDate}).` : `\u041D\u0430\u0439\u0434\u0438\u0442\u0435 \u0442\u043E\u0447\u043D\u044B\u0439 \u0442\u0438\u043A\u0435\u0440 \u043A\u043E\u043C\u0430\u043D\u0434\u043E\u0439 search, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: search ${symbol.slice(0, 3)}.`;
-  return new AppError({ code: "APP_INSTRUMENT_NOT_FOUND", userMessage: `\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442 ${symbol}${where} \u043D\u0430 Bybit \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D. ${hint}` });
+  const hint = option ? `Доступные контракты — opt chain ${option.baseCoin} (--expiry ${option.expiryDate}).` : `Найдите точный тикер командой search, например: search ${symbol.slice(0, 3)}.`;
+  return new AppError({ code: "APP_INSTRUMENT_NOT_FOUND", userMessage: `Инструмент ${symbol}${where} на Bybit не найден. ${hint}` });
 }
 async function resolveCategories(client3, deps2, symbol, category) {
   if (category) return [category];
@@ -5507,7 +5507,7 @@ var isoDay2 = (ms) => new Date(ms).toISOString().slice(0, 10);
 async function history(client3, options, deps2) {
   const symbol = options.symbol.toUpperCase();
   if (options.category === "option" || !options.category && parseOptionSymbol(symbol)) {
-    throw badArgument(`\u0421\u0432\u0435\u0447\u0435\u0439 \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C Bybit \u043D\u0435 \u0434\u0430\u0451\u0442 (kline: \u0442\u043E\u043B\u044C\u043A\u043E spot, linear, inverse). \u0414\u043B\u044F ${symbol} \u0435\u0441\u0442\u044C quote \u0438 opt chain.`);
+    throw badArgument(`Свечей по опционам Bybit не даёт (kline: только spot, linear, inverse). Для ${symbol} есть quote и opt chain.`);
   }
   const category = await resolveCategory(client3, deps2, symbol, options.category);
   const { interval } = options;
@@ -5527,9 +5527,9 @@ async function history(client3, options, deps2) {
 }
 function boundary(symbol, period, interval, candles) {
   const first = candles[0];
-  if (!first) return `\u0417\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 ${isoDay2(period.from)} \u2014 ${isoDay2(period.to)} \u0443 \u0431\u0438\u0440\u0436\u0438 \u043D\u0435\u0442 \u0441\u0432\u0435\u0447\u0435\u0439 ${symbol}.`;
+  if (!first) return `За период ${isoDay2(period.from)} — ${isoDay2(period.to)} у биржи нет свечей ${symbol}.`;
   if (first.start - period.from < CANDLE_DAYS[interval] * DAY_MS) return null;
-  return `\u0411\u0438\u0440\u0436\u0430 \u043E\u0442\u0434\u0430\u0451\u0442 \u0441\u0432\u0435\u0447\u0438 ${symbol} \u0441 ${isoDay2(first.start)}, \u0440\u0430\u043D\u044C\u0448\u0435 \u0434\u0430\u043D\u043D\u044B\u0445 \u043D\u0435\u0442; \u0437\u0430\u043F\u0440\u043E\u0448\u0435\u043D\u043E \u0441 ${isoDay2(period.from)}.`;
+  return `Биржа отдаёт свечи ${symbol} с ${isoDay2(first.start)}, раньше данных нет; запрошено с ${isoDay2(period.from)}.`;
 }
 function candleEnd(start, interval) {
   if (interval === "M") {
@@ -5538,14 +5538,14 @@ function candleEnd(start, interval) {
   }
   return start + CANDLE_DAYS[interval] * DAY_MS;
 }
-var INTERVAL_TEXT = { D: "\u0434\u043D\u0435\u0432\u043D\u044B\u0435", W: "\u043D\u0435\u0434\u0435\u043B\u044C\u043D\u044B\u0435", M: "\u043C\u0435\u0441\u044F\u0447\u043D\u044B\u0435" };
+var INTERVAL_TEXT = { D: "дневные", W: "недельные", M: "месячные" };
 function renderHistory(r) {
   const rows = r.candles.map((c) => [isoDay2(c.start), c.open, c.high, c.low, c.close, c.volume]);
   return [
-    `${r.symbol} (${r.category}), \u0441\u0432\u0435\u0447\u0438 ${INTERVAL_TEXT[r.interval]}, ${isoDay2(r.period.from)} \u2014 ${isoDay2(r.period.to)} (UTC)`,
+    `${r.symbol} (${r.category}), свечи ${INTERVAL_TEXT[r.interval]}, ${isoDay2(r.period.from)} — ${isoDay2(r.period.to)} (UTC)`,
     ...r.boundary ? [r.boundary] : [],
-    ...rows.length ? [renderTable(["\u041D\u0430\u0447\u0430\u043B\u043E UTC", "\u041E\u0442\u043A\u0440\u044B\u0442\u0438\u0435", "\u041C\u0430\u043A\u0441", "\u041C\u0438\u043D", "\u0417\u0430\u043A\u0440\u044B\u0442\u0438\u0435", "\u041E\u0431\u044A\u0451\u043C"], rows)] : [],
-    ...r.lastCandleOpen ? ["\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0441\u0432\u0435\u0447\u0430 \u0435\u0449\u0451 \u043D\u0435 \u0437\u0430\u043A\u0440\u044B\u0442\u0430: \u0435\u0451 \u0437\u0430\u043A\u0440\u044B\u0442\u0438\u0435 \u2014 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0446\u0435\u043D\u0430."] : []
+    ...rows.length ? [renderTable(["Начало UTC", "Открытие", "Макс", "Мин", "Закрытие", "Объём"], rows)] : [],
+    ...r.lastCandleOpen ? ["Последняя свеча ещё не закрыта: её закрытие — последняя цена."] : []
   ].join("\n");
 }
 
@@ -5565,11 +5565,11 @@ function flatten(info, prefix = "") {
     const name = prefix + key;
     if (v !== null && typeof v === "object" && !Array.isArray(v)) return flatten(v, `${name}.`);
     if ((key === "launchTime" || key === "deliveryTime") && typeof v === "string" && v !== "0") return [[name, `${v} (${new Date(Number(v)).toISOString().slice(0, 16).replace("T", " ")} UTC)`]];
-    return [[name, v === null || v === "" ? "\u2014" : String(v)]];
+    return [[name, v === null || v === "" ? "—" : String(v)]];
   });
 }
 function renderInstrument(r) {
-  return r.cards.map((c) => [`${r.symbol} (${c.category}):`, renderTable(["\u041F\u043E\u043B\u0435", "\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435"], flatten(c.info))].join("\n")).join("\n\n");
+  return r.cards.map((c) => [`${r.symbol} (${c.category}):`, renderTable(["Поле", "Значение"], flatten(c.info))].join("\n")).join("\n\n");
 }
 
 // src/commands/orderbook.ts
@@ -5580,17 +5580,17 @@ async function orderbook(client3, options, deps2) {
   const symbol = options.symbol.toUpperCase();
   const category = await resolveCategory(client3, deps2, symbol, options.category);
   const depth = options.depth ?? ORDERBOOK_DEFAULT_DEPTH;
-  if (category === "option" && depth > ORDERBOOK_OPTION_MAX_DEPTH) throw badArgument(`\u0421\u0442\u0430\u043A\u0430\u043D \u043E\u043F\u0446\u0438\u043E\u043D\u0430 \u0443 Bybit \u043D\u0435 \u0433\u043B\u0443\u0431\u0436\u0435 ${ORDERBOOK_OPTION_MAX_DEPTH} \u0443\u0440\u043E\u0432\u043D\u0435\u0439.`);
+  if (category === "option" && depth > ORDERBOOK_OPTION_MAX_DEPTH) throw badArgument(`Стакан опциона у Bybit не глубже ${ORDERBOOK_OPTION_MAX_DEPTH} уровней.`);
   const r = await getForSymbol(client3, "/v5/market/orderbook", { category, symbol, limit: String(depth) }, options.category);
   if (Array.isArray(r)) throw instrumentNotFound(symbol, category);
   return { symbol, category, depth, bids: r.b, asks: r.a, ts: r.ts };
 }
 function renderOrderbook(r) {
-  const asks = [...r.asks].reverse().map(([price, size]) => ["\u043F\u0440\u043E\u0434\u0430\u0436\u0430", price, size]);
-  const bids = r.bids.map(([price, size]) => ["\u043F\u043E\u043A\u0443\u043F\u043A\u0430", price, size]);
+  const asks = [...r.asks].reverse().map(([price, size]) => ["продажа", price, size]);
+  const bids = r.bids.map(([price, size]) => ["покупка", price, size]);
   return [
-    `${r.symbol} (${r.category}), \u0434\u043E ${r.depth} \u0443\u0440\u043E\u0432\u043D\u0435\u0439, ${new Date(r.ts).toISOString().slice(0, 19).replace("T", " ")} UTC`,
-    asks.length + bids.length ? renderTable(["\u0421\u0442\u043E\u0440\u043E\u043D\u0430", "\u0426\u0435\u043D\u0430", "\u041E\u0431\u044A\u0451\u043C"], [...asks, ...bids]) : "\u0421\u0442\u0430\u043A\u0430\u043D \u043F\u0443\u0441\u0442: \u0437\u0430\u044F\u0432\u043E\u043A \u043D\u0435\u0442."
+    `${r.symbol} (${r.category}), до ${r.depth} уровней, ${new Date(r.ts).toISOString().slice(0, 19).replace("T", " ")} UTC`,
+    asks.length + bids.length ? renderTable(["Сторона", "Цена", "Объём"], [...asks, ...bids]) : "Стакан пуст: заявок нет."
   ].join("\n");
 }
 
@@ -5605,30 +5605,30 @@ async function quote(client3, options, deps2) {
   if (quotes.length === 0) throw instrumentNotFound(symbol, options.category);
   return { symbol, quotes };
 }
-var CONTRACT = [["lastPrice", "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F"], ["markPrice", "\u041C\u0430\u0440\u043A\u0438\u0440\u043E\u0432\u043A\u0430"], ["indexPrice", "\u0418\u043D\u0434\u0435\u043A\u0441"], ["bid1Price", "\u041F\u043E\u043A\u0443\u043F\u043A\u0430"], ["ask1Price", "\u041F\u0440\u043E\u0434\u0430\u0436\u0430"], ["price24hPcnt", "\u0418\u0437\u043C. 24\u0447 (\u0434\u043E\u043B\u044F)"], ["highPrice24h", "\u041C\u0430\u043A\u0441 24\u0447"], ["lowPrice24h", "\u041C\u0438\u043D 24\u0447"], ["volume24h", "\u041E\u0431\u044A\u0451\u043C 24\u0447"], ["turnover24h", "\u041E\u0431\u043E\u0440\u043E\u0442 24\u0447"], ["openInterest", "\u041E\u0442\u043A\u0440\u044B\u0442\u044B\u0439 \u0438\u043D\u0442\u0435\u0440\u0435\u0441"], ["fundingRate", "\u0424\u0430\u043D\u0434\u0438\u043D\u0433"], ["nextFundingTime", "\u0421\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0439 \u0444\u0430\u043D\u0434\u0438\u043D\u0433"]];
+var CONTRACT = [["lastPrice", "Последняя"], ["markPrice", "Маркировка"], ["indexPrice", "Индекс"], ["bid1Price", "Покупка"], ["ask1Price", "Продажа"], ["price24hPcnt", "Изм. 24ч (доля)"], ["highPrice24h", "Макс 24ч"], ["lowPrice24h", "Мин 24ч"], ["volume24h", "Объём 24ч"], ["turnover24h", "Оборот 24ч"], ["openInterest", "Открытый интерес"], ["fundingRate", "Фандинг"], ["nextFundingTime", "Следующий фандинг"]];
 var FIELDS = {
-  spot: [["lastPrice", "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F"], ["bid1Price", "\u041F\u043E\u043A\u0443\u043F\u043A\u0430"], ["ask1Price", "\u041F\u0440\u043E\u0434\u0430\u0436\u0430"], ["price24hPcnt", "\u0418\u0437\u043C. 24\u0447 (\u0434\u043E\u043B\u044F)"], ["highPrice24h", "\u041C\u0430\u043A\u0441 24\u0447"], ["lowPrice24h", "\u041C\u0438\u043D 24\u0447"], ["volume24h", "\u041E\u0431\u044A\u0451\u043C 24\u0447"], ["turnover24h", "\u041E\u0431\u043E\u0440\u043E\u0442 24\u0447"]],
+  spot: [["lastPrice", "Последняя"], ["bid1Price", "Покупка"], ["ask1Price", "Продажа"], ["price24hPcnt", "Изм. 24ч (доля)"], ["highPrice24h", "Макс 24ч"], ["lowPrice24h", "Мин 24ч"], ["volume24h", "Объём 24ч"], ["turnover24h", "Оборот 24ч"]],
   linear: CONTRACT,
   inverse: CONTRACT,
-  option: [["lastPrice", "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F"], ["markPrice", "\u041C\u0430\u0440\u043A\u0438\u0440\u043E\u0432\u043A\u0430"], ["bid1Price", "\u041F\u043E\u043A\u0443\u043F\u043A\u0430"], ["ask1Price", "\u041F\u0440\u043E\u0434\u0430\u0436\u0430"], ["markIv", "IV \u043C\u0430\u0440\u043A\u0438\u0440\u043E\u0432\u043A\u0438 (\u0434\u043E\u043B\u044F)"], ["bid1Iv", "IV \u043F\u043E\u043A\u0443\u043F\u043A\u0438"], ["ask1Iv", "IV \u043F\u0440\u043E\u0434\u0430\u0436\u0438"], ["underlyingPrice", "\u0411\u0430\u0437\u043E\u0432\u044B\u0439 \u0430\u043A\u0442\u0438\u0432"], ["delta", "\u0414\u0435\u043B\u044C\u0442\u0430"], ["gamma", "\u0413\u0430\u043C\u043C\u0430"], ["vega", "\u0412\u0435\u0433\u0430"], ["theta", "\u0422\u0435\u0442\u0430"], ["volume24h", "\u041E\u0431\u044A\u0451\u043C 24\u0447"], ["openInterest", "\u041E\u0442\u043A\u0440\u044B\u0442\u044B\u0439 \u0438\u043D\u0442\u0435\u0440\u0435\u0441"]]
+  option: [["lastPrice", "Последняя"], ["markPrice", "Маркировка"], ["bid1Price", "Покупка"], ["ask1Price", "Продажа"], ["markIv", "IV маркировки (доля)"], ["bid1Iv", "IV покупки"], ["ask1Iv", "IV продажи"], ["underlyingPrice", "Базовый актив"], ["delta", "Дельта"], ["gamma", "Гамма"], ["vega", "Вега"], ["theta", "Тета"], ["volume24h", "Объём 24ч"], ["openInterest", "Открытый интерес"]]
 };
-var TITLE = { spot: "\u0441\u043F\u043E\u0442", linear: "\u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0439 / \u0444\u044C\u044E\u0447\u0435\u0440\u0441 USDT, USDC", inverse: "\u0438\u043D\u0432\u0435\u0440\u0441\u043D\u044B\u0439", option: "\u043E\u043F\u0446\u0438\u043E\u043D" };
+var TITLE = { spot: "спот", linear: "бессрочный / фьючерс USDT, USDC", inverse: "инверсный", option: "опцион" };
 function value(field, raw) {
-  if (raw === void 0) return "\u2014";
+  if (raw === void 0) return "—";
   if (field === "nextFundingTime" && raw !== "" && raw !== "0") return `${new Date(Number(raw)).toISOString().slice(0, 16).replace("T", " ")} UTC`;
   return orDash(raw);
 }
 function renderQuote(r) {
-  return r.quotes.map((q) => [`${r.symbol} \u2014 ${TITLE[q.category]}:`, renderTable(["\u041F\u043E\u043B\u0435", "\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435"], FIELDS[q.category].map(([f, label]) => [label, value(f, q.ticker[f])]))].join("\n")).join("\n\n");
+  return r.quotes.map((q) => [`${r.symbol} — ${TITLE[q.category]}:`, renderTable(["Поле", "Значение"], FIELDS[q.category].map(([f, label]) => [label, value(f, q.ticker[f])]))].join("\n")).join("\n\n");
 }
 
 // src/commands/search.ts
 var CATEGORY_ORDER = ["spot", "linear", "inverse"];
 var TYPES = {
-  LinearPerpetual: "\u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0439",
-  LinearFutures: "\u0444\u044C\u044E\u0447\u0435\u0440\u0441",
-  InversePerpetual: "\u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0439 \u0438\u043D\u0432\u0435\u0440\u0441\u043D\u044B\u0439",
-  InverseFutures: "\u0444\u044C\u044E\u0447\u0435\u0440\u0441 \u0438\u043D\u0432\u0435\u0440\u0441\u043D\u044B\u0439"
+  LinearPerpetual: "бессрочный",
+  LinearFutures: "фьючерс",
+  InversePerpetual: "бессрочный инверсный",
+  InverseFutures: "фьючерс инверсный"
 };
 var TEXT_LIMIT = 50;
 function rank(e, q) {
@@ -5644,31 +5644,31 @@ async function search(client3, query, deps2) {
     return r === null ? [] : [{ e, r }];
   });
   ranked.sort((a, b) => a.r - b.r || CATEGORY_ORDER.indexOf(a.e.category) - CATEGORY_ORDER.indexOf(b.e.category) || (a.e.symbol < b.e.symbol ? -1 : a.e.symbol > b.e.symbol ? 1 : 0));
-  const matches = ranked.map(({ e }) => ({ symbol: e.symbol, category: e.category, type: TYPES[e.contractType] ?? "\u0441\u043F\u043E\u0442", baseCoin: e.baseCoin, quoteCoin: e.quoteCoin, status: e.status }));
+  const matches = ranked.map(({ e }) => ({ symbol: e.symbol, category: e.category, type: TYPES[e.contractType] ?? "спот", baseCoin: e.baseCoin, quoteCoin: e.quoteCoin, status: e.status }));
   const coins = await client3.getPublic("/v5/market/option-base-coins");
   return { query: q, matches, options: coins.list.filter((c) => c.baseCoin.includes(q)), catalogSavedAt: catalog.savedAt };
 }
 function renderSearch(r) {
-  if (r.matches.length === 0 && r.options.length === 0) return `\u041D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E \u043F\u043E \xAB${r.query}\xBB. \u0423\u0442\u043E\u0447\u043D\u0438\u0442\u0435 \u0442\u0438\u043A\u0435\u0440: BTC, BTCUSDT, SOL. \u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0439 \u043C\u043E\u043D\u0435\u0442 \u0443 Bybit \u043D\u0435\u0442, \u0442\u043E\u043B\u044C\u043A\u043E \u0442\u0438\u043A\u0435\u0440\u044B.`;
+  if (r.matches.length === 0 && r.options.length === 0) return `Ничего не найдено по «${r.query}». Уточните тикер: BTC, BTCUSDT, SOL. Названий монет у Bybit нет, только тикеры.`;
   const rows = r.matches.slice(0, TEXT_LIMIT).map((m) => [m.symbol, m.type, m.category, m.baseCoin, m.quoteCoin, m.status]);
   const more = r.matches.length - rows.length;
   return [
-    ...rows.length ? [renderTable(["\u0422\u0438\u043A\u0435\u0440", "\u0422\u0438\u043F", "\u0420\u0430\u0437\u0434\u0435\u043B", "\u041C\u043E\u043D\u0435\u0442\u0430", "\u041A\u043E\u0442\u0438\u0440\u0443\u0435\u0442\u0441\u044F \u0432", "\u0421\u0442\u0430\u0442\u0443\u0441"], rows)] : [],
-    ...more > 0 ? [`\u0418 \u0435\u0449\u0451 ${more}, \u043F\u043E\u043B\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u2014 \u0432 --json.`] : [],
-    ...r.options.map((o) => `${o.baseCoin} \u2014 \u043E\u043F\u0446\u0438\u043E\u043D\u044B${o.hasSymbol ? "" : " (\u0441\u0435\u0439\u0447\u0430\u0441 \u0431\u0435\u0437 \u0442\u043E\u0440\u0433\u0443\u0435\u043C\u044B\u0445 \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u043E\u0432)"}: \u0434\u0430\u0442\u044B \u2014 opt expiries ${o.baseCoin}, \u0434\u043E\u0441\u043A\u0430 \u2014 opt chain ${o.baseCoin}.`),
-    `\u0421\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A \u043E\u0442 ${new Date(r.catalogSavedAt).toISOString().slice(0, 16).replace("T", " ")} UTC.`
+    ...rows.length ? [renderTable(["Тикер", "Тип", "Раздел", "Монета", "Котируется в", "Статус"], rows)] : [],
+    ...more > 0 ? [`И ещё ${more}, полный список — в --json.`] : [],
+    ...r.options.map((o) => `${o.baseCoin} — опционы${o.hasSymbol ? "" : " (сейчас без торгуемых контрактов)"}: даты — opt expiries ${o.baseCoin}, доска — opt chain ${o.baseCoin}.`),
+    `Справочник от ${new Date(r.catalogSavedAt).toISOString().slice(0, 16).replace("T", " ")} UTC.`
   ].join("\n");
 }
 
 // src/cli/register-market.ts
 function parseIntervalArg(value2) {
   const v = value2.toUpperCase();
-  if (!CANDLE_INTERVALS.includes(v)) throw new InvalidArgumentError("\u0438\u043D\u0442\u0435\u0440\u0432\u0430\u043B \u0441\u0432\u0435\u0447\u0435\u0439: D (\u0434\u0435\u043D\u044C), W (\u043D\u0435\u0434\u0435\u043B\u044F) \u0438\u043B\u0438 M (\u043C\u0435\u0441\u044F\u0446).");
+  if (!CANDLE_INTERVALS.includes(v)) throw new InvalidArgumentError("интервал свечей: D (день), W (неделя) или M (месяц).");
   return v;
 }
 function parseDepthArg(value2) {
   const n = Number(value2);
-  if (!/^\d+$/.test(value2) || n < 1 || n > ORDERBOOK_MAX_DEPTH) throw new InvalidArgumentError(`\u0433\u043B\u0443\u0431\u0438\u043D\u0430 \u0441\u0442\u0430\u043A\u0430\u043D\u0430 \u2014 \u0446\u0435\u043B\u043E\u0435 \u043E\u0442 1 \u0434\u043E ${ORDERBOOK_MAX_DEPTH}.`);
+  if (!/^\d+$/.test(value2) || n < 1 || n > ORDERBOOK_MAX_DEPTH) throw new InvalidArgumentError(`глубина стакана — целое от 1 до ${ORDERBOOK_MAX_DEPTH}.`);
   return n;
 }
 var client2 = () => new BybitClient({ baseUrl: resolveBaseUrl(process.env) });
@@ -5678,17 +5678,17 @@ function print2(cmd, value2, render) {
   const { json } = cmd.optsWithGlobals();
   console.log(formatOutput(value2, Boolean(json), render));
 }
-var CATEGORY_HELP = "spot, linear, inverse \u0438\u043B\u0438 option (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E \u2014 \u043F\u043E \u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0443)";
+var CATEGORY_HELP = "spot, linear, inverse или option (по умолчанию — по справочнику)";
 function registerMarketCommands(program2) {
-  program2.command("quote").description("\u043A\u043E\u0442\u0438\u0440\u043E\u0432\u043A\u0430; \u0442\u0438\u043A\u0435\u0440 \u0438\u0437 \u043D\u0435\u0441\u043A\u043E\u043B\u044C\u043A\u0438\u0445 \u0440\u0430\u0437\u0434\u0435\u043B\u043E\u0432 \u2014 \u043F\u043E \u043A\u0430\u0436\u0434\u043E\u043C\u0443").argument("<symbol>", "\u0442\u0438\u043A\u0435\u0440, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTCUSDT").option("--category <c>", CATEGORY_HELP, parseCategoryArg).action(async (symbol, o, cmd) => print2(cmd, await quote(client2(), { symbol, ...o }, deps()), renderQuote));
-  program2.command("history").description("\u0441\u0432\u0435\u0447\u0438: \u0434\u043D\u0435\u0432\u043D\u044B\u0435, \u043D\u0435\u0434\u0435\u043B\u044C\u043D\u044B\u0435, \u043C\u0435\u0441\u044F\u0447\u043D\u044B\u0435; \u043F\u0440\u0438 \u0441\u043F\u043E\u0442\u0435 \u0438 \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u043E\u043C \u2014 \u0441\u043F\u043E\u0442").argument("<symbol>", "\u0442\u0438\u043A\u0435\u0440, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTCUSDT").option("--category <c>", CATEGORY_HELP, parseCategoryArg).option("--interval <i>", "D, W \u0438\u043B\u0438 M (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E D)", parseIntervalArg).option("--days <n>", `\u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 N \u0434\u043D\u0435\u0439 (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E ${HISTORY_DEFAULT_DAYS}, \u0434\u043E 3 \u043B\u0435\u0442 \u0438 \u0433\u043B\u0443\u0431\u0436\u0435)`, parseDaysArg).option("--from <date>", "\u0441 \u0434\u0430\u0442\u044B \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414 (UTC)", parseDateArg).option("--to <date>", "\u043F\u043E \u0434\u0430\u0442\u0443 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414 \u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E (UTC)", parseDateArg).action(async (symbol, o, cmd) => {
+  program2.command("quote").description("котировка; тикер из нескольких разделов — по каждому").argument("<symbol>", "тикер, например BTCUSDT").option("--category <c>", CATEGORY_HELP, parseCategoryArg).action(async (symbol, o, cmd) => print2(cmd, await quote(client2(), { symbol, ...o }, deps()), renderQuote));
+  program2.command("history").description("свечи: дневные, недельные, месячные; при споте и бессрочном — спот").argument("<symbol>", "тикер, например BTCUSDT").option("--category <c>", CATEGORY_HELP, parseCategoryArg).option("--interval <i>", "D, W или M (по умолчанию D)", parseIntervalArg).option("--days <n>", `последние N дней (по умолчанию ${HISTORY_DEFAULT_DAYS}, до 3 лет и глубже)`, parseDaysArg).option("--from <date>", "с даты ГГГГ-ММ-ДД (UTC)", parseDateArg).option("--to <date>", "по дату ГГГГ-ММ-ДД включительно (UTC)", parseDateArg).action(async (symbol, o, cmd) => {
     const d = deps();
     const period = resolvePeriod(o, HISTORY_DEFAULT_DAYS, d.now);
     print2(cmd, await history(client2(), { symbol, category: o.category, interval: o.interval ?? "D", period }, d), renderHistory);
   });
-  program2.command("orderbook").description("\u0441\u0442\u0430\u043A\u0430\u043D; \u043F\u0440\u0438 \u0441\u043F\u043E\u0442\u0435 \u0438 \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u043E\u043C \u2014 \u0441\u043F\u043E\u0442").argument("<symbol>", "\u0442\u0438\u043A\u0435\u0440, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTCUSDT").option("--category <c>", CATEGORY_HELP, parseCategoryArg).option("--depth <n>", "\u0443\u0440\u043E\u0432\u043D\u0435\u0439 \u043D\u0430 \u0441\u0442\u043E\u0440\u043E\u043D\u0443 (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E 25, \u0443 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043D\u0435 \u0431\u043E\u043B\u044C\u0448\u0435 25)", parseDepthArg).action(async (symbol, o, cmd) => print2(cmd, await orderbook(client2(), { symbol, ...o }, deps()), renderOrderbook));
-  program2.command("instrument").description("\u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0430 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430: \u0441\u0442\u0430\u0442\u0443\u0441, \u0448\u0430\u0433\u0438 \u0446\u0435\u043D\u044B \u0438 \u043A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u0430, \u043F\u043B\u0435\u0447\u043E, \u0434\u0430\u0442\u044B").argument("<symbol>", "\u0442\u0438\u043A\u0435\u0440, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTCUSDT").option("--category <c>", CATEGORY_HELP, parseCategoryArg).action(async (symbol, o, cmd) => print2(cmd, await instrument(client2(), { symbol, ...o }, deps()), renderInstrument));
-  program2.command("search").description("\u043F\u043E\u0438\u0441\u043A \u043F\u043E \u0442\u0438\u043A\u0435\u0440\u0443: \u0441\u043F\u043E\u0442, \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435, \u0444\u044C\u044E\u0447\u0435\u0440\u0441\u044B; \u043E\u043F\u0446\u0438\u043E\u043D\u044B \u2014 \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0435").argument("<query>", "\u0447\u0430\u0441\u0442\u044C \u0442\u0438\u043A\u0435\u0440\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 sol").action(async (query, _o, cmd) => print2(cmd, await search(client2(), query, deps()), renderSearch));
+  program2.command("orderbook").description("стакан; при споте и бессрочном — спот").argument("<symbol>", "тикер, например BTCUSDT").option("--category <c>", CATEGORY_HELP, parseCategoryArg).option("--depth <n>", "уровней на сторону (по умолчанию 25, у опционов не больше 25)", parseDepthArg).action(async (symbol, o, cmd) => print2(cmd, await orderbook(client2(), { symbol, ...o }, deps()), renderOrderbook));
+  program2.command("instrument").description("карточка инструмента: статус, шаги цены и количества, плечо, даты").argument("<symbol>", "тикер, например BTCUSDT").option("--category <c>", CATEGORY_HELP, parseCategoryArg).action(async (symbol, o, cmd) => print2(cmd, await instrument(client2(), { symbol, ...o }, deps()), renderInstrument));
+  program2.command("search").description("поиск по тикеру: спот, бессрочные, фьючерсы; опционы — по монете").argument("<query>", "часть тикера, например sol").action(async (query, _o, cmd) => print2(cmd, await search(client2(), query, deps()), renderSearch));
 }
 
 // src/options/instruments.ts
@@ -5706,10 +5706,10 @@ function isMonthly(deliveryTime) {
   const weekLater = new Date(d.getTime() + 7 * 864e5);
   return d.getUTCDay() === 5 && weekLater.getUTCMonth() !== d.getUTCMonth();
 }
-var MONTHLY_RULE = "\u041C\u0435\u0441\u044F\u0447\u043D\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F \u2014 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u043F\u044F\u0442\u043D\u0438\u0446\u0430 \u043C\u0435\u0441\u044F\u0446\u0430 \u043F\u043E \u0434\u0430\u0442\u0435 UTC (\u043F\u0440\u0438\u0437\u043D\u0430\u043A\u0430 \u0443 \u0431\u0438\u0440\u0436\u0438 \u043D\u0435\u0442, \u043F\u0440\u0430\u0432\u0438\u043B\u043E).";
+var MONTHLY_RULE = "Месячная экспирация — последняя пятница месяца по дате UTC (признака у биржи нет, правило).";
 
 // src/commands/opt-chain.ts
-var STRIKE_NOTE = "\u0421\u0442\u0440\u0430\u0439\u043A \u0440\u0430\u0437\u043E\u0431\u0440\u0430\u043D \u0438\u0437 \u0441\u0438\u043C\u0432\u043E\u043B\u0430 \u043F\u043E \u0444\u043E\u0440\u043C\u0430\u0442\u0443 Bybit (enum symbol): \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u043E\u0433\u043E \u043F\u043E\u043B\u044F \u0443 \u0431\u0438\u0440\u0436\u0438 \u043D\u0435\u0442.";
+var STRIKE_NOTE = "Страйк разобран из символа по формату Bybit (enum symbol): отдельного поля у биржи нет.";
 function toRow(t, inst, strike) {
   return {
     symbol: t.symbol,
@@ -5745,11 +5745,11 @@ function joinRows(tickers, instruments, notes) {
     else if (!contract) unparsed.push(t.symbol);
     else rows.push(toRow(t, card, contract.strike));
   }
-  if (noCard.length) notes.push(`\u041D\u0435\u0442 \u0432 instruments-info, \u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u044B (\u0432\u0440\u0435\u043C\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u043D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E): ${noCard.join(", ")}.`);
-  if (unparsed.length) notes.push(`\u0421\u0438\u043C\u0432\u043E\u043B \u043D\u0435 \u0440\u0430\u0437\u043E\u0431\u0440\u0430\u043D, \u0438\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u044B (\u0441\u0442\u0440\u0430\u0439\u043A \u043D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D): ${unparsed.join(", ")}.`);
+  if (noCard.length) notes.push(`Нет в instruments-info, исключены (время экспирации неизвестно): ${noCard.join(", ")}.`);
+  if (unparsed.length) notes.push(`Символ не разобран, исключены (страйк неизвестен): ${unparsed.join(", ")}.`);
   return rows;
 }
-var MONTHLY_NOTE = `\u041F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E \u2014 \u0431\u043B\u0438\u0436\u0430\u0439\u0448\u0430\u044F \u043C\u0435\u0441\u044F\u0447\u043D\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F. ${MONTHLY_RULE}`;
+var MONTHLY_NOTE = `По умолчанию — ближайшая месячная экспирация. ${MONTHLY_RULE}`;
 var earliest = (rows) => rows.filter((r) => r.deliveryTime === rows.reduce((m, x) => Number(x.deliveryTime) < Number(m.deliveryTime) ? x : m).deliveryTime);
 function pickExpiry(rows, expiry, now, notes) {
   if (expiry) return rows.filter((r) => utcDate(r.deliveryTime) === expiry);
@@ -5760,7 +5760,7 @@ function pickExpiry(rows, expiry, now, notes) {
     notes.push(MONTHLY_NOTE);
     return earliest(monthly);
   }
-  notes.push("\u0412\u043F\u0435\u0440\u0435\u0434\u0438 \u043D\u0435\u0442 \u043C\u0435\u0441\u044F\u0447\u043D\u043E\u0439 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438: \u0432\u0437\u044F\u0442\u0430 \u0431\u043B\u0438\u0436\u0430\u0439\u0448\u0430\u044F.");
+  notes.push("Впереди нет месячной экспирации: взята ближайшая.");
   return earliest(future);
 }
 function applyFilters(rows, o) {
@@ -5776,8 +5776,8 @@ async function optChain(client3, options) {
   const available = [...new Set(instruments.filter((i) => Number(i.deliveryTime) > now).map((i) => utcDate(i.deliveryTime)))].sort();
   const chosen = pickExpiry(all, options.expiry, now, notes);
   const first = chosen[0];
-  if (all.length === 0) notes.push(`\u041F\u043E ${baseCoin} \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432.`);
-  else if (!first) notes.push(`\u041D\u0430 ${options.expiry ?? "\u0431\u0443\u0434\u0443\u0449\u0438\u0435 \u0434\u0430\u0442\u044B"} \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u043F\u043E ${baseCoin} \u043D\u0435\u0442. \u0414\u043E\u0441\u0442\u0443\u043F\u043D\u044B\u0435 \u0434\u0430\u0442\u044B: ${available.join(", ") || "\u043D\u0435\u0442"}.`);
+  if (all.length === 0) notes.push(`По ${baseCoin} биржа не вернула опционов.`);
+  else if (!first) notes.push(`На ${options.expiry ?? "будущие даты"} экспирации по ${baseCoin} нет. Доступные даты: ${available.join(", ") || "нет"}.`);
   return {
     baseCoin,
     expiry: first ? { date: utcDate(first.deliveryTime), deliveryTime: first.deliveryTime } : null,
@@ -5788,7 +5788,7 @@ async function optChain(client3, options) {
   };
 }
 function renderOptChain(r) {
-  const head = r.expiry ? `${r.baseCoin}, \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F ${r.expiry.date} ${new Date(Number(r.expiry.deliveryTime)).toISOString().slice(11, 16)} UTC, \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u043E\u0432: ${r.rows.length}` : `${r.baseCoin}: \u0434\u043E\u0441\u043A\u0430 \u043F\u0443\u0441\u0442\u0430.`;
+  const head = r.expiry ? `${r.baseCoin}, экспирация ${r.expiry.date} ${new Date(Number(r.expiry.deliveryTime)).toISOString().slice(11, 16)} UTC, контрактов: ${r.rows.length}` : `${r.baseCoin}: доска пуста.`;
   const rows = r.rows.map((x) => [
     String(x.computed.strike),
     x.optionsType,
@@ -5806,8 +5806,8 @@ function renderOptChain(r) {
     x.openInterest
   ]);
   const lines = [head];
-  if (rows.length) lines.push(renderTable(["\u0421\u0442\u0440\u0430\u0439\u043A*", "\u0422\u0438\u043F", "Bid", "Ask", "Mark", "IV bid", "IV ask", "IV mark", "Delta", "Gamma", "Vega", "Theta", "\u041E\u0431\u044A\u0451\u043C 24\u0447", "OI"], rows));
-  lines.push(`\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u044B\u0435 \u0434\u0430\u0442\u044B \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438: ${r.availableExpiries.join(", ") || "\u043D\u0435\u0442"}`, "", `* [\u0440\u0430\u0441\u0447\u0451\u0442] ${r.computedNotes.strike}`, ...r.notes.map((n) => `- ${n}`));
+  if (rows.length) lines.push(renderTable(["Страйк*", "Тип", "Bid", "Ask", "Mark", "IV bid", "IV ask", "IV mark", "Delta", "Gamma", "Vega", "Theta", "Объём 24ч", "OI"], rows));
+  lines.push(`Доступные даты экспирации: ${r.availableExpiries.join(", ") || "нет"}`, "", `* [расчёт] ${r.computedNotes.strike}`, ...r.notes.map((n) => `- ${n}`));
   return lines.join("\n");
 }
 
@@ -5826,16 +5826,16 @@ async function optExpiries(client3, options = {}) {
   return { expiries, computedNotes: { monthly: MONTHLY_RULE } };
 }
 function renderOptExpiries(r) {
-  if (r.expiries.length === 0) return "\u041E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u044D\u0442\u043E\u0439 \u043C\u043E\u043D\u0435\u0442\u0435 \u043D\u0435\u0442.";
-  const rows = r.expiries.map((e) => [e.baseCoin, e.date, new Date(Number(e.deliveryTime)).toISOString().slice(11, 16), e.computed.monthly ? "\u0434\u0430" : "", String(e.calls), String(e.puts)]);
-  return [renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "\u0414\u0430\u0442\u0430", "\u0412\u0440\u0435\u043C\u044F UTC", "\u041C\u0435\u0441\u044F\u0447\u043D\u0430\u044F*", "Call", "Put"], rows), "", `* [\u0440\u0430\u0441\u0447\u0451\u0442] ${r.computedNotes.monthly}`].join("\n");
+  if (r.expiries.length === 0) return "Опционов по этой монете нет.";
+  const rows = r.expiries.map((e) => [e.baseCoin, e.date, new Date(Number(e.deliveryTime)).toISOString().slice(11, 16), e.computed.monthly ? "да" : "", String(e.calls), String(e.puts)]);
+  return [renderTable(["Монета", "Дата", "Время UTC", "Месячная*", "Call", "Put"], rows), "", `* [расчёт] ${r.computedNotes.monthly}`].join("\n");
 }
 
 // src/commands/opt-greeks.ts
 var SOURCE_NOTES = [
-  "Delta \u2014 totalDelta \u0438\u0437 option-asset-info: \u0442\u043E\u043B\u044C\u043A\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438, \u0431\u0435\u0437 \u0441\u043F\u043E\u0442\u0430 \u0438 \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0445.",
-  "Gamma, Vega, Theta \u2014 \u0438\u0437 coin-greeks; \u043D\u0430 \u0436\u0438\u0432\u043E\u043C \u0441\u0447\u0451\u0442\u0435 \u0440\u0430\u0432\u043D\u044B \u0441\u0443\u043C\u043C\u0435 \u0433\u0440\u0435\u043A\u043E\u0432 \u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439.",
-  "\u0412\u0441\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F \u0441\u044B\u0440\u044B\u0435, \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u044B \u043E\u0442 \u0431\u0438\u0440\u0436\u0438; \u0441\u043A\u0438\u043B\u043B \u0438\u0445 \u043D\u0435 \u043F\u0435\u0440\u0435\u0441\u0447\u0438\u0442\u044B\u0432\u0430\u0435\u0442."
+  "Delta — totalDelta из option-asset-info: только опционные позиции, без спота и бессрочных.",
+  "Gamma, Vega, Theta — из coin-greeks; на живом счёте равны сумме греков опционных позиций.",
+  "Все значения сырые, получены от биржи; скилл их не пересчитывает."
 ];
 async function optGreeks(client3, options = {}) {
   await requireReadOnlyKey(client3);
@@ -5848,23 +5848,23 @@ async function optGreeks(client3, options = {}) {
   const coins = [.../* @__PURE__ */ new Set([...byCoin.keys(), ...deltas.keys()])].map((baseCoin) => {
     const g = byCoin.get(baseCoin);
     const delta = deltas.get(baseCoin);
-    if (delta === void 0) notes.push(`${baseCoin}: \u043D\u0435\u0442 \u0432 option-asset-info \u2014 \u0434\u0435\u043B\u044C\u0442\u0430 \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C \u043D\u0435 \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u0430.`);
-    if (!g) notes.push(`${baseCoin}: \u043D\u0435\u0442 \u0432 coin-greeks \u2014 \u0433\u0430\u043C\u043C\u0430, \u0432\u0435\u0433\u0430 \u0438 \u0442\u0435\u0442\u0430 \u043D\u0435 \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u044B.`);
+    if (delta === void 0) notes.push(`${baseCoin}: нет в option-asset-info — дельта по опционам не получена.`);
+    if (!g) notes.push(`${baseCoin}: нет в coin-greeks — гамма, вега и тета не получены.`);
     return { baseCoin, delta: delta ?? "", gamma: g?.totalGamma ?? "", vega: g?.totalVega ?? "", theta: g?.totalTheta ?? "" };
   });
   return { coins, notes };
 }
 function renderOptGreeks(r) {
-  if (r.coins.length === 0) return "\u041D\u0435\u0442\u0442\u043E-\u0433\u0440\u0435\u043A\u043E\u0432 \u043D\u0435\u0442: \u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u043D\u0435\u0442.";
+  if (r.coins.length === 0) return "Нетто-греков нет: опционных позиций нет.";
   const rows = r.coins.map((c) => [c.baseCoin, orDash(c.delta), orDash(c.gamma), orDash(c.vega), orDash(c.theta)]);
-  return [renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "Delta", "Gamma", "Vega", "Theta"], rows), "", ...r.notes.map((n) => `- ${n}`)].join("\n");
+  return [renderTable(["Монета", "Delta", "Gamma", "Vega", "Theta"], rows), "", ...r.notes.map((n) => `- ${n}`)].join("\n");
 }
 
 // src/commands/opt-margin.ts
 var SUM_TOLERANCE = 0.01;
-var METHOD_NOTE = "Portfolio Margin: MM \u043C\u043E\u043D\u0435\u0442\u044B = \u0445\u0443\u0434\u0448\u0438\u0439 \u0443\u0431\u044B\u0442\u043E\u043A \u043F\u043E \u0441\u0435\u0442\u043A\u0435 \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0435\u0432 \u0446\u0435\u043D\u044B \u0438 IV (\u0432\u0441\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 \u043C\u043E\u043D\u0435\u0442\u044B) + contingency; IM = 1.2 \xD7 MM; MM \u0441\u0447\u0451\u0442\u0430 = \u0441\u0443\u043C\u043C\u0430 MM \u043C\u043E\u043D\u0435\u0442; accountMMRate = accountMM / equity. \u041C\u0430\u0440\u0436\u0443 \u043D\u0430 \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u044B\u0439 \u043E\u043F\u0446\u0438\u043E\u043D \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u043D\u0430\u0437\u043D\u0430\u0447\u0430\u0435\u0442 (\u0441\u0432\u0435\u0440\u0435\u043D\u043E \u043D\u0430 \u0441\u0447\u0451\u0442\u0435 2026-09-27).";
+var METHOD_NOTE = "Portfolio Margin: MM монеты = худший убыток по сетке сценариев цены и IV (все позиции монеты) + contingency; IM = 1.2 × MM; MM счёта = сумма MM монет; accountMMRate = accountMM / equity. Маржу на отдельный опцион биржа не назначает (сверено на счёте 2026-09-27).";
 var SHARE_NOTE = "assetMM / accountMM.";
-var LOSS_NOTE = "\u0423\u0431\u044B\u0442\u043E\u043A \u043E\u043F\u0446\u0438\u043E\u043D\u0430 \u0432 \u0445\u0443\u0434\u0448\u0435\u043C \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0438 \u043C\u043E\u043D\u0435\u0442\u044B (priceScale = maxLossPriceMove), \u0438\u0437 portfolio-margin. \u0423 \u043E\u043F\u0446\u0438\u043E\u043D\u0430 \u0442\u0440\u0438 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F \u043D\u0430 \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0439: IV \u0432\u0432\u0435\u0440\u0445, \u0431\u0435\u0437 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0439, \u0432\u043D\u0438\u0437; \u0431\u0435\u0440\u0451\u0442\u0441\u044F \u043F\u043E \u0437\u043D\u0430\u043A\u0443 maxLossIvShock (\u043F\u043E\u0440\u044F\u0434\u043E\u043A \u0432 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0446\u0438\u0438 \u043D\u0435 \u043E\u043F\u0438\u0441\u0430\u043D, \u0432\u044B\u0432\u0435\u0434\u0435\u043D \u0438\u0437 \u043F\u0440\u0438\u043C\u0435\u0440\u0430 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430\u0446\u0438\u0438 \u0438 \u0436\u0438\u0432\u043E\u0433\u043E \u0441\u0447\u0451\u0442\u0430). \u041F\u0440\u043E\u0432\u0435\u0440\u043A\u0430: \u0441\u0443\u043C\u043C\u0430 \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C \u0441\u043E\u0432\u043F\u0430\u0434\u0430\u0435\u0442 \u0441 \u0438\u0442\u043E\u0433\u043E\u043C OPTION \u0434\u043E 0.01. \u042D\u0442\u043E \u0432\u043A\u043B\u0430\u0434 \u0432 \u0440\u0438\u0441\u043A, \u043D\u0435 \u043C\u0430\u0440\u0436\u0430 \u043F\u043E\u0437\u0438\u0446\u0438\u0438: contingency \u043D\u0435 \u0434\u0435\u043B\u0438\u0442\u0441\u044F.";
+var LOSS_NOTE = "Убыток опциона в худшем сценарии монеты (priceScale = maxLossPriceMove), из portfolio-margin. У опциона три значения на сценарий: IV вверх, без изменений, вниз; берётся по знаку maxLossIvShock (порядок в документации не описан, выведен из примера документации и живого счёта). Проверка: сумма по опционам совпадает с итогом OPTION до 0.01. Это вклад в риск, не маржа позиции: contingency не делится.";
 var atScale = (ranges, scale) => ranges?.find((r) => Number(r.priceScale) === scale)?.pnls;
 function ivIndex(pnls, shock) {
   if (pnls.length === 1) return 0;
@@ -5872,7 +5872,7 @@ function ivIndex(pnls, shock) {
 }
 function optionLosses(a, scale, optionTotal) {
   const positions2 = a.optionExpiryDatePnlRanges.flatMap((e) => e.optionPositionPnlRanges);
-  if (positions2.length === 0) return { values: {}, note: "\u041E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0435 \u043D\u0435\u0442." };
+  if (positions2.length === 0) return { values: {}, note: "Опционных позиций по монете нет." };
   const shock = Number(a.maxLossIvShock);
   const picked = positions2.map((p) => {
     const pnls = atScale(p.pnlRanges, scale);
@@ -5881,11 +5881,11 @@ function optionLosses(a, scale, optionTotal) {
   });
   const empty = Object.fromEntries(positions2.map((p) => [p.symbolName, null]));
   if (picked.some(([, v]) => v === null) || optionTotal === "") {
-    return { values: empty, note: `\u041D\u0435\u0442 \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u044F priceScale = ${a.maxLossPriceMove} \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C \u0438\u043B\u0438 \u0438\u0442\u043E\u0433\u0430 OPTION: \u0443\u0431\u044B\u0442\u043E\u043A \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C \u043D\u0435 \u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0451\u043D.` };
+    return { values: empty, note: `Нет сценария priceScale = ${a.maxLossPriceMove} по опционам или итога OPTION: убыток по опционам не определён.` };
   }
   const sum = picked.reduce((s, [, v]) => s + (v ?? 0), 0);
   if (Math.abs(sum - Number(optionTotal)) > SUM_TOLERANCE) {
-    return { values: empty, note: `\u0421\u0443\u043C\u043C\u0430 \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C (${sum.toFixed(2)}) \u043D\u0435 \u0441\u0445\u043E\u0434\u0438\u0442\u0441\u044F \u0441 \u0438\u0442\u043E\u0433\u043E\u043C OPTION (${optionTotal}): \u0432\u044B\u0431\u043E\u0440 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F \u043D\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0451\u043D, \u0443\u0431\u044B\u0442\u043A\u0438 \u043D\u0435 \u043F\u043E\u043A\u0430\u0437\u0430\u043D\u044B.` };
+    return { values: empty, note: `Сумма по опционам (${sum.toFixed(2)}) не сходится с итогом OPTION (${optionTotal}): выбор значения не подтверждён, убытки не показаны.` };
   }
   return { values: Object.fromEntries(picked), note: LOSS_NOTE };
 }
@@ -5893,7 +5893,7 @@ function toCoin(a, accountMM) {
   const scale = Number(a.maxLossPriceMove);
   const loss = (k) => atScale(a.totalPnlRanges[k]?.pnlRanges, scale)?.[0] ?? "";
   const worstLoss = { all: loss("ALL"), option: loss("OPTION"), perpetual: loss("PERPETUAL") };
-  const notes = worstLoss.all === "" ? [`\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0439 priceScale = ${a.maxLossPriceMove} (maxLossPriceMove): \u0443\u0431\u044B\u0442\u043E\u043A \u0432 \u0445\u0443\u0434\u0448\u0435\u043C \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0438 \u043D\u0435 \u043F\u043E\u043A\u0430\u0437\u0430\u043D.`] : ["OPTION", "PERPETUAL"].filter((k) => loss(k) === "").map((k) => `\u0418\u0442\u043E\u0433\u0430 ${k} \u0434\u043B\u044F \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u044F priceScale = ${a.maxLossPriceMove} \u0432 \u043E\u0442\u0432\u0435\u0442\u0435 \u0431\u0438\u0440\u0436\u0438 \u043D\u0435\u0442.`);
+  const notes = worstLoss.all === "" ? [`Биржа не вернула сценарий priceScale = ${a.maxLossPriceMove} (maxLossPriceMove): убыток в худшем сценарии не показан.`] : ["OPTION", "PERPETUAL"].filter((k) => loss(k) === "").map((k) => `Итога ${k} для сценария priceScale = ${a.maxLossPriceMove} в ответе биржи нет.`);
   const losses = optionLosses(a, scale, worstLoss.option);
   const share = accountMM > 0 ? Number(a.asset.assetMM) / accountMM : null;
   return {
@@ -5907,14 +5907,14 @@ function toCoin(a, accountMM) {
     options: a.optionExpiryDatePnlRanges.flatMap((e) => e.optionPositionPnlRanges.map((p) => ({ symbol: p.symbolName, position: p.position }))),
     notes,
     computed: { shareOfAccountMM: share, optionLoss: losses.values },
-    computedNotes: { shareOfAccountMM: share === null ? "accountMM \u0440\u0430\u0432\u0435\u043D \u043D\u0443\u043B\u044E \u0438\u043B\u0438 \u043F\u0443\u0441\u0442: \u0434\u043E\u043B\u044F \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0430." : SHARE_NOTE, optionLoss: losses.note }
+    computedNotes: { shareOfAccountMM: share === null ? "accountMM равен нулю или пуст: доля не вычислена." : SHARE_NOTE, optionLoss: losses.note }
   };
 }
 async function optMargin(client3) {
   await requireReadOnlyKey(client3);
   const { marginMode } = await client3.getPrivate("/v5/account/info");
   if (marginMode !== "PORTFOLIO_MARGIN") {
-    const note = `\u0420\u0435\u0436\u0438\u043C \u043C\u0430\u0440\u0436\u0438 ${marginMode}, \u043D\u0435 Portfolio Margin: \u043C\u0430\u0440\u0436\u0430 \u0441\u0447\u0438\u0442\u0430\u0435\u0442\u0441\u044F \u043F\u043E \u043A\u0430\u0436\u0434\u043E\u0439 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 \u2014 \u0441\u043C. \u043A\u043E\u043C\u0430\u043D\u0434\u0443 positions (positionIM, positionMM).`;
+    const note = `Режим маржи ${marginMode}, не Portfolio Margin: маржа считается по каждой позиции — см. команду positions (positionIM, positionMM).`;
     return { marginMode, account: null, coins: [], notes: [note] };
   }
   const pm = await client3.getPrivate("/v5/asset/portfolio-margin");
@@ -5922,15 +5922,15 @@ async function optMargin(client3) {
   const account = { equity, marginBalance, accountIM, accountMM, accountIMRate, accountMMRate };
   return { marginMode, account, coins: pm.assetPnlRange.map((a) => toCoin(a, Number(accountMM))), notes: [METHOD_NOTE] };
 }
-var pct = (v) => v === null ? "\u2014" : `${(v * 100).toFixed(1)}%`;
+var pct = (v) => v === null ? "—" : `${(v * 100).toFixed(1)}%`;
 function renderOptMargin(r) {
   if (!r.account) return r.notes.join("\n");
   const a = r.account;
   const lines = [
-    `\u041A\u0430\u043F\u0438\u0442\u0430\u043B ${a.equity} USD, MM ${a.accountMM} (${a.accountMMRate}), IM ${a.accountIM} (${a.accountIMRate})`,
+    `Капитал ${a.equity} USD, MM ${a.accountMM} (${a.accountMMRate}), IM ${a.accountIM} (${a.accountIMRate})`,
     "",
     renderTable(
-      ["\u041C\u043E\u043D\u0435\u0442\u0430", "MM", "IM", "\u0414\u043E\u043B\u044F MM*", "\u0421\u0434\u0432\u0438\u0433 \u0446\u0435\u043D\u044B", "IV-\u0448\u043E\u043A", "\u0423\u0431\u044B\u0442\u043E\u043A \u0432\u0441\u0435\u0433\u043E", "\u043E\u043F\u0446\u0438\u043E\u043D\u044B", "\u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435", "Contingency"],
+      ["Монета", "MM", "IM", "Доля MM*", "Сдвиг цены", "IV-шок", "Убыток всего", "опционы", "бессрочные", "Contingency"],
       r.coins.map((c) => [
         c.baseCoin,
         c.assetMM,
@@ -5946,17 +5946,17 @@ function renderOptMargin(r) {
     )
   ];
   const optionRows = r.coins.flatMap((c) => c.options.map((o) => [c.baseCoin, o.symbol, o.position, numOrDash(c.computed.optionLoss[o.symbol])]));
-  if (optionRows.length) lines.push("", renderTable(["\u041C\u043E\u043D\u0435\u0442\u0430", "\u041E\u043F\u0446\u0438\u043E\u043D", "\u041F\u043E\u0437\u0438\u0446\u0438\u044F", "\u0423\u0431\u044B\u0442\u043E\u043A \u0432 \u0445\u0443\u0434\u0448\u0435\u043C \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0438*"], optionRows));
+  if (optionRows.length) lines.push("", renderTable(["Монета", "Опцион", "Позиция", "Убыток в худшем сценарии*"], optionRows));
   const coinNotes = r.coins.flatMap((c) => [...c.notes.map((n) => `${c.baseCoin}: ${n}`), ...c.computedNotes.optionLoss === LOSS_NOTE ? [] : [`${c.baseCoin}: ${c.computedNotes.optionLoss}`]]);
-  lines.push("", "* [\u0440\u0430\u0441\u0447\u0451\u0442] \u2014 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u043E \u0441\u043A\u0438\u043B\u043B\u043E\u043C:", `- \u0414\u043E\u043B\u044F MM: ${SHARE_NOTE}`, `- \u0423\u0431\u044B\u0442\u043E\u043A \u043E\u043F\u0446\u0438\u043E\u043D\u0430: ${LOSS_NOTE}`, ...coinNotes.map((n) => `- ${n}`), "", ...r.notes);
+  lines.push("", "* [расчёт] — вычислено скиллом:", `- Доля MM: ${SHARE_NOTE}`, `- Убыток опциона: ${LOSS_NOTE}`, ...coinNotes.map((n) => `- ${n}`), "", ...r.notes);
   return lines.join("\n");
 }
 
 // src/commands/opt-positions.ts
 var DAY_MS3 = 864e5;
-var CONTRACT_NOTE = "\u0420\u0430\u0437\u043E\u0431\u0440\u0430\u043D\u043E \u0438\u0437 \u0441\u0438\u043C\u0432\u043E\u043B\u0430 \u043F\u043E \u0444\u043E\u0440\u043C\u0430\u0442\u0443 Bybit (enum symbol): \u043C\u043E\u043D\u0435\u0442\u0430-\u0414\u0414\u041C\u041C\u041C\u0413\u0413-\u0441\u0442\u0440\u0430\u0439\u043A-C/P[-\u0440\u0430\u0441\u0447\u0451\u0442\u043D\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430]; \u0431\u0435\u0437 \u0441\u0443\u0444\u0444\u0438\u043A\u0441\u0430 \u2014 USDC.";
-var DAYS_NOTE = "(deliveryTime \u0438\u0437 instruments-info \u2212 \u0442\u0435\u043A\u0443\u0449\u0435\u0435 \u0432\u0440\u0435\u043C\u044F) / 86 400 000, \u0434\u0440\u043E\u0431\u043D\u044B\u0435 \u0441\u0443\u0442\u043A\u0438, \u043E\u043A\u0440\u0443\u0433\u043B\u0435\u043D\u0438\u0435 \u0434\u043E 0.01.";
-var GREEKS_NOTE = "\u0413\u0440\u0435\u043A\u0438 \u2014 \u0441\u044B\u0440\u044B\u0435 \u043F\u043E\u043B\u044F position/list: \u043D\u0430 \u0432\u0441\u044E \u043F\u043E\u0437\u0438\u0446\u0438\u044E, \u0441 \u0443\u0447\u0451\u0442\u043E\u043C \u0441\u0442\u043E\u0440\u043E\u043D\u044B (\u0443 \u043F\u0440\u043E\u0434\u0430\u043D\u043D\u043E\u0439 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 \u0437\u043D\u0430\u043A \u043E\u0431\u0440\u0430\u0442\u043D\u044B\u0439).";
+var CONTRACT_NOTE = "Разобрано из символа по формату Bybit (enum symbol): монета-ДДМММГГ-страйк-C/P[-расчётная монета]; без суффикса — USDC.";
+var DAYS_NOTE = "(deliveryTime из instruments-info − текущее время) / 86 400 000, дробные сутки, округление до 0.01.";
+var GREEKS_NOTE = "Греки — сырые поля position/list: на всю позицию, с учётом стороны (у проданной позиции знак обратный).";
 function fetchOptionPositions(client3) {
   const base = { category: "option", limit: "200" };
   return fetchAllPages(
@@ -5980,8 +5980,8 @@ function toView4(p, deliveryTime, now) {
     deliveryTime,
     computed: { contract, daysToExpiry: days },
     computedNotes: {
-      contract: contract ? CONTRACT_NOTE : `\u0421\u0438\u043C\u0432\u043E\u043B ${p.symbol} \u043D\u0435 \u0441\u043E\u043E\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0443\u0435\u0442 \u0444\u043E\u0440\u043C\u0430\u0442\u0443 \u043E\u043F\u0446\u0438\u043E\u043D\u0430 Bybit: \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442 \u043D\u0435 \u0440\u0430\u0437\u043E\u0431\u0440\u0430\u043D.`,
-      daysToExpiry: days === null ? `\u041A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u0430 ${p.symbol} \u043D\u0435\u0442 \u0432 instruments-info: \u0432\u0440\u0435\u043C\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u043D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E, \u0434\u043D\u0438 \u043D\u0435 \u043F\u043E\u0441\u0447\u0438\u0442\u0430\u043D\u044B.` : DAYS_NOTE
+      contract: contract ? CONTRACT_NOTE : `Символ ${p.symbol} не соответствует формату опциона Bybit: контракт не разобран.`,
+      daysToExpiry: days === null ? `Контракта ${p.symbol} нет в instruments-info: время экспирации неизвестно, дни не посчитаны.` : DAYS_NOTE
     }
   };
 }
@@ -5994,15 +5994,15 @@ async function optPositions(client3, options = {}) {
   return { positions: raw.map((p) => toView4(p, delivery.get(p.symbol) ?? "", now)) };
 }
 function renderOptPositions(r) {
-  if (r.positions.length === 0) return "\u041E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u043D\u0435\u0442.";
+  if (r.positions.length === 0) return "Опционных позиций нет.";
   const rows = r.positions.map((p) => {
     const c = p.computed.contract;
     return [
       p.symbol,
-      c?.baseCoin ?? "\u2014",
-      c ? String(c.strike) : "\u2014",
-      c?.expiryDate ?? "\u2014",
-      c?.type ?? "\u2014",
+      c?.baseCoin ?? "—",
+      c ? String(c.strike) : "—",
+      c?.expiryDate ?? "—",
+      c?.type ?? "—",
       numOrDash(p.computed.daysToExpiry),
       p.side,
       p.size,
@@ -6015,27 +6015,27 @@ function renderOptPositions(r) {
       p.theta
     ];
   });
-  const head = ["\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442", "\u041C\u043E\u043D\u0435\u0442\u0430*", "\u0421\u0442\u0440\u0430\u0439\u043A*", "\u042D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F*", "\u0422\u0438\u043F*", "\u0414\u043D\u0435\u0439*", "\u0421\u0442\u043E\u0440\u043E\u043D\u0430", "\u0420\u0430\u0437\u043C\u0435\u0440", "\u0412\u0445\u043E\u0434", "\u041C\u0430\u0440\u043A\u0438\u0440\u043E\u0432\u043A\u0430", "\u041D\u0435\u0440\u0435\u0430\u043B\u0438\u0437.", "Delta", "Gamma", "Vega", "Theta"];
+  const head = ["Инструмент", "Монета*", "Страйк*", "Экспирация*", "Тип*", "Дней*", "Сторона", "Размер", "Вход", "Маркировка", "Нереализ.", "Delta", "Gamma", "Vega", "Theta"];
   const notes = [...new Set(r.positions.flatMap((p) => [p.computedNotes.contract, p.computedNotes.daysToExpiry]))];
-  return [renderTable(head, rows), "", "* [\u0440\u0430\u0441\u0447\u0451\u0442] \u2014 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u043E \u0441\u043A\u0438\u043B\u043B\u043E\u043C:", ...notes.map((n) => `- ${n}`), "", GREEKS_NOTE].join("\n");
+  return [renderTable(head, rows), "", "* [расчёт] — вычислено скиллом:", ...notes.map((n) => `- ${n}`), "", GREEKS_NOTE].join("\n");
 }
 
 // src/cli/register-options.ts
 function parseExpiryArg(value2) {
   const ms = Date.parse(`${value2}T00:00:00Z`);
   const ok = /^\d{4}-\d{2}-\d{2}$/.test(value2) && !Number.isNaN(ms) && new Date(ms).toISOString().startsWith(value2);
-  if (!ok) throw new InvalidArgumentError("\u0434\u0430\u0442\u0430 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u0432 \u0444\u043E\u0440\u043C\u0430\u0442\u0435 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 2026-10-30.");
+  if (!ok) throw new InvalidArgumentError("дата экспирации в формате ГГГГ-ММ-ДД, например 2026-10-30.");
   return value2;
 }
 function parseTypeArg(value2) {
   const v = value2.toLowerCase();
   if (v === "call") return "Call";
   if (v === "put") return "Put";
-  throw new InvalidArgumentError("\u0442\u0438\u043F \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u0430: call \u0438\u043B\u0438 put.");
+  throw new InvalidArgumentError("тип контракта: call или put.");
 }
 function parseStrikeArg(value2) {
   const n = Number(value2);
-  if (value2.trim() === "" || !Number.isFinite(n)) throw new InvalidArgumentError("\u0441\u0442\u0440\u0430\u0439\u043A \u2014 \u0447\u0438\u0441\u043B\u043E, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 60000 \u0438\u043B\u0438 0.85.");
+  if (value2.trim() === "" || !Number.isFinite(n)) throw new InvalidArgumentError("страйк — число, например 60000 или 0.85.");
   return n;
 }
 var accountClient = () => new BybitClient({ credentials: loadCredentials(process.env), baseUrl: resolveBaseUrl(process.env) });
@@ -6045,18 +6045,18 @@ function print3(cmd, value2, render) {
   console.log(formatOutput(value2, Boolean(json), render));
 }
 function registerOptionCommands(program2) {
-  const opt = program2.command("opt").description("\u043E\u043F\u0446\u0438\u043E\u043D\u044B: \u043F\u043E\u0437\u0438\u0446\u0438\u0438, \u0433\u0440\u0435\u043A\u0438, \u043C\u0430\u0440\u0436\u0430, \u0434\u043E\u0441\u043A\u0430, \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438");
-  opt.command("positions").description("\u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438: \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442, \u0434\u043D\u0438 \u0434\u043E \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438, \u0433\u0440\u0435\u043A\u0438").action(async (_o, cmd) => print3(cmd, await optPositions(accountClient()), renderOptPositions));
-  opt.command("greeks").description("\u043D\u0435\u0442\u0442\u043E-\u0433\u0440\u0435\u043A\u0438 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u0431\u0430\u0437\u043E\u0432\u043E\u0439 \u043C\u043E\u043D\u0435\u0442\u0435").option("--coin <coin>", "\u043E\u0434\u043D\u0430 \u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (o, cmd) => print3(cmd, await optGreeks(accountClient(), o), renderOptGreeks));
-  opt.command("margin").description("\u043C\u0430\u0440\u0436\u0430 Portfolio Margin \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0430\u043C \u0438 \u0432\u043A\u043B\u0430\u0434 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u0432 \u0445\u0443\u0434\u0448\u0438\u0439 \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0439").action(async (_o, cmd) => print3(cmd, await optMargin(accountClient()), renderOptMargin));
-  opt.command("chain").description("\u0434\u043E\u0441\u043A\u0430 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0435; \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E \u0431\u043B\u0438\u0436\u0430\u0439\u0448\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F").argument("<coin>", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").option("--expiry <date>", "\u0434\u0430\u0442\u0430 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414", parseExpiryArg).option("--type <type>", "call \u0438\u043B\u0438 put", parseTypeArg).option("--min-strike <n>", "\u0441\u0442\u0440\u0430\u0439\u043A \u043E\u0442 (\u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E)", parseStrikeArg).option("--max-strike <n>", "\u0441\u0442\u0440\u0430\u0439\u043A \u0434\u043E (\u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E)", parseStrikeArg).action(async (coin, o, cmd) => print3(cmd, await optChain(marketClient(), { ...o, coin }), renderOptChain));
-  opt.command("expiries").description("\u0434\u0430\u0442\u044B \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438; \u0431\u0435\u0437 \u043C\u043E\u043D\u0435\u0442\u044B \u2014 \u043F\u043E \u0432\u0441\u0435\u043C \u043C\u043E\u043D\u0435\u0442\u0430\u043C").argument("[coin]", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (coin, _o, cmd) => print3(cmd, await optExpiries(marketClient(), { coin }), renderOptExpiries));
+  const opt = program2.command("opt").description("опционы: позиции, греки, маржа, доска, экспирации");
+  opt.command("positions").description("опционные позиции: контракт, дни до экспирации, греки").action(async (_o, cmd) => print3(cmd, await optPositions(accountClient()), renderOptPositions));
+  opt.command("greeks").description("нетто-греки опционов по базовой монете").option("--coin <coin>", "одна базовая монета, например BTC").action(async (o, cmd) => print3(cmd, await optGreeks(accountClient(), o), renderOptGreeks));
+  opt.command("margin").description("маржа Portfolio Margin по монетам и вклад опционов в худший сценарий").action(async (_o, cmd) => print3(cmd, await optMargin(accountClient()), renderOptMargin));
+  opt.command("chain").description("доска опционов по монете; по умолчанию ближайшая экспирация").argument("<coin>", "базовая монета, например BTC").option("--expiry <date>", "дата экспирации ГГГГ-ММ-ДД", parseExpiryArg).option("--type <type>", "call или put", parseTypeArg).option("--min-strike <n>", "страйк от (включительно)", parseStrikeArg).option("--max-strike <n>", "страйк до (включительно)", parseStrikeArg).action(async (coin, o, cmd) => print3(cmd, await optChain(marketClient(), { ...o, coin }), renderOptChain));
+  opt.command("expiries").description("даты экспирации; без монеты — по всем монетам").argument("[coin]", "базовая монета, например BTC").action(async (coin, _o, cmd) => print3(cmd, await optExpiries(marketClient(), { coin }), renderOptExpiries));
 }
 
 // src/cli/register-session.ts
 function registerSessionCommands(program2) {
-  const session = program2.command("session").description("\u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0435 \u0434\u043E\u0441\u0442\u0443\u043F\u0430 \u043A \u0431\u0438\u0440\u0436\u0435");
-  session.command("status").description("\u043A\u043B\u044E\u0447, \u043F\u0440\u0430\u0432\u0430, \u043E\u043A\u0440\u0443\u0436\u0435\u043D\u0438\u0435, \u0447\u0430\u0441\u044B, \u0441\u0432\u044F\u0437\u044C \u0441 \u0431\u0438\u0440\u0436\u0435\u0439").action(async (_opts, cmd) => {
+  const session = program2.command("session").description("состояние доступа к бирже");
+  session.command("status").description("ключ, права, окружение, часы, связь с биржей").action(async (_opts, cmd) => {
     const { json } = cmd.optsWithGlobals();
     const client3 = new BybitClient({ credentials: readCredentials(process.env), baseUrl: resolveBaseUrl(process.env) });
     const status = await sessionStatus(client3, Date.now);
@@ -6066,7 +6066,7 @@ function registerSessionCommands(program2) {
 
 // src/cli/program.ts
 function buildProgram() {
-  const program2 = new Command().name("bybit").description("Read-only access to a Bybit account").version("0.1.0").option("--json", "\u043C\u0430\u0448\u0438\u043D\u043D\u044B\u0439 \u0432\u044B\u0432\u043E\u0434 (JSON)");
+  const program2 = new Command().name("bybit").description("Read-only access to a Bybit account").version("1.0.0").option("--json", "машинный вывод (JSON)");
   registerSessionCommands(program2);
   registerAccountCommands(program2);
   registerOptionCommands(program2);

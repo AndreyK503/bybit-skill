@@ -1,5 +1,4 @@
 node_modules/
 .env
 *.log
-*.skill
 .claude/settings.local.json
