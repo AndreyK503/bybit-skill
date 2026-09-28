@@ -111,7 +111,7 @@ export function clockSkewError(driftMs: number | null): AppError {
       : `Локальное время расходится с биржей на ${formatDrift(driftMs)}.`;
   return new AppError({
     code: 'APP_CLOCK_SKEW',
-    userMessage: `Биржа отвергла запрос из-за расхождения системных часов. ${measured} Синхронизируйте часы (NTP).`,
+    userMessage: `Биржа отвергла запрос из-за расхождения системных часов, и подпись по времени биржи не помогла. ${measured} Синхронизируйте часы (NTP).`,
     details: { driftMs },
   });
 }

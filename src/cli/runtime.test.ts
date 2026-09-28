@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildProgram } from './program.js';
-import { formatOutput } from './runtime.js';
+import { AppError } from '../api/errors.js';
+import { formatOutput, shouldRelaunchWithSystemCa } from './runtime.js';
 
 describe('formatOutput (NFR-5)', () => {
   const value = { a: 1, b: 'x' };
@@ -59,5 +60,28 @@ describe('E2 CLI registration', () => {
   it('has portfolio, balance and positions commands', () => {
     const names = buildProgram().commands.map((c) => c.name());
     expect(names).toEqual(expect.arrayContaining(['portfolio', 'balance', 'positions']));
+  });
+});
+
+describe('relaunch with the system certificate store (corporate TLS interception)', () => {
+  const tlsError = new AppError({ code: 'APP_TLS_UNTRUSTED', userMessage: 'x' });
+  const supported = new Set(['--use-system-ca']);
+
+  it('untrusted certificate, flag supported and not yet used -> relaunch', () => {
+    expect(shouldRelaunchWithSystemCa(tlsError, [], {}, supported)).toBe(true);
+  });
+
+  it('already running with the flag (argv or NODE_OPTIONS) -> no relaunch loop', () => {
+    expect(shouldRelaunchWithSystemCa(tlsError, ['--use-system-ca'], {}, supported)).toBe(false);
+    expect(shouldRelaunchWithSystemCa(tlsError, [], { NODE_OPTIONS: '--use-system-ca' }, supported)).toBe(false);
+  });
+
+  it('Node without the flag -> no relaunch, the error is shown', () => {
+    expect(shouldRelaunchWithSystemCa(tlsError, [], {}, new Set())).toBe(false);
+  });
+
+  it('any other error -> no relaunch', () => {
+    expect(shouldRelaunchWithSystemCa(new AppError({ code: 'APP_UNAVAILABLE', userMessage: 'x' }), [], {}, supported)).toBe(false);
+    expect(shouldRelaunchWithSystemCa(new Error('x'), [], {}, supported)).toBe(false);
   });
 });

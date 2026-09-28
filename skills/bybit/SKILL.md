@@ -3,7 +3,7 @@ name: bybit
 description: Read-only access to the user's Bybit account (Unified Trading Account) via the Bybit V5 API — portfolio, balances by wallet (trading, funding, Earn), positions, options positions and greeks, Portfolio Margin breakdown, option chain and expiries, trade history, transaction log, realised PnL, expiry deliveries, net deposits and all-time result, quotes, candles, order book, instrument cards, ticker search. Use whenever the user asks about their Bybit account, crypto portfolio, options, trades, PnL, deposits or withdrawals, or a Bybit price or ticker (BTC, ETH, SOL, BTCUSDT). Data comes from the Bybit API via the bundled CLI — never answer from memory. Cannot trade: the skill is read-only by design.
 ---
 
-<!-- bybit · версия 1.0.1 · https://github.com/AndreyK503/bybit-skill · CHANGELOG в репозитории -->
+<!-- bybit · версия 1.0.2 · https://github.com/AndreyK503/bybit-skill · CHANGELOG в репозитории -->
 
 # Доступ к счёту Bybit — только на чтение
 
@@ -197,7 +197,8 @@ BYUSDT, валюта результата).
 | `APP_KEY_NOT_READONLY` | у ключа есть права на изменение счёта | создать ключ «Только чтение»; скилл с другим не работает |
 | `APP_KEY_IP_MISMATCH` | ключ привязан к другим IP | добавить текущий IP в ключ или снять привязку |
 | `APP_PERMISSION_DENIED` | у ключа нет права на этот запрос (путь назван) | сверить права в `session status`, добавить право на чтение |
-| `APP_CLOCK_SKEW` | часы компьютера ушли от биржи (разница названа) | синхронизировать системное время |
+| `APP_CLOCK_SKEW` | часы компьютера ушли от биржи (разница названа). В `problems` у `session status` — предупреждение: скилл сам подписывает запросы по времени биржи, данные идут. Ошибкой команды — только если и это не помогло | при возможности синхронизировать время; права администратора для работы скилла не нужны |
+| `APP_TLS_UNTRUSTED` | сеть подменяет сертификаты (корпоративный прокси, антивирус), Node им не доверяет. CLI сам перезапускается с системным хранилищем сертификатов (`--use-system-ca`) и пишет об этом строку в stderr — это не ошибка | ошибка осталась — Node старше 22.15 или сертификата прокси нет в системе: обновить Node или задать `NODE_EXTRA_CA_CERTS`. Не предлагай глобальный `NODE_OPTIONS` |
 | `APP_REGION_BLOCKED` | биржа не обслуживает этот адрес (США, материковый Китай и др.) | передать пользователю; скилл это ограничение не обходит |
 | `APP_RATE_LIMIT` | исчерпан лимит запросов | подождать до названного времени |
 | `APP_UNAVAILABLE` | биржа не ответила или ответила не JSON | см. ниже |

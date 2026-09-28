@@ -34,3 +34,20 @@ export function progressReporter(write: (line: string) => void): (label: string,
     write(`Сбор: ${label} — окно ${done} из ${total}`);
   };
 }
+
+export const SYSTEM_CA_FLAG = '--use-system-ca';
+
+/**
+ * Relaunch once with the OS certificate store when a proxy's certificate is not trusted by Node's
+ * bundled CAs. Not when the flag is already on (no loop) or this Node does not know it (< 22.15).
+ */
+export function shouldRelaunchWithSystemCa(
+  err: unknown,
+  execArgv: string[],
+  env: NodeJS.ProcessEnv,
+  allowedFlags: ReadonlySet<string>,
+): boolean {
+  if (!(err instanceof AppError && err.code === 'APP_TLS_UNTRUSTED')) return false;
+  if (execArgv.includes(SYSTEM_CA_FLAG) || (env.NODE_OPTIONS ?? '').includes(SYSTEM_CA_FLAG)) return false;
+  return allowedFlags.has(SYSTEM_CA_FLAG);
+}

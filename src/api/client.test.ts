@@ -151,6 +151,83 @@ describe('BybitClient clock skew (D-3, criterion 2)', () => {
   });
 });
 
+describe('BybitClient signs by exchange time after 10002 (D-3 revised 2026-09-28)', () => {
+  // Local 1688639405423; server 1688639403423 (MARKET_TIME); drift +2000 ms, round trip 0.
+  // Corrected timestamp aims 1 s behind the exchange: 1688639405423 - 2000 - 1000 = 1688639402423.
+  const LOCAL = 1688639405423;
+  const CORRECTED = '1688639402423';
+
+  /** Private endpoint answers 10002 until the timestamp is corrected. */
+  function skewedExchange() {
+    return mockFetch((url) => {
+      if (url.pathname === '/v5/market/time') return jsonResponse(MARKET_TIME);
+      return jsonResponse(ACCOUNT_INFO);
+    });
+  }
+
+  it('10002 once -> measures drift, retries once with the corrected timestamp and succeeds', async () => {
+    let privateCalls = 0;
+    const { fn, calls } = mockFetch((url) => {
+      if (url.pathname === '/v5/market/time') return jsonResponse(MARKET_TIME);
+      privateCalls += 1;
+      return jsonResponse(privateCalls === 1 ? errorEnvelope(10002) : ACCOUNT_INFO);
+    });
+    expect(await client(fn, LOCAL).getPrivate('/v5/account/info', { a: '1' })).toEqual(ACCOUNT_INFO.result);
+    expect(calls.map((c) => new URL(c.url).pathname)).toEqual(['/v5/account/info', '/v5/market/time', '/v5/account/info']);
+    expect(header(calls[2], 'X-BAPI-TIMESTAMP')).toBe(CORRECTED);
+    expect(header(calls[2], 'X-BAPI-SIGN')).toBe(sign(signPayload(CORRECTED, DOC_CREDS.apiKey, '5000', 'a=1'), DOC_CREDS.apiSecret));
+  });
+
+  it('keeps the correction: the next signed request goes straight with the exchange time', async () => {
+    let first = true;
+    const { fn, calls } = mockFetch((url) => {
+      if (url.pathname === '/v5/market/time') return jsonResponse(MARKET_TIME);
+      const reply = first ? errorEnvelope(10002) : ACCOUNT_INFO;
+      first = false;
+      return jsonResponse(reply);
+    });
+    const c = client(fn, LOCAL);
+    await c.getPrivate('/v5/account/info');
+    calls.length = 0;
+    await c.getPrivate('/v5/account/info');
+    expect(calls).toHaveLength(1);
+    expect(header(calls[0], 'X-BAPI-TIMESTAMP')).toBe(CORRECTED);
+  });
+
+  it('no 10002 -> local time is used as is, no extra time request', async () => {
+    const { fn, calls } = skewedExchange();
+    await client(fn, LOCAL).getPrivate('/v5/account/info');
+    expect(calls).toHaveLength(1);
+    expect(header(calls[0], 'X-BAPI-TIMESTAMP')).toBe(String(LOCAL));
+  });
+});
+
+describe('BybitClient untrusted certificate (corporate TLS interception)', () => {
+  const certFailure = () => Promise.reject(new TypeError('fetch failed', { cause: Object.assign(new Error('self-signed certificate in certificate chain'), { code: 'SELF_SIGNED_CERT_IN_CHAIN' }) }));
+
+  it.each(['SELF_SIGNED_CERT_IN_CHAIN', 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY', 'DEPTH_ZERO_SELF_SIGNED_CERT'])(
+    '%s -> APP_TLS_UNTRUSTED naming --use-system-ca, one request only',
+    async (code) => {
+      const failure = () => Promise.reject(new TypeError('fetch failed', { cause: Object.assign(new Error('x'), { code }) }));
+      const { fn, calls } = mockFetch(failure);
+      const err = await rejection(client(fn).getPublic('/v5/market/time'));
+      expect(err.code).toBe('APP_TLS_UNTRUSTED');
+      expect(err.userMessage).toContain('--use-system-ca');
+      expect(calls).toHaveLength(1);
+    },
+  );
+
+  it('the fixture shape matches Node: cause carries the code', async () => {
+    const { fn } = mockFetch(certFailure);
+    expect((await rejection(client(fn).getPublic('/v5/market/time'))).code).toBe('APP_TLS_UNTRUSTED');
+  });
+
+  it('other network failures stay APP_UNAVAILABLE', async () => {
+    const { fn } = mockFetch(() => Promise.reject(new TypeError('fetch failed', { cause: Object.assign(new Error('x'), { code: 'ECONNREFUSED' }) })));
+    expect((await rejection(client(fn).getPublic('/v5/market/time'))).code).toBe('APP_UNAVAILABLE');
+  });
+});
+
 describe('BybitClient transport failures', () => {
   it('HTTP 403 with an HTML body -> APP_REGION_BLOCKED', async () => {
     const { fn } = mockFetch(() => new Response('<html>403 Forbidden</html>', { status: 403 }));

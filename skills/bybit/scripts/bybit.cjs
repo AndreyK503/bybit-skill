@@ -3844,6 +3844,9 @@ var require_dist = __commonJS({
   }
 });
 
+// src/cli.ts
+var import_node_child_process = require("node:child_process");
+
 // node_modules/commander/esm.mjs
 var import_index = __toESM(require_commander(), 1);
 var {
@@ -4013,7 +4016,7 @@ function clockSkewError(driftMs) {
   const measured = driftMs === null ? "Время биржи получить не удалось, величину расхождения назвать нельзя." : `Локальное время расходится с биржей на ${formatDrift(driftMs)}.`;
   return new AppError({
     code: "APP_CLOCK_SKEW",
-    userMessage: `Биржа отвергла запрос из-за расхождения системных часов. ${measured} Синхронизируйте часы (NTP).`,
+    userMessage: `Биржа отвергла запрос из-за расхождения системных часов, и подпись по времени биржи не помогла. ${measured} Синхронизируйте часы (NTP).`,
     details: { driftMs }
   });
 }
@@ -4035,6 +4038,8 @@ var BybitClient = class {
   fetchFn;
   now;
   timeoutMs;
+  /** Added to local time when signing; set once after a 10002. */
+  clockCorrectionMs = 0;
   constructor(options) {
     this.baseUrl = options.baseUrl;
     this.credentials = options.credentials;
@@ -4047,24 +4052,39 @@ var BybitClient = class {
   getPublic(path4, params = {}) {
     return this.request(path4, new URLSearchParams(params).toString(), {});
   }
-  /** Signed GET; returns `result` of the envelope. On 10002 names the clock drift (D-3). */
+  /**
+   * Signed GET; returns `result` of the envelope.
+   * On 10002 (clock drift) measures the drift, then signs by exchange time for the rest of the
+   * process and retries once (D-3 revised 2026-09-28); still rejected or no exchange time: APP_CLOCK_SKEW.
+   */
   async getPrivate(path4, params = {}) {
     if (!this.credentials) throw keyMissingError();
     const query = new URLSearchParams(params).toString();
-    const timestamp = String(this.now());
+    try {
+      return await this.request(path4, query, this.signedHeaders(query));
+    } catch (err) {
+      if (!(err instanceof AppError && err.code === "APP_CLOCK_SKEW")) throw err;
+      const drift = await this.driftOrNull();
+      if (drift === null || this.clockCorrectionMs !== 0) throw clockSkewError(drift);
+      this.clockCorrectionMs = -drift - CLOCK_CORRECTION_MARGIN_MS;
+      try {
+        return await this.request(path4, query, this.signedHeaders(query));
+      } catch (retryErr) {
+        if (retryErr instanceof AppError && retryErr.code === "APP_CLOCK_SKEW") throw clockSkewError(drift);
+        throw retryErr;
+      }
+    }
+  }
+  signedHeaders(query) {
+    const { apiKey, apiSecret } = this.credentials;
+    const timestamp = String(Math.round(this.now() + this.clockCorrectionMs));
     const recvWindow = String(RECV_WINDOW_MS);
-    const headers = {
-      "X-BAPI-API-KEY": this.credentials.apiKey,
+    return {
+      "X-BAPI-API-KEY": apiKey,
       "X-BAPI-TIMESTAMP": timestamp,
       "X-BAPI-RECV-WINDOW": recvWindow,
-      "X-BAPI-SIGN": sign(signPayload(timestamp, this.credentials.apiKey, recvWindow, query), this.credentials.apiSecret)
+      "X-BAPI-SIGN": sign(signPayload(timestamp, apiKey, recvWindow, query), apiSecret)
     };
-    try {
-      return await this.request(path4, query, headers);
-    } catch (err) {
-      if (err instanceof AppError && err.code === "APP_CLOCK_SKEW") throw clockSkewError(await this.driftOrNull());
-      throw err;
-    }
   }
   /** Exchange time in ms from /v5/market/time (timeNano / 1e6). */
   async getServerTimeMs() {
@@ -4094,6 +4114,7 @@ var BybitClient = class {
     try {
       response = await this.fetchFn(url, { headers, signal: AbortSignal.timeout(this.timeoutMs) });
     } catch (cause) {
+      if (isUntrustedCertificate(cause)) throw tlsUntrustedError(path4);
       const reason = cause instanceof DOMException && cause.name === "TimeoutError" ? "timeout" : "network";
       throw new AppError({
         code: "APP_UNAVAILABLE",
@@ -4111,6 +4132,26 @@ var BybitClient = class {
     return envelope.result;
   }
 };
+var CLOCK_CORRECTION_MARGIN_MS = 1e3;
+var UNTRUSTED_CERT_CODES = /* @__PURE__ */ new Set([
+  "SELF_SIGNED_CERT_IN_CHAIN",
+  "DEPTH_ZERO_SELF_SIGNED_CERT",
+  "UNABLE_TO_GET_ISSUER_CERT",
+  "UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
+  "UNABLE_TO_VERIFY_LEAF_SIGNATURE",
+  "CERT_UNTRUSTED"
+]);
+function isUntrustedCertificate(err) {
+  const code = err instanceof Error && err.cause instanceof Error ? err.cause.code : void 0;
+  return typeof code === "string" && UNTRUSTED_CERT_CODES.has(code);
+}
+function tlsUntrustedError(path4) {
+  return new AppError({
+    code: "APP_TLS_UNTRUSTED",
+    userMessage: "Node не доверяет сертификату, которым представился сервер биржи: сеть подменяет сертификаты (корпоративный прокси или антивирус). CLI сам повторяет запуск с системным хранилищем сертификатов (node --use-system-ca, Node 22.15+). Если ошибка осталась: обновите Node или задайте NODE_EXTRA_CA_CERTS=<путь к корневому сертификату прокси>.",
+    details: { path: path4 }
+  });
+}
 async function parseEnvelope(response, path4) {
   try {
     return await response.json();
@@ -4199,11 +4240,12 @@ function driftNote(driftMs, rttMs, error) {
 }
 function clockSkewMessage(driftMs) {
   const drift = `Локальное время расходится с биржей на ${formatDrift(driftMs)}`;
-  if (driftMs > 0) return `${drift}: часы спешат, биржа отвергает подписанные запросы при опережении больше 1 с. Синхронизируйте часы (NTP).`;
+  const corrected = "Скилл подписывает запросы по времени биржи, работа не нарушена; при возможности синхронизируйте часы (NTP).";
+  if (driftMs > 0) return `${drift}: часы спешат, биржа отвергает подписанные запросы при опережении больше 1 с. ${corrected}`;
   if (-driftMs >= RECV_WINDOW_MS) {
-    return `${drift}: часы отстают больше окна ${RECV_WINDOW_MS / 1e3} с, биржа отвергает подписанные запросы. Синхронизируйте часы (NTP).`;
+    return `${drift}: часы отстают больше окна ${RECV_WINDOW_MS / 1e3} с, биржа отвергает подписанные запросы. ${corrected}`;
   }
-  return `${drift}: часы отстают; пока это в пределах окна ${RECV_WINDOW_MS / 1e3} с и запросы проходят, но запас мал. Синхронизируйте часы (NTP).`;
+  return `${drift}: часы отстают; пока это в пределах окна ${RECV_WINDOW_MS / 1e3} с и запросы проходят. Синхронизируйте часы (NTP).`;
 }
 function unifiedNote(isUnified) {
   if (isUnified === null) return "Режим счёта не получен, признак UTA не вычислен.";
@@ -4603,6 +4645,12 @@ function progressReporter(write) {
     current.shown = step;
     write(`Сбор: ${label} — окно ${done} из ${total}`);
   };
+}
+var SYSTEM_CA_FLAG = "--use-system-ca";
+function shouldRelaunchWithSystemCa(err, execArgv, env, allowedFlags) {
+  if (!(err instanceof AppError && err.code === "APP_TLS_UNTRUSTED")) return false;
+  if (execArgv.includes(SYSTEM_CA_FLAG) || (env.NODE_OPTIONS ?? "").includes(SYSTEM_CA_FLAG)) return false;
+  return allowedFlags.has(SYSTEM_CA_FLAG);
 }
 
 // src/cli/register-account.ts
@@ -6066,7 +6114,7 @@ function registerSessionCommands(program2) {
 
 // src/cli/program.ts
 function buildProgram() {
-  const program2 = new Command().name("bybit").description("Read-only access to a Bybit account").version("1.0.1").option("--json", "машинный вывод (JSON)");
+  const program2 = new Command().name("bybit").description("Read-only access to a Bybit account").version("1.0.2").option("--json", "машинный вывод (JSON)");
   registerSessionCommands(program2);
   registerAccountCommands(program2);
   registerOptionCommands(program2);
@@ -6077,4 +6125,9 @@ function buildProgram() {
 
 // src/cli.ts
 bootstrapEnv();
-buildProgram().parseAsync().catch(printError);
+buildProgram().parseAsync().catch((err) => {
+  if (!shouldRelaunchWithSystemCa(err, process.execArgv, process.env, process.allowedNodeEnvironmentFlags)) return printError(err);
+  console.error(`Сертификат сети не признан встроенным списком Node: повтор с системным хранилищем сертификатов (${SYSTEM_CA_FLAG}).`);
+  const child = (0, import_node_child_process.spawnSync)(process.execPath, [SYSTEM_CA_FLAG, ...process.execArgv, ...process.argv.slice(1)], { stdio: "inherit" });
+  process.exitCode = child.status ?? 1;
+});

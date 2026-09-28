@@ -99,14 +99,18 @@ function driftNote(driftMs: number | null, rttMs: number, error: string | null):
   );
 }
 
-/** Bybit accepts timestamps in [server - recvWindow, server + 1000): the window is asymmetric. */
+/**
+ * Bybit accepts timestamps in [server - recvWindow, server + 1000): the window is asymmetric.
+ * The client signs by exchange time after a rejection (D-3 revised), so the drift is a warning.
+ */
 function clockSkewMessage(driftMs: number): string {
   const drift = `Локальное время расходится с биржей на ${formatDrift(driftMs)}`;
-  if (driftMs > 0) return `${drift}: часы спешат, биржа отвергает подписанные запросы при опережении больше 1 с. Синхронизируйте часы (NTP).`;
+  const corrected = 'Скилл подписывает запросы по времени биржи, работа не нарушена; при возможности синхронизируйте часы (NTP).';
+  if (driftMs > 0) return `${drift}: часы спешат, биржа отвергает подписанные запросы при опережении больше 1 с. ${corrected}`;
   if (-driftMs >= RECV_WINDOW_MS) {
-    return `${drift}: часы отстают больше окна ${RECV_WINDOW_MS / 1000} с, биржа отвергает подписанные запросы. Синхронизируйте часы (NTP).`;
+    return `${drift}: часы отстают больше окна ${RECV_WINDOW_MS / 1000} с, биржа отвергает подписанные запросы. ${corrected}`;
   }
-  return `${drift}: часы отстают; пока это в пределах окна ${RECV_WINDOW_MS / 1000} с и запросы проходят, но запас мал. Синхронизируйте часы (NTP).`;
+  return `${drift}: часы отстают; пока это в пределах окна ${RECV_WINDOW_MS / 1000} с и запросы проходят. Синхронизируйте часы (NTP).`;
 }
 
 function unifiedNote(isUnified: boolean | null): string {
