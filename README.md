@@ -61,11 +61,24 @@ CLI, получает свежие данные с биржи и отвечае�
 
 Нужен только Node.js 20 или новее. Пакеты ставить и собирать ничего не нужно.
 
+**Linux, macOS, WSL** (терминал, bash):
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/AndreyK503/bybit-skill/main/install.sh | bash
 ```
 
-Установщик (Linux, macOS, WSL) спрашивает, куда ставить:
+**Windows** (PowerShell; `install.sh` здесь не работает — в PowerShell нет bash):
+
+```powershell
+irm https://raw.githubusercontent.com/AndreyK503/bybit-skill/main/install.ps1 | iex
+```
+
+Оба установщика делают одно и то же; у Windows-версии сообщения на английском
+(Windows PowerShell 5.1 искажает кириллицу в скриптах). Пути на Windows —
+те же относительно домашней папки: `C:\Users\<вы>\.claude\skills\bybit`,
+ключ — `C:\Users\<вы>\.config\bybit\.env`.
+
+Установщик спрашивает, куда ставить:
 
 ```
 Куда установить скилл?
@@ -79,18 +92,27 @@ curl -fsSL https://raw.githubusercontent.com/AndreyK503/bybit-skill/main/install
 - **В проект** (2): только в `./.claude/skills/bybit` той папки, где запущена
   команда. Скилл виден только в ней, его можно хранить в git проекта.
 
-Без вопроса: `... | BYBIT_SCOPE=project bash` или `BYBIT_SCOPE=global`. Если
-задать вопрос негде (нет терминала), скилл ставится глобально.
+Без вопроса: `... | BYBIT_SCOPE=project bash` или `BYBIT_SCOPE=global`; в
+PowerShell — `$env:BYBIT_SCOPE='project'` перед командой. Если задать вопрос
+негде (нет терминала), `install.sh` ставит глобально.
 
 Ключ при любом выборе один — `~/.config/bybit/.env`, вне проекта, чтобы не попал
-в git. Установщик создаёт его с пустыми строками и правами 600, уже существующий
-не трогает. Повторный запуск обновляет скилл, ключ остаётся на месте.
+в git. Установщик создаёт его с пустыми строками (на Linux и macOS — с правами
+600), уже существующий не трогает. Повторный запуск обновляет скилл, ключ
+остаётся на месте.
 
 Установка из локального пакета, без скачивания:
 
 ```bash
 BYBIT_SKILL_FILE=./bybit.skill bash install.sh
 ```
+
+```powershell
+$env:BYBIT_SKILL_FILE='.\bybit.skill'; .\install.ps1
+```
+
+Если PowerShell запрещает запуск локального скрипта, выполните
+`powershell -ExecutionPolicy Bypass -File .\install.ps1`.
 
 Вручную: распакуйте `bybit.skill` (это ZIP) в каталог скиллов агента:
 `unzip bybit.skill -d ~/.claude/skills` (глобально) или

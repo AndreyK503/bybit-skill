@@ -5,6 +5,8 @@
 - `install.sh` спрашивает, куда ставить: глобально (по умолчанию) или в текущий
   проект (`./.claude/skills/bybit`); без вопроса — `BYBIT_SCOPE=global|project`.
   Ключ при любом выборе — `~/.config/bybit/.env`.
+- `install.ps1` — установщик для Windows (PowerShell 5.1 и 7): то же поведение,
+  команда `irm .../install.ps1 | iex`.
 
 ## 1.0.0 (2026-09-28)
 

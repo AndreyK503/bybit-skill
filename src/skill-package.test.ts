@@ -260,6 +260,33 @@ describe('install.sh', () => {
   });
 });
 
+describe('install.ps1 (static: no PowerShell in CI)', () => {
+  const ps1 = () => read(join(ROOT, 'install.ps1'));
+
+  it('is ASCII only: Windows PowerShell 5.1 reads BOM-less files as ANSI', () => {
+    const nonAscii = [...ps1()].filter((ch) => ch.charCodeAt(0) > 0x7e || (ch.charCodeAt(0) < 0x20 && !'\t\n\r'.includes(ch)));
+    expect(nonAscii).toEqual([]);
+  });
+
+  it('never calls exit: under irm | iex it would close the PowerShell window', () => {
+    expect(ps1()).not.toMatch(/^\s*exit\b/im);
+    expect(ps1()).not.toMatch(/[;{]\s*exit\b/i);
+  });
+
+  it('downloads the same package and writes the same key names as install.sh', () => {
+    const text = ps1();
+    expect(text).toContain('raw.githubusercontent.com/$repo/$ref/bybit.skill');
+    expect(text).toContain("'AndreyK503/bybit-skill'");
+    expect(text).toMatch(/^BYBIT_API_KEY=$/m);
+    expect(text).toMatch(/^BYBIT_API_SECRET=$/m);
+    for (const name of ['BYBIT_SCOPE', 'BYBIT_SKILL_FILE', 'BYBIT_REF', '.claude', '.agents', '.config']) expect(text, name).toContain(name);
+  });
+
+  it('README documents the Windows command', () => {
+    expect(read(join(ROOT, 'README.md'))).toContain('irm https://raw.githubusercontent.com/AndreyK503/bybit-skill/main/install.ps1 | iex');
+  });
+});
+
 describe('release', () => {
   it('CLI version matches package.json and CHANGELOG', () => {
     const version = (JSON.parse(read(join(ROOT, 'package.json'))) as { version: string }).version;
