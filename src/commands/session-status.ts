@@ -70,7 +70,8 @@ async function capture<T>(fn: () => Promise<T>, problems: Problem[]): Promise<T 
   try {
     return await fn();
   } catch (err) {
-    if (!(err instanceof AppError)) throw err;
+    // Untrusted certificate is rethrown: the CLI relaunches with the system certificate store.
+    if (!(err instanceof AppError) || err.code === 'APP_TLS_UNTRUSTED') throw err;
     if (!problems.some((p) => p.code === err.code)) problems.push({ code: err.code, message: err.userMessage });
     return null;
   }
@@ -132,7 +133,8 @@ export async function sessionStatus(client: BybitClient, now: () => number): Pro
     driftMs = (before + after) / 2 - serverTimeMs;
     rttMs = after - before;
   } catch (err) {
-    if (!(err instanceof AppError)) throw err;
+    // Untrusted certificate is rethrown: the CLI relaunches with the system certificate store.
+    if (!(err instanceof AppError) || err.code === 'APP_TLS_UNTRUSTED') throw err;
     connError = err.userMessage;
   }
   // Only a drift that exceeds the threshold beyond the measurement error is reported (NFR-3).

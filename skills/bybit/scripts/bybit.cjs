@@ -4215,7 +4215,7 @@ async function capture(fn, problems) {
   try {
     return await fn();
   } catch (err) {
-    if (!(err instanceof AppError)) throw err;
+    if (!(err instanceof AppError) || err.code === "APP_TLS_UNTRUSTED") throw err;
     if (!problems.some((p) => p.code === err.code)) problems.push({ code: err.code, message: err.userMessage });
     return null;
   }
@@ -4264,7 +4264,7 @@ async function sessionStatus(client3, now) {
     driftMs = (before + after) / 2 - serverTimeMs;
     rttMs = after - before;
   } catch (err) {
-    if (!(err instanceof AppError)) throw err;
+    if (!(err instanceof AppError) || err.code === "APP_TLS_UNTRUSTED") throw err;
     connError = err.userMessage;
   }
   if (driftMs !== null && Math.abs(driftMs) - rttMs / 2 > CLOCK_SKEW_WARN_MS) {
@@ -6114,7 +6114,7 @@ function registerSessionCommands(program2) {
 
 // src/cli/program.ts
 function buildProgram() {
-  const program2 = new Command().name("bybit").description("Read-only access to a Bybit account").version("1.0.2").option("--json", "машинный вывод (JSON)");
+  const program2 = new Command().name("bybit").description("Read-only access to a Bybit account").version("1.0.3").option("--json", "машинный вывод (JSON)");
   registerSessionCommands(program2);
   registerAccountCommands(program2);
   registerOptionCommands(program2);

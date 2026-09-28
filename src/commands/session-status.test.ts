@@ -254,3 +254,24 @@ describe('decision A: clock problem only when the drift exceeds 1 s beyond the e
     expect(codes(s.problems)).toContain('APP_CLOCK_SKEW');
   });
 });
+
+describe('untrusted certificate is not swallowed: the CLI must see it to relaunch with --use-system-ca', () => {
+  const certFailure = (): Response => {
+    throw new TypeError('fetch failed', { cause: Object.assign(new Error('x'), { code: 'SELF_SIGNED_CERT_IN_CHAIN' }) });
+  };
+
+  it('certificate failure on the time request -> sessionStatus rejects with APP_TLS_UNTRUSTED', async () => {
+    const err = await status({ '/v5/market/time': certFailure }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(AppError);
+    expect((err as AppError).code).toBe('APP_TLS_UNTRUSTED');
+  });
+
+  it('other connection failures still become a problem, not a throw', async () => {
+    const refused = (): Response => {
+      throw new TypeError('fetch failed', { cause: Object.assign(new Error('x'), { code: 'ECONNREFUSED' }) });
+    };
+    const { status: s } = await status({ '/v5/market/time': refused, '/v5/user/query-api': refused, '/v5/account/info': refused });
+    expect(s.connectivity.ok).toBe(false);
+    expect(codes(s.problems)).toContain('APP_UNAVAILABLE');
+  });
+});
