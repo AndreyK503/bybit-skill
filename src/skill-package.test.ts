@@ -158,12 +158,56 @@ describe('install.sh', () => {
     pack(pkg);
   }, 60_000);
 
-  function install(home: string): void {
-    execFileSync('bash', [join(ROOT, 'install.sh')], {
-      env: { PATH: process.env.PATH, HOME: home, BYBIT_SKILL_FILE: pkg },
-      stdio: 'pipe',
-    });
+  /** Run install.sh; the scope comes from BYBIT_SCOPE, or from an answer file standing in for the terminal. */
+  function install(home: string, opts: { scope?: string; answer?: string; cwd?: string } = { scope: 'global' }): string {
+    const env: NodeJS.ProcessEnv = { PATH: process.env.PATH, HOME: home, BYBIT_SKILL_FILE: pkg, BYBIT_TTY: join(home, 'no-terminal') };
+    if (opts.scope !== undefined) env.BYBIT_SCOPE = opts.scope;
+    if (opts.answer !== undefined) {
+      env.BYBIT_TTY = join(home, 'answer');
+      writeFileSync(env.BYBIT_TTY, opts.answer);
+    }
+    return execFileSync('bash', [join(ROOT, 'install.sh')], { env, cwd: opts.cwd ?? home, stdio: 'pipe', encoding: 'utf8' });
   }
+
+  const newDirs = () => ({ home: mkdtempSync(join(tmpdir(), 'bybit-home-')), project: mkdtempSync(join(tmpdir(), 'bybit-proj-')) });
+  const installedIn = (base: string) => existsSync(join(base, 'SKILL.md'));
+
+  it('install.sh project scope installs only into the current project', () => {
+    const { home, project } = newDirs();
+    install(home, { scope: 'project', cwd: project });
+    expect(read(join(project, '.claude/skills/bybit/SKILL.md'))).toBe(skillMd());
+    expect(installedIn(join(home, '.claude/skills/bybit'))).toBe(false);
+    expect(installedIn(join(home, '.agents/skills/bybit'))).toBe(false);
+    expect(existsSync(join(project, '.claude/skills/bybit/.env'))).toBe(false);
+    expect(statSync(join(home, '.config/bybit/.env')).mode & 0o777).toBe(0o600);
+  });
+
+  it('install.sh asks: answer 2 means project', () => {
+    const { home, project } = newDirs();
+    install(home, { answer: '2\n', cwd: project });
+    expect(installedIn(join(project, '.claude/skills/bybit'))).toBe(true);
+    expect(installedIn(join(home, '.claude/skills/bybit'))).toBe(false);
+  });
+
+  it('install.sh asks: empty answer means global', () => {
+    const { home, project } = newDirs();
+    install(home, { answer: '\n', cwd: project });
+    expect(installedIn(join(home, '.claude/skills/bybit'))).toBe(true);
+    expect(installedIn(join(project, '.claude/skills/bybit'))).toBe(false);
+  });
+
+  it('install.sh without a terminal installs globally', () => {
+    const { home, project } = newDirs();
+    install(home, { cwd: project });
+    expect(installedIn(join(home, '.claude/skills/bybit'))).toBe(true);
+    expect(installedIn(join(project, '.claude/skills/bybit'))).toBe(false);
+  });
+
+  it('install.sh rejects an unknown scope', () => {
+    const { home, project } = newDirs();
+    expect(() => install(home, { scope: 'everywhere', cwd: project })).toThrow(/BYBIT_SCOPE/);
+    expect(installedIn(join(home, '.claude/skills/bybit'))).toBe(false);
+  });
 
   it('install.sh installs into both dirs', () => {
     const home = mkdtempSync(join(tmpdir(), 'bybit-home-'));

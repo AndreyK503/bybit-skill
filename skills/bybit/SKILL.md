@@ -3,7 +3,7 @@ name: bybit
 description: Read-only access to the user's Bybit account (Unified Trading Account) via the Bybit V5 API — portfolio, balances by wallet (trading, funding, Earn), positions, options positions and greeks, Portfolio Margin breakdown, option chain and expiries, trade history, transaction log, realised PnL, expiry deliveries, net deposits and all-time result, quotes, candles, order book, instrument cards, ticker search. Use whenever the user asks about their Bybit account, crypto portfolio, options, trades, PnL, deposits or withdrawals, or a Bybit price or ticker (BTC, ETH, SOL, BTCUSDT). Data comes from the Bybit API via the bundled CLI — never answer from memory. Cannot trade: the skill is read-only by design.
 ---
 
-<!-- bybit · версия 1.0.0 · https://github.com/AndreyK503/bybit-skill · CHANGELOG в репозитории -->
+<!-- bybit · версия 1.0.1 · https://github.com/AndreyK503/bybit-skill · CHANGELOG в репозитории -->
 
 # Доступ к счёту Bybit — только на чтение
 

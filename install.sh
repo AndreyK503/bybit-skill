@@ -4,23 +4,52 @@
 #   curl -fsSL https://raw.githubusercontent.com/AndreyK503/bybit-skill/main/install.sh | bash
 #
 # Что делает:
-#   1. Скачивает bybit.skill с GitHub (или берёт локальный: BYBIT_SKILL_FILE=<путь>).
-#   2. Распаковывает в ~/.claude/skills/bybit (Claude Code) и ~/.agents/skills/bybit
-#      (общий каталог агентов); старую версию удаляет.
+#   1. Спрашивает, куда ставить (BYBIT_SCOPE=global|project — без вопроса):
+#        global  — ~/.claude/skills/bybit (Claude Code, все проекты) и
+#                  ~/.agents/skills/bybit (общий каталог агентов); по умолчанию;
+#        project — ./.claude/skills/bybit, только в текущем проекте.
+#      Нет терминала для вопроса — global.
+#   2. Скачивает bybit.skill с GitHub (или берёт локальный: BYBIT_SKILL_FILE=<путь>)
+#      и распаковывает; старую версию удаляет.
 #   3. Создаёт ~/.config/bybit/.env с пустыми строками ключа (права 600), если его
-#      нет. Существующий файл не трогает: вписанный ключ остаётся.
+#      нет. Ключ всегда вне проекта; существующий файл не трогает.
 set -euo pipefail
 
 REPO="${BYBIT_REPO:-AndreyK503/bybit-skill}"
 REF="${BYBIT_REF:-main}"
 SKILL_NAME="bybit"
 SKILL_URL="https://raw.githubusercontent.com/${REPO}/${REF}/${SKILL_NAME}.skill"
-SKILL_DIRS=("$HOME/.claude/skills" "$HOME/.agents/skills")
 CONFIG_DIR="$HOME/.config/bybit"
 ENV_FILE="$CONFIG_DIR/.env"
+# Answer is read from the terminal, not stdin: under `curl | bash` stdin is the script.
+TTY="${BYBIT_TTY:-/dev/tty}"
 
 info() { printf '%s\n' "$*"; }
 die()  { printf 'Ошибка: %s\n' "$*" >&2; exit 1; }
+
+# Print global or project: BYBIT_SCOPE, else the user's answer, else global.
+choose_scope() {
+  if [ -n "${BYBIT_SCOPE:-}" ]; then printf '%s' "$BYBIT_SCOPE"; return; fi
+  if ! { exec 3<"$TTY"; } 2>/dev/null; then printf 'global'; return; fi
+  printf '%s\n' "Куда установить скилл?" \
+    "  1) глобально — во всех проектах (~/.claude/skills) [по умолчанию]" \
+    "  2) в текущий проект — только здесь ($PWD/.claude/skills)" >&2
+  printf 'Выбор [1]: ' >&2
+  local answer=""
+  read -r answer <&3 || true
+  case "$answer" in
+    ""|1) printf 'global' ;;
+    2) printf 'project' ;;
+    *) printf '%s' "$answer" ;;
+  esac
+}
+
+SCOPE="$(choose_scope)"
+case "$SCOPE" in
+  global)  SKILL_DIRS=("$HOME/.claude/skills" "$HOME/.agents/skills") ;;
+  project) SKILL_DIRS=("$PWD/.claude/skills") ;;
+  *) die "неизвестный выбор «$SCOPE»: ответьте 1 или 2, либо задайте BYBIT_SCOPE=global или BYBIT_SCOPE=project." ;;
+esac
 
 command -v unzip >/dev/null 2>&1 || die "нужен unzip: установите его и повторите."
 
@@ -67,4 +96,9 @@ fi
 info ""
 info "Готово. Дальше:"
 info "  1) Впишите BYBIT_API_KEY и BYBIT_API_SECRET в ${ENV_FILE}."
-info "  2) Перезапустите сессию агента: скилл ${SKILL_NAME} подхватится сам."
+if [ "$SCOPE" = project ]; then
+  info "  2) Запустите агента в этой папке ($PWD): скилл ${SKILL_NAME} виден только здесь."
+  info "     Ключа в папке проекта нет, .claude/skills/${SKILL_NAME} можно хранить в git."
+else
+  info "  2) Перезапустите сессию агента: скилл ${SKILL_NAME} подхватится в любой папке."
+fi

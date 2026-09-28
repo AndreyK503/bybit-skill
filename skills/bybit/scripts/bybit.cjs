@@ -6066,7 +6066,7 @@ function registerSessionCommands(program2) {
 
 // src/cli/program.ts
 function buildProgram() {
-  const program2 = new Command().name("bybit").description("Read-only access to a Bybit account").version("1.0.0").option("--json", "машинный вывод (JSON)");
+  const program2 = new Command().name("bybit").description("Read-only access to a Bybit account").version("1.0.1").option("--json", "машинный вывод (JSON)");
   registerSessionCommands(program2);
   registerAccountCommands(program2);
   registerOptionCommands(program2);
