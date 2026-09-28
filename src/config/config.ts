@@ -6,6 +6,9 @@ import { AppError } from '../api/errors.js';
 /** Single canonical .env location, outside the repository (D-10). */
 export const ENV_PATH = path.join(os.homedir(), '.config', 'bybit', '.env');
 
+/** Catalog cache (D-7), next to the key, outside the repository. */
+export const CACHE_DIR = path.join(os.homedir(), '.config', 'bybit', 'cache');
+
 export const DEFAULT_BASE_URL = 'https://api.bybit.com';
 
 /** Mainnet hosts from docs /v5/guide; regional hosts are selected via BYBIT_BASE_URL. */

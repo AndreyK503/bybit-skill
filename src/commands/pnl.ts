@@ -75,7 +75,8 @@ const NOTES: PnlResult['computedNotes'] = {
     'Не видны позиции, открытые до начала журнала и истёкшие вне денег: такая экспирация записей не оставляет.',
   total:
     'closedPerps + closedOptions по валюте. Комиссии и фандинг уже внутри них. Результат экспираций уже входит в closedOptions. ' +
-    'Спот не входит: биржа не считает результат спотовых сделок (закрытых позиций по споту нет).',
+    'Спот не входит: биржа не считает результат спотовых сделок (закрытых позиций по споту нет). ' +
+    'Полный результат за всё время, включая спот, — команда funds.',
 };
 
 const perpSource = (category: 'linear' | 'inverse') => ({ label: `закрытые позиции ${category}`, path: '/v5/position/closed-pnl', params: { category, limit: '100' }, windowDays: 7, depthDays: DEPTH_2Y_DAYS, depthText: '2 лет' });

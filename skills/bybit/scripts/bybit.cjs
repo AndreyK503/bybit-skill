@@ -114,11 +114,11 @@ var require_argument = __commonJS({
       /**
        * @package
        */
-      _collectValue(value, previous) {
+      _collectValue(value2, previous) {
         if (previous === this.defaultValue || !Array.isArray(previous)) {
-          return [value];
+          return [value2];
         }
-        previous.push(value);
+        previous.push(value2);
         return previous;
       }
       /**
@@ -128,8 +128,8 @@ var require_argument = __commonJS({
        * @param {string} [description]
        * @return {Argument}
        */
-      default(value, description) {
-        this.defaultValue = value;
+      default(value2, description) {
+        this.defaultValue = value2;
         this.defaultValueDescription = description;
         return this;
       }
@@ -837,8 +837,8 @@ var require_option = __commonJS({
        * @param {string} [description]
        * @return {Option}
        */
-      default(value, description) {
-        this.defaultValue = value;
+      default(value2, description) {
+        this.defaultValue = value2;
         this.defaultValueDescription = description;
         return this;
       }
@@ -939,11 +939,11 @@ var require_option = __commonJS({
       /**
        * @package
        */
-      _collectValue(value, previous) {
+      _collectValue(value2, previous) {
         if (previous === this.defaultValue || !Array.isArray(previous)) {
-          return [value];
+          return [value2];
         }
-        previous.push(value);
+        previous.push(value2);
         return previous;
       }
       /**
@@ -1037,7 +1037,7 @@ var require_option = __commonJS({
             this.positiveOptions.set(option.attributeName(), option);
           }
         });
-        this.negativeOptions.forEach((value, key) => {
+        this.negativeOptions.forEach((value2, key) => {
           if (this.positiveOptions.has(key)) {
             this.dualOptions.add(key);
           }
@@ -1050,12 +1050,12 @@ var require_option = __commonJS({
        * @param {Option} option
        * @returns {boolean}
        */
-      valueFromOption(value, option) {
+      valueFromOption(value2, option) {
         const optionKey = option.attributeName();
         if (!this.dualOptions.has(optionKey)) return true;
         const preset = this.negativeOptions.get(optionKey).presetArg;
         const negativeValue = preset !== void 0 ? preset : false;
-        return option.negate === (negativeValue === value);
+        return option.negate === (negativeValue === value2);
       }
     };
     function camelcase(str) {
@@ -1192,8 +1192,8 @@ var require_command = __commonJS({
   "node_modules/commander/lib/command.js"(exports2) {
     var EventEmitter = require("node:events").EventEmitter;
     var childProcess = require("node:child_process");
-    var path2 = require("node:path");
-    var fs = require("node:fs");
+    var path4 = require("node:path");
+    var fs2 = require("node:fs");
     var process2 = require("node:process");
     var { Argument: Argument2, humanReadableArgName } = require_argument();
     var { CommanderError: CommanderError2 } = require_error();
@@ -1694,9 +1694,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @param {string} invalidArgumentMessage
        * @private
        */
-      _callParseArg(target, value, previous, invalidArgumentMessage) {
+      _callParseArg(target, value2, previous, invalidArgumentMessage) {
         try {
-          return target.parseArg(value, previous);
+          return target.parseArg(value2, previous);
         } catch (err) {
           if (err.code === "commander.invalidArgument") {
             const message = `${invalidArgumentMessage} ${err.message}`;
@@ -1983,8 +1983,8 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @param {object} value
        * @return {Command} `this` command for chaining
        */
-      setOptionValue(key, value) {
-        return this.setOptionValueWithSource(key, value, void 0);
+      setOptionValue(key, value2) {
+        return this.setOptionValueWithSource(key, value2, void 0);
       }
       /**
        * Store option value and where the value came from.
@@ -1994,11 +1994,11 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @param {string} source - expected values are default/config/env/cli/implied
        * @return {Command} `this` command for chaining
        */
-      setOptionValueWithSource(key, value, source) {
+      setOptionValueWithSource(key, value2, source) {
         if (this._storeOptionsAsProperties) {
-          this[key] = value;
+          this[key] = value2;
         } else {
-          this._optionValues[key] = value;
+          this._optionValues[key] = value2;
         }
         this._optionValueSources[key] = source;
         return this;
@@ -2187,7 +2187,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @param {string} subcommandName
        */
       _checkForMissingExecutable(executableFile, executableDir, subcommandName) {
-        if (fs.existsSync(executableFile)) return;
+        if (fs2.existsSync(executableFile)) return;
         const executableDirMessage = executableDir ? `searched for local subcommand relative to directory '${executableDir}'` : "no directory for search for local subcommand, use .executableDir() to supply a custom directory";
         const executableMissing = `'${executableFile}' does not exist
  - if '${subcommandName}' is not meant to be an executable command, remove description parameter from '.command()' and use '.description()' instead
@@ -2205,11 +2205,11 @@ Expecting one of '${allowedValues.join("', '")}'`);
         let launchWithNode = false;
         const sourceExt = [".js", ".ts", ".tsx", ".mjs", ".cjs"];
         function findFile(baseDir, baseName) {
-          const localBin = path2.resolve(baseDir, baseName);
-          if (fs.existsSync(localBin)) return localBin;
-          if (sourceExt.includes(path2.extname(baseName))) return void 0;
+          const localBin = path4.resolve(baseDir, baseName);
+          if (fs2.existsSync(localBin)) return localBin;
+          if (sourceExt.includes(path4.extname(baseName))) return void 0;
           const foundExt = sourceExt.find(
-            (ext) => fs.existsSync(`${localBin}${ext}`)
+            (ext) => fs2.existsSync(`${localBin}${ext}`)
           );
           if (foundExt) return `${localBin}${foundExt}`;
           return void 0;
@@ -2221,21 +2221,21 @@ Expecting one of '${allowedValues.join("', '")}'`);
         if (this._scriptPath) {
           let resolvedScriptPath;
           try {
-            resolvedScriptPath = fs.realpathSync(this._scriptPath);
+            resolvedScriptPath = fs2.realpathSync(this._scriptPath);
           } catch {
             resolvedScriptPath = this._scriptPath;
           }
-          executableDir = path2.resolve(
-            path2.dirname(resolvedScriptPath),
+          executableDir = path4.resolve(
+            path4.dirname(resolvedScriptPath),
             executableDir
           );
         }
         if (executableDir) {
           let localFile = findFile(executableDir, executableFile);
           if (!localFile && !subcommand._executableFile && this._scriptPath) {
-            const legacyName = path2.basename(
+            const legacyName = path4.basename(
               this._scriptPath,
-              path2.extname(this._scriptPath)
+              path4.extname(this._scriptPath)
             );
             if (legacyName !== this._name) {
               localFile = findFile(
@@ -2246,7 +2246,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
           }
           executableFile = localFile || executableFile;
         }
-        launchWithNode = sourceExt.includes(path2.extname(executableFile));
+        launchWithNode = sourceExt.includes(path4.extname(executableFile));
         let proc;
         if (process2.platform !== "win32") {
           if (launchWithNode) {
@@ -2381,13 +2381,13 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @private
        */
       _processArguments() {
-        const myParseArg = (argument, value, previous) => {
-          let parsedValue = value;
-          if (value !== null && argument.parseArg) {
-            const invalidValueMessage = `error: command-argument value '${value}' is invalid for argument '${argument.name()}'.`;
+        const myParseArg = (argument, value2, previous) => {
+          let parsedValue = value2;
+          if (value2 !== null && argument.parseArg) {
+            const invalidValueMessage = `error: command-argument value '${value2}' is invalid for argument '${argument.name()}'.`;
             parsedValue = this._callParseArg(
               argument,
-              value,
+              value2,
               previous,
               invalidValueMessage
             );
@@ -2397,25 +2397,25 @@ Expecting one of '${allowedValues.join("', '")}'`);
         this._checkNumberOfArguments();
         const processedArgs = [];
         this.registeredArguments.forEach((declaredArg, index) => {
-          let value = declaredArg.defaultValue;
+          let value2 = declaredArg.defaultValue;
           if (declaredArg.variadic) {
             if (index < this.args.length) {
-              value = this.args.slice(index);
+              value2 = this.args.slice(index);
               if (declaredArg.parseArg) {
-                value = value.reduce((processed, v) => {
+                value2 = value2.reduce((processed, v) => {
                   return myParseArg(declaredArg, v, processed);
                 }, declaredArg.defaultValue);
               }
-            } else if (value === void 0) {
-              value = [];
+            } else if (value2 === void 0) {
+              value2 = [];
             }
           } else if (index < this.args.length) {
-            value = this.args[index];
+            value2 = this.args[index];
             if (declaredArg.parseArg) {
-              value = myParseArg(declaredArg, value, declaredArg.defaultValue);
+              value2 = myParseArg(declaredArg, value2, declaredArg.defaultValue);
             }
           }
-          processedArgs[index] = value;
+          processedArgs[index] = value2;
         });
         this.processedArgs = processedArgs;
       }
@@ -2680,15 +2680,15 @@ Expecting one of '${allowedValues.join("', '")}'`);
             const option = this._findOption(arg);
             if (option) {
               if (option.required) {
-                const value = args[i++];
-                if (value === void 0) this.optionMissingArgument(option);
-                this.emit(`option:${option.name()}`, value);
+                const value2 = args[i++];
+                if (value2 === void 0) this.optionMissingArgument(option);
+                this.emit(`option:${option.name()}`, value2);
               } else if (option.optional) {
-                let value = null;
+                let value2 = null;
                 if (i < args.length && (!maybeOption(args[i]) || negativeNumberArg(args[i]))) {
-                  value = args[i++];
+                  value2 = args[i++];
                 }
-                this.emit(`option:${option.name()}`, value);
+                this.emit(`option:${option.name()}`, value2);
               } else {
                 this.emit(`option:${option.name()}`);
               }
@@ -3161,7 +3161,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @return {Command}
        */
       nameFromFilename(filename) {
-        this._name = path2.basename(filename, path2.extname(filename));
+        this._name = path4.basename(filename, path4.extname(filename));
         return this;
       }
       /**
@@ -3175,9 +3175,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @param {string} [path]
        * @return {(string|null|Command)}
        */
-      executableDir(path3) {
-        if (path3 === void 0) return this._executableDir;
-        this._executableDir = path3;
+      executableDir(path5) {
+        if (path5 === void 0) return this._executableDir;
+        this._executableDir = path5;
         return this;
       }
       /**
@@ -3882,6 +3882,7 @@ var AppError = class extends Error {
 
 // src/config/config.ts
 var ENV_PATH = import_node_path.default.join(import_node_os.default.homedir(), ".config", "bybit", ".env");
+var CACHE_DIR = import_node_path.default.join(import_node_os.default.homedir(), ".config", "bybit", "cache");
 var DEFAULT_BASE_URL = "https://api.bybit.com";
 var ALLOWED_BASE_URLS = [
   "https://api.bybit.com",
@@ -3944,9 +3945,9 @@ var KIND = {
     code: "APP_KEY_IP_MISMATCH",
     userMessage: "\u041A\u043B\u044E\u0447 API \u043F\u0440\u0438\u0432\u044F\u0437\u0430\u043D \u043A \u0434\u0440\u0443\u0433\u0438\u043C IP-\u0430\u0434\u0440\u0435\u0441\u0430\u043C. \u0414\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u0442\u0435\u043A\u0443\u0449\u0438\u0439 IP \u0432 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430\u0445 \u043A\u043B\u044E\u0447\u0430 \u043D\u0430 Bybit \u0438\u043B\u0438 \u0441\u043D\u0438\u043C\u0438\u0442\u0435 \u043F\u0440\u0438\u0432\u044F\u0437\u043A\u0443."
   }),
-  permissionDenied: (path2) => new AppError({
+  permissionDenied: (path4) => new AppError({
     code: "APP_PERMISSION_DENIED",
-    userMessage: `\u0423 \u043A\u043B\u044E\u0447\u0430 API \u043D\u0435\u0442 \u043F\u0440\u0430\u0432\u0430 \u043D\u0430 \u0437\u0430\u043F\u0440\u043E\u0441 ${path2}. \u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0441\u043E\u043E\u0431\u0449\u0430\u0435\u0442, \u043A\u0430\u043A\u043E\u0435 \u043F\u0440\u0430\u0432\u043E \u043D\u0443\u0436\u043D\u043E: \u0441\u0432\u0435\u0440\u044C\u0442\u0435 \u043F\u0440\u0430\u0432\u0430 \u043A\u043B\u044E\u0447\u0430 (session status) \u0441 \u0440\u0430\u0437\u0434\u0435\u043B\u043E\u043C \u0434\u0430\u043D\u043D\u044B\u0445 \u0438 \u0434\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u043D\u0443\u0436\u043D\u043E\u0435 \u043F\u0440\u0430\u0432\u043E \u043D\u0430 \u0447\u0442\u0435\u043D\u0438\u0435.`
+    userMessage: `\u0423 \u043A\u043B\u044E\u0447\u0430 API \u043D\u0435\u0442 \u043F\u0440\u0430\u0432\u0430 \u043D\u0430 \u0437\u0430\u043F\u0440\u043E\u0441 ${path4}. \u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u0441\u043E\u043E\u0431\u0449\u0430\u0435\u0442, \u043A\u0430\u043A\u043E\u0435 \u043F\u0440\u0430\u0432\u043E \u043D\u0443\u0436\u043D\u043E: \u0441\u0432\u0435\u0440\u044C\u0442\u0435 \u043F\u0440\u0430\u0432\u0430 \u043A\u043B\u044E\u0447\u0430 (session status) \u0441 \u0440\u0430\u0437\u0434\u0435\u043B\u043E\u043C \u0434\u0430\u043D\u043D\u044B\u0445 \u0438 \u0434\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u043D\u0443\u0436\u043D\u043E\u0435 \u043F\u0440\u0430\u0432\u043E \u043D\u0430 \u0447\u0442\u0435\u043D\u0438\u0435.`
   }),
   regionBlocked: () => new AppError({
     code: "APP_REGION_BLOCKED",
@@ -4043,11 +4044,11 @@ var BybitClient = class {
     this.timeoutMs = options.timeoutMs ?? REQUEST_TIMEOUT_MS;
   }
   /** Unsigned GET; returns `result` of the envelope. */
-  getPublic(path2, params = {}) {
-    return this.request(path2, new URLSearchParams(params).toString(), {});
+  getPublic(path4, params = {}) {
+    return this.request(path4, new URLSearchParams(params).toString(), {});
   }
   /** Signed GET; returns `result` of the envelope. On 10002 names the clock drift (D-3). */
-  async getPrivate(path2, params = {}) {
+  async getPrivate(path4, params = {}) {
     if (!this.credentials) throw keyMissingError();
     const query = new URLSearchParams(params).toString();
     const timestamp = String(this.now());
@@ -4059,7 +4060,7 @@ var BybitClient = class {
       "X-BAPI-SIGN": sign(signPayload(timestamp, this.credentials.apiKey, recvWindow, query), this.credentials.apiSecret)
     };
     try {
-      return await this.request(path2, query, headers);
+      return await this.request(path4, query, headers);
     } catch (err) {
       if (err instanceof AppError && err.code === "APP_CLOCK_SKEW") throw clockSkewError(await this.driftOrNull());
       throw err;
@@ -4087,8 +4088,8 @@ var BybitClient = class {
       return null;
     }
   }
-  async request(path2, query, headers) {
-    const url = `${this.baseUrl}${path2}${query ? `?${query}` : ""}`;
+  async request(path4, query, headers) {
+    const url = `${this.baseUrl}${path4}${query ? `?${query}` : ""}`;
     let response;
     try {
       response = await this.fetchFn(url, { headers, signal: AbortSignal.timeout(this.timeoutMs) });
@@ -4098,26 +4099,26 @@ var BybitClient = class {
         code: "APP_UNAVAILABLE",
         userMessage: `\u0411\u0438\u0440\u0436\u0430 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u0430 (${reason === "timeout" ? "\u043D\u0435\u0442 \u043E\u0442\u0432\u0435\u0442\u0430 \u0437\u0430 \u043E\u0442\u0432\u0435\u0434\u0451\u043D\u043D\u043E\u0435 \u0432\u0440\u0435\u043C\u044F" : "\u043D\u0435\u0442 \u0441\u043E\u0435\u0434\u0438\u043D\u0435\u043D\u0438\u044F"}). \u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u0437\u0430\u043F\u0440\u043E\u0441 \u043F\u043E\u0437\u0436\u0435.`,
         // The fetch error itself is not kept: its message may echo a header value, i.e. the key (D-10).
-        details: { path: path2, reason, error: cause instanceof Error ? cause.name : typeof cause }
+        details: { path: path4, reason, error: cause instanceof Error ? cause.name : typeof cause }
       });
     }
     const reset = response.headers.get("X-Bapi-Limit-Reset-Timestamp");
-    const ctx = { path: path2, resetTimestamp: reset === null ? void 0 : Number(reset) };
+    const ctx = { path: path4, resetTimestamp: reset === null ? void 0 : Number(reset) };
     if (!response.ok) throw mapHttpStatus(response.status, ctx);
-    const envelope = await parseEnvelope(response, path2);
+    const envelope = await parseEnvelope(response, path4);
     if (envelope.retCode === 10002) throw clockSkewError(null);
     if (envelope.retCode !== 0) throw mapRetCode(envelope.retCode, envelope.retMsg, ctx);
     return envelope.result;
   }
 };
-async function parseEnvelope(response, path2) {
+async function parseEnvelope(response, path4) {
   try {
     return await response.json();
   } catch (cause) {
     throw new AppError({
       code: "APP_UNAVAILABLE",
       userMessage: "\u0411\u0438\u0440\u0436\u0430 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u043E\u0442\u0432\u0435\u0442 \u0432 \u043D\u0435\u043E\u0436\u0438\u0434\u0430\u043D\u043D\u043E\u043C \u0444\u043E\u0440\u043C\u0430\u0442\u0435 (\u043D\u0435 JSON). \u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u0437\u0430\u043F\u0440\u043E\u0441 \u043F\u043E\u0437\u0436\u0435.",
-      details: { path: path2, status: response.status },
+      details: { path: path4, status: response.status },
       cause
     });
   }
@@ -4134,11 +4135,11 @@ function renderTable(headers, rows) {
 
 // src/format/values.ts
 var DASH = "\u2014";
-function orDash(value) {
-  return value === "" ? DASH : value;
+function orDash(value2) {
+  return value2 === "" ? DASH : value2;
 }
-function numOrDash(value, digits = 2) {
-  return value === null || value === void 0 ? DASH : value.toFixed(digits);
+function numOrDash(value2, digits = 2) {
+  return value2 === null || value2 === void 0 ? DASH : value2.toFixed(digits);
 }
 
 // src/valuation/usd.ts
@@ -4165,8 +4166,8 @@ function notReadOnlyError() {
     userMessage: "\u041A\u043B\u044E\u0447 API \u0438\u043C\u0435\u0435\u0442 \u043F\u0440\u0430\u0432\u0430 \u043D\u0430 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u0435 \u0441\u0447\u0451\u0442\u0430. \u0421\u043A\u0438\u043B\u043B \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442 \u0442\u043E\u043B\u044C\u043A\u043E \u0441 \u043A\u043B\u044E\u0447\u043E\u043C \u0442\u043E\u043B\u044C\u043A\u043E \u043D\u0430 \u0447\u0442\u0435\u043D\u0438\u0435: \u0441\u043E\u0437\u0434\u0430\u0439\u0442\u0435 \u043D\u0430 Bybit \u043A\u043B\u044E\u0447 Read-Only \u0438 \u0437\u0430\u043C\u0435\u043D\u0438\u0442\u0435 \u0438\u043C \u0442\u0435\u043A\u0443\u0449\u0438\u0439."
   });
 }
-async function requireReadOnlyKey(client2) {
-  const info = await client2.getPrivate("/v5/user/query-api");
+async function requireReadOnlyKey(client3) {
+  const info = await client3.getPrivate("/v5/user/query-api");
   if (info.readOnly !== 1) throw notReadOnlyError();
 }
 async function capture(fn, problems) {
@@ -4208,7 +4209,7 @@ function unifiedNote(isUnified) {
   if (isUnified === null) return "\u0420\u0435\u0436\u0438\u043C \u0441\u0447\u0451\u0442\u0430 \u043D\u0435 \u043F\u043E\u043B\u0443\u0447\u0435\u043D, \u043F\u0440\u0438\u0437\u043D\u0430\u043A UTA \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D.";
   return "\u041F\u043E unifiedMarginStatus \u0438\u0437 /v5/account/info: 3\u20136 \u2014 \u0435\u0434\u0438\u043D\u044B\u0439 \u0442\u043E\u0440\u0433\u043E\u0432\u044B\u0439 \u0441\u0447\u0451\u0442 (UTA), 1 \u2014 \u043A\u043B\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043A\u0438\u0439 (docs /v5/enum).";
 }
-async function sessionStatus(client2, now) {
+async function sessionStatus(client3, now) {
   const problems = [];
   let serverTimeMs = null;
   let connError = null;
@@ -4216,7 +4217,7 @@ async function sessionStatus(client2, now) {
   let rttMs = 0;
   try {
     const before = now();
-    serverTimeMs = await client2.getServerTimeMs();
+    serverTimeMs = await client3.getServerTimeMs();
     const after = now();
     driftMs = (before + after) / 2 - serverTimeMs;
     rttMs = after - before;
@@ -4229,13 +4230,13 @@ async function sessionStatus(client2, now) {
   }
   let key = null;
   let account = null;
-  if (!client2.hasCredentials) {
+  if (!client3.hasCredentials) {
     const err = keyMissingError();
     problems.push({ code: err.code, message: err.userMessage });
   } else {
-    const info = await capture(() => client2.getPrivate("/v5/user/query-api"), problems);
+    const info = await capture(() => client3.getPrivate("/v5/user/query-api"), problems);
     key = info && toKeyView(info);
-    const acc = await capture(() => client2.getPrivate("/v5/account/info"), problems);
+    const acc = await capture(() => client3.getPrivate("/v5/account/info"), problems);
     account = acc && { unifiedMarginStatus: acc.unifiedMarginStatus, marginMode: acc.marginMode };
   }
   const isUnified = account ? UTA_STATUSES.includes(account.unifiedMarginStatus) : null;
@@ -4250,8 +4251,8 @@ async function sessionStatus(client2, now) {
     });
   }
   return {
-    configured: client2.hasCredentials,
-    environment: { baseUrl: client2.baseUrl, network: "mainnet" },
+    configured: client3.hasCredentials,
+    environment: { baseUrl: client3.baseUrl, network: "mainnet" },
     connectivity: { ok: serverTimeMs !== null, serverTimeMs, error: connError },
     key,
     account,
@@ -4291,8 +4292,8 @@ function renderSessionStatus(s) {
 
 // src/commands/balance.ts
 var UNVALUED_NOTE = "\u0411\u0438\u0440\u0436\u0430 \u043D\u0435 \u043E\u0446\u0435\u043D\u0438\u0432\u0430\u0435\u0442 \u0432 \u0434\u043E\u043B\u043B\u0430\u0440\u0430\u0445 \u043C\u043E\u043D\u0435\u0442\u0443, \u043A\u043E\u0442\u043E\u0440\u0430\u044F \u043D\u0435 \u043C\u043E\u0436\u0435\u0442 \u0431\u044B\u0442\u044C \u0437\u0430\u043B\u043E\u0433\u043E\u043C (marginCollateral=false): usdValue \u043F\u0440\u0438\u0445\u043E\u0434\u0438\u0442 0. \u041E\u0446\u0435\u043D\u043A\u0430 \u043D\u0435 \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0435\u0442\u0441\u044F, \u0447\u0442\u043E\u0431\u044B \u043D\u0435 \u0432\u044B\u0434\u0430\u0432\u0430\u0442\u044C 0 \u0437\u0430 \u0441\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C (docs WebSocket wallet, usdValue).";
-async function fetchWallet(client2) {
-  const wallet = await client2.getPrivate("/v5/account/wallet-balance", { accountType: "UNIFIED" });
+async function fetchWallet(client3) {
+  const wallet = await client3.getPrivate("/v5/account/wallet-balance", { accountType: "UNIFIED" });
   const account = wallet.list[0];
   if (!account) {
     throw new AppError({
@@ -4308,8 +4309,8 @@ function unifiedView(c) {
 function fundingTotalEquity(overview) {
   return overview.list.find((a) => a.accountType === "FundingAccount")?.totalEquity ?? null;
 }
-async function spotPrices(client2) {
-  const tickers = await client2.getPublic("/v5/market/tickers", { category: "spot" });
+async function spotPrices(client3) {
+  const tickers = await client3.getPublic("/v5/market/tickers", { category: "spot" });
   return new Map(tickers.list.map((t) => [t.symbol, t.lastPrice]));
 }
 function earnView(overview) {
@@ -4328,13 +4329,13 @@ function totalUsd(unified, funding, fundingEmpty, earn) {
   if (earn === null) notes.push("Earn: \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u0432\u0435\u0440\u043D\u0443\u043B\u0430 \u0441\u0447\u0451\u0442, \u0432 \u0441\u0443\u043C\u043C\u0443 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442.");
   return { value: Number(unified) + Number(funding ?? 0) + Number(earn ?? 0), note: notes.join(" ") };
 }
-async function balance(client2) {
-  await requireReadOnlyKey(client2);
-  const account = await fetchWallet(client2);
-  const fund = await client2.getPrivate("/v5/asset/transfer/query-account-coins-balance", { accountType: "FUND" });
-  const overview = await client2.getPrivate("/v5/asset/asset-overview");
+async function balance(client3) {
+  await requireReadOnlyKey(client3);
+  const account = await fetchWallet(client3);
+  const fund = await client3.getPrivate("/v5/asset/transfer/query-account-coins-balance", { accountType: "FUND" });
+  const overview = await client3.getPrivate("/v5/asset/asset-overview");
   const fundingCoins = fund.balance.filter((b) => Number(b.walletBalance) !== 0).map((b) => ({ coin: b.coin, walletBalance: b.walletBalance, transferBalance: b.transferBalance }));
-  const prices = fundingCoins.length > 0 ? await spotPrices(client2) : /* @__PURE__ */ new Map();
+  const prices = fundingCoins.length > 0 ? await spotPrices(client3) : /* @__PURE__ */ new Map();
   const fundingUsd = {};
   const fundingNotes = {};
   for (const c of fundingCoins) {
@@ -4435,12 +4436,12 @@ function toView(category, p) {
     positionMM: p.positionMM
   };
 }
-async function fetchAllPositions(client2) {
+async function fetchAllPositions(client3) {
   const views = [];
   for (const q of QUERIES) {
     const base = { category: q.category, ...q.settleCoin ? { settleCoin: q.settleCoin } : {}, limit: "200" };
     const rows = await fetchAllPages(
-      (cursor) => client2.getPrivate("/v5/position/list", cursor ? { ...base, cursor } : base)
+      (cursor) => client3.getPrivate("/v5/position/list", cursor ? { ...base, cursor } : base)
     );
     views.push(...rows.map((p) => toView(q.category, p)));
   }
@@ -4453,10 +4454,10 @@ function fieldNotes(marginMode, views) {
   }
   return notes;
 }
-async function positions(client2) {
-  await requireReadOnlyKey(client2);
-  const { marginMode } = await client2.getPrivate("/v5/account/info");
-  const views = await fetchAllPositions(client2);
+async function positions(client3) {
+  await requireReadOnlyKey(client3);
+  const { marginMode } = await client3.getPrivate("/v5/account/info");
+  const views = await fetchAllPositions(client3);
   return { marginMode, positions: views, fieldNotes: fieldNotes(marginMode, views) };
 }
 function renderPositions(result) {
@@ -4501,11 +4502,11 @@ function coinShares(coins, unvalued) {
     note: "\u0414\u043E\u043B\u044F usdValue \u043C\u043E\u043D\u0435\u0442\u044B \u043E\u0442 \u0441\u0443\u043C\u043C\u044B usdValue \u0432\u0441\u0435\u0445 \u043E\u0446\u0435\u043D\u0451\u043D\u043D\u044B\u0445 \u043C\u043E\u043D\u0435\u0442 \u0442\u043E\u0440\u0433\u043E\u0432\u043E\u0433\u043E \u0441\u0447\u0451\u0442\u0430. \u041C\u043E\u043D\u0435\u0442\u0430 \u0432 \u0434\u043E\u043B\u0433\u0435 \u0438\u043C\u0435\u0435\u0442 \u043E\u0442\u0440\u0438\u0446\u0430\u0442\u0435\u043B\u044C\u043D\u044B\u0439 usdValue \u0438 \u043E\u0442\u0440\u0438\u0446\u0430\u0442\u0435\u043B\u044C\u043D\u0443\u044E \u0434\u043E\u043B\u044E."
   };
 }
-async function portfolio(client2) {
-  await requireReadOnlyKey(client2);
-  const { marginMode } = await client2.getPrivate("/v5/account/info");
-  const a = await fetchWallet(client2);
-  const options = (await client2.getPrivate("/v5/account/option-asset-info")).result.map((o) => ({
+async function portfolio(client3) {
+  await requireReadOnlyKey(client3);
+  const { marginMode } = await client3.getPrivate("/v5/account/info");
+  const a = await fetchWallet(client3);
+  const options = (await client3.getPrivate("/v5/account/option-asset-info")).result.map((o) => ({
     coin: o.coin,
     totalUPL: o.totalUPL,
     totalRPL: o.totalRPL,
@@ -4513,8 +4514,8 @@ async function portfolio(client2) {
     assetIM: o.assetIM,
     assetMM: o.assetMM
   }));
-  const positions2 = await fetchAllPositions(client2);
-  const overview = await client2.getPrivate("/v5/asset/asset-overview");
+  const positions2 = await fetchAllPositions(client3);
+  const overview = await client3.getPrivate("/v5/asset/asset-overview");
   const fundingTotal = fundingTotalEquity(overview);
   const earnTotal = earnView(overview).totalEquity;
   const coins = a.coin.map((c) => ({ coin: c.coin, equity: c.equity, usdValue: c.usdValue, unrealisedPnl: c.unrealisedPnl, cumRealisedPnl: c.cumRealisedPnl }));
@@ -4580,8 +4581,8 @@ function renderPortfolio(r) {
 function bootstrapEnv() {
   loadEnvFile(ENV_PATH, process.env);
 }
-function formatOutput(value, json, render) {
-  return json ? JSON.stringify(value, null, 2) : render(value);
+function formatOutput(value2, json, render) {
+  return json ? JSON.stringify(value2, null, 2) : render(value2);
 }
 function printError(err) {
   if (err instanceof AppError) {
@@ -4648,8 +4649,8 @@ function splitWindows(period, windowDays) {
 function clampToDepth(period, source, now) {
   const minFrom = now - source.depthDays * DAY_MS;
   const from = Math.max(period.from, minFrom);
-  const boundary = period.from < minFrom ? `\u0411\u0438\u0440\u0436\u0430 \u043E\u0442\u0434\u0430\u0451\u0442 ${source.label} \u043D\u0435 \u0433\u043B\u0443\u0431\u0436\u0435 ${source.depthText}: \u0434\u0430\u043D\u043D\u044B\u0435 \u0441 ${isoDate(minFrom)}, \u0437\u0430\u043F\u0440\u043E\u0448\u0435\u043D\u043E \u0441 ${isoDate(period.from)}.` : null;
-  const coverage = { source: source.label, requestedFrom: period.from, from, to: period.to, boundary };
+  const boundary2 = period.from < minFrom ? `\u0411\u0438\u0440\u0436\u0430 \u043E\u0442\u0434\u0430\u0451\u0442 ${source.label} \u043D\u0435 \u0433\u043B\u0443\u0431\u0436\u0435 ${source.depthText}: \u0434\u0430\u043D\u043D\u044B\u0435 \u0441 ${isoDate(minFrom)}, \u0437\u0430\u043F\u0440\u043E\u0448\u0435\u043D\u043E \u0441 ${isoDate(period.from)}.` : null;
+  const coverage = { source: source.label, requestedFrom: period.from, from, to: period.to, boundary: boundary2 };
   return { period: from <= period.to ? { from, to: period.to } : null, coverage };
 }
 function createThrottle(intervalMs, clock, sleep2) {
@@ -4660,8 +4661,8 @@ function createThrottle(intervalMs, clock, sleep2) {
     last = clock();
   };
 }
-async function fetchWindowed(client2, source, period, deps) {
-  const clamped = clampToDepth(period, source, deps.now);
+async function fetchWindowed(client3, source, period, deps2) {
+  const clamped = clampToDepth(period, source, deps2.now);
   if (!clamped.period) return { rows: [], coverage: clamped.coverage };
   const windows = splitWindows(clamped.period, source.windowDays);
   const rows = [];
@@ -4669,12 +4670,12 @@ async function fetchWindowed(client2, source, period, deps) {
     const time = source.timeParams ? source.timeParams(w) : { startTime: String(w.from), endTime: String(w.to) };
     const base = { ...source.params, ...time };
     const page = await fetchAllPages(async (cursor) => {
-      await deps.throttle?.();
-      const r = await client2.getPrivate(source.path, cursor ? { ...base, cursor } : base);
+      await deps2.throttle?.();
+      const r = await client3.getPrivate(source.path, cursor ? { ...base, cursor } : base);
       return { list: r.list ?? r.rows ?? [], nextPageCursor: r.nextPageCursor };
     });
     rows.push(...page);
-    deps.onProgress?.(source.label, i + 1, windows.length);
+    deps2.onProgress?.(source.label, i + 1, windows.length);
   }
   return { rows, coverage: clamped.coverage };
 }
@@ -4683,12 +4684,12 @@ async function fetchWindowed(client2, source, period, deps) {
 var KLINE_WINDOW_DAYS = 1e3;
 var utcDay = (ms) => ms - ms % DAY_MS;
 var isoDay = (ms) => new Date(ms).toISOString().slice(0, 10);
-async function fetchDailyCloses(client2, pair, period, throttle) {
+async function fetchDailyCloses(client3, pair, period, throttle) {
   const closes = /* @__PURE__ */ new Map();
   for (const w of splitWindows({ from: utcDay(period.from), to: period.to }, KLINE_WINDOW_DAYS)) {
     await throttle?.();
     const params = { category: "spot", symbol: pair, interval: "D", start: String(w.from), end: String(w.to), limit: String(KLINE_WINDOW_DAYS) };
-    const r = await client2.getPublic("/v5/market/kline", params);
+    const r = await client3.getPublic("/v5/market/kline", params);
     for (const k of r.list) closes.set(Number(k[0]), k[4]);
   }
   return closes;
@@ -4741,8 +4742,8 @@ var INSIDE_TYPES = [
   "fundingAccountRecordFiatGAUNFreeze"
 ];
 function classifyFundingRow(row) {
-  const boundary = BOUNDARY[row.description];
-  if (boundary) return boundary;
+  const boundary2 = BOUNDARY[row.description];
+  if (boundary2) return boundary2;
   if (INSIDE_GROUPS.includes(row.showBusiType) || INSIDE_TYPES.includes(row.description)) return "inside";
   return "unclassified";
 }
@@ -4812,14 +4813,14 @@ var unclassifiedRow = (r) => ({
   descriptionEn: r.descriptionEn.trim()
 });
 var uniqueBy = (rows, key) => [...new Map(rows.map((r) => [key(r), r])).values()];
-async function collect(client2, source, period, deps) {
-  return fetchWindowed(client2, source, period, { ...deps, throttle: deps.throttleFor?.(source.intervalMs) ?? deps.throttle });
+async function collect(client3, source, period, deps2) {
+  return fetchWindowed(client3, source, period, { ...deps2, throttle: deps2.throttleFor?.(source.intervalMs) ?? deps2.throttle });
 }
-async function collectFlows(client2, period, deps) {
-  const dep = await collect(client2, FUNDS_SOURCES.deposit, period, deps);
-  const internal = await collect(client2, FUNDS_SOURCES.internalDeposit, period, deps);
-  const wd = await collect(client2, FUNDS_SOURCES.withdrawal, period, deps);
-  const fund = await collect(client2, FUNDS_SOURCES.funding, period, deps);
+async function collectFlows(client3, period, deps2) {
+  const dep = await collect(client3, FUNDS_SOURCES.deposit, period, deps2);
+  const internal = await collect(client3, FUNDS_SOURCES.internalDeposit, period, deps2);
+  const wd = await collect(client3, FUNDS_SOURCES.withdrawal, period, deps2);
+  const fund = await collect(client3, FUNDS_SOURCES.funding, period, deps2);
   const flows = [
     ...uniqueBy(dep.rows, (d) => d.id).map(depositFlow),
     ...uniqueBy(internal.rows, (d) => d.id).map(internalFlow),
@@ -4838,17 +4839,17 @@ async function collectFlows(client2, period, deps) {
 // src/commands/funds.ts
 var SCOPE = "\u0414\u0432\u0438\u0436\u0435\u043D\u0438\u0435 \u0441\u0440\u0435\u0434\u0441\u0442\u0432 \u0447\u0435\u0440\u0435\u0437 \u0433\u0440\u0430\u043D\u0438\u0446\u0443 \u043E\u0441\u043D\u043E\u0432\u043D\u043E\u0433\u043E \u0441\u0447\u0451\u0442\u0430 \u0441 2023-11-20 (\u043F\u0435\u0440\u0432\u0430\u044F \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u044F \u0441\u0447\u0451\u0442\u0430; \u0440\u0430\u043D\u044C\u0448\u0435 \u0443 \u0431\u0438\u0440\u0436\u0438 \u0437\u0430\u043F\u0438\u0441\u0435\u0439 \u043D\u0435\u0442) \u043F\u043E \u043C\u043E\u043C\u0435\u043D\u0442 \u0437\u0430\u043F\u0440\u043E\u0441\u0430. \u0412\u0432\u043E\u0434: \u0432\u0432\u043E\u0434\u044B \u0438\u0437 \u0431\u043B\u043E\u043A\u0447\u0435\u0439\u043D\u0430 \u0438 \u043E\u0442 \u0434\u0440\u0443\u0433\u0438\u0445 UID, P2P \u043F\u043E\u043A\u0443\u043F\u043A\u0438, \u043E\u0442\u043C\u0435\u043D\u0451\u043D\u043D\u044B\u0435 P2P \u043F\u0440\u043E\u0434\u0430\u0436\u0438, \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u044B \u0441 \u0441\u0443\u0431\u0441\u0447\u0451\u0442\u0430. \u0412\u044B\u0432\u043E\u0434: \u0432\u044B\u0432\u043E\u0434\u044B (\u0441\u0443\u043C\u043C\u0430, \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u043D\u0430\u044F \u043D\u0430 \u0442\u043E\u0439 \u0441\u0442\u043E\u0440\u043E\u043D\u0435; \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u044F \u0432\u044B\u0432\u043E\u0434\u0430 \u0443\u043C\u0435\u043D\u044C\u0448\u0430\u0435\u0442 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442), P2P \u043F\u0440\u043E\u0434\u0430\u0436\u0438, \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u044B \u043D\u0430 \u0441\u0443\u0431\u0441\u0447\u0451\u0442. P2P \u043E\u0446\u0435\u043D\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u043F\u043E \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u043D\u044B\u043C \u0438\u043B\u0438 \u043E\u0442\u0434\u0430\u043D\u043D\u044B\u043C USDT 1:1: \u0441\u043A\u043E\u043B\u044C\u043A\u043E \u0444\u0438\u0430\u0442\u0430 \u0437\u0430\u043F\u043B\u0430\u0447\u0435\u043D\u043E, \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u043E\u0442\u0434\u0430\u0451\u0442, \u0441\u043F\u0440\u0435\u0434 P2P \u0432 \u0440\u0430\u0441\u0447\u0451\u0442 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442. \u041D\u0435 \u0432\u0432\u043E\u0434: \u043F\u0435\u0440\u0435\u0432\u043E\u0434\u044B \u043C\u0435\u0436\u0434\u0443 \u0441\u0432\u043E\u0438\u043C\u0438 \u043A\u043E\u0448\u0435\u043B\u044C\u043A\u0430\u043C\u0438, \u043D\u0430\u0433\u0440\u0430\u0434\u044B Earn, Launchpool, \u0430\u0438\u0440\u0434\u0440\u043E\u043F\u044B \u2014 \u043E\u043D\u0438 \u043F\u043E\u043F\u0430\u0434\u0430\u044E\u0442 \u0432 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442. \u0417\u0430\u0439\u043C\u044B (Crypto Loans) \u043D\u0435 \u0443\u0447\u0438\u0442\u044B\u0432\u0430\u044E\u0442\u0441\u044F.";
 var TOTALS_METHOD = "\u0421\u0443\u043C\u043C\u0430 \u0434\u043E\u043B\u043B\u0430\u0440\u043E\u0432\u044B\u0445 \u043E\u0446\u0435\u043D\u043E\u043A \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043D\u043D\u044B\u0445 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0439. USDT \u0438 USDC \u2014 1:1; \u043F\u0440\u043E\u0447\u0438\u0435 \u043C\u043E\u043D\u0435\u0442\u044B \u2014 \u043F\u043E \u0446\u0435\u043D\u0435 \u0437\u0430\u043A\u0440\u044B\u0442\u0438\u044F \u0434\u043D\u0435\u0432\u043D\u043E\u0439 \u0441\u0432\u0435\u0447\u0438 \u041C\u041E\u041D\u0415\u0422\u0410USDT \u043D\u0430 \u0441\u043F\u043E\u0442-\u0440\u044B\u043D\u043A\u0435 Bybit \u0437\u0430 \u0434\u0435\u043D\u044C \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438 (UTC): \u043F\u043E\u0433\u0440\u0435\u0448\u043D\u043E\u0441\u0442\u044C \u2014 \u0434\u0432\u0438\u0436\u0435\u043D\u0438\u0435 \u0446\u0435\u043D\u044B \u0432\u043D\u0443\u0442\u0440\u0438 \u0434\u043D\u044F. \u0417\u0430 \u0442\u0435\u043A\u0443\u0449\u0438\u0439 \u0434\u0435\u043D\u044C \u0441\u0432\u0435\u0447\u0430 \u043D\u0435 \u0437\u0430\u043A\u0440\u044B\u0442\u0430 \u2014 \u0431\u0435\u0440\u0451\u0442\u0441\u044F \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0446\u0435\u043D\u0430.";
-async function dailyPrices(client2, flows, deps) {
+async function dailyPrices(client3, flows, deps2) {
   const times = /* @__PURE__ */ new Map();
   for (const f of flows.filter((x) => x.counted)) if (!USD_STABLECOINS.includes(f.coin)) times.set(f.coin, [...times.get(f.coin) ?? [], f.time]);
-  const prices = { pairs: /* @__PURE__ */ new Set(), closes: /* @__PURE__ */ new Map(), now: deps.now };
+  const prices = { pairs: /* @__PURE__ */ new Set(), closes: /* @__PURE__ */ new Map(), now: deps2.now };
   if (times.size === 0) return prices;
-  const tickers = await client2.getPublic("/v5/market/tickers", { category: "spot" });
+  const tickers = await client3.getPublic("/v5/market/tickers", { category: "spot" });
   prices.pairs = new Set(tickers.list.map((t) => t.symbol));
-  const throttle = deps.throttleFor?.(MIN_REQUEST_INTERVAL_MS) ?? deps.throttle;
+  const throttle = deps2.throttleFor?.(MIN_REQUEST_INTERVAL_MS) ?? deps2.throttle;
   for (const [coin, ts] of times) {
     const pair = `${coin}USDT`;
-    if (prices.pairs.has(pair)) prices.closes.set(pair, await fetchDailyCloses(client2, pair, { from: Math.min(...ts), to: Math.max(...ts) }, throttle));
+    if (prices.pairs.has(pair)) prices.closes.set(pair, await fetchDailyCloses(client3, pair, { from: Math.min(...ts), to: Math.max(...ts) }, throttle));
   }
   return prices;
 }
@@ -4880,11 +4881,11 @@ function resultNote(netInput, current, hasFlows, inProgress) {
   if (current.value === null) return `\u0421\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C \u0441\u0447\u0451\u0442\u0430 \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0430: ${current.note}`;
   return "\u0422\u0435\u043A\u0443\u0449\u0430\u044F \u0441\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C \u0441\u0447\u0451\u0442\u0430 \u043C\u0438\u043D\u0443\u0441 \u043D\u0435\u0442\u0442\u043E-\u0432\u0432\u043E\u0434 (\u0432\u0432\u0435\u0434\u0435\u043D\u043E \u2212 \u0432\u044B\u0432\u0435\u0434\u0435\u043D\u043E).";
 }
-async function funds(client2, deps) {
-  await requireReadOnlyKey(client2);
-  const period = { from: FUNDS_FROM, to: deps.now };
-  const { flows, unclassified, coverage } = await collectFlows(client2, period, deps);
-  const prices = await dailyPrices(client2, flows, deps);
+async function funds(client3, deps2) {
+  await requireReadOnlyKey(client3);
+  const period = { from: FUNDS_FROM, to: deps2.now };
+  const { flows, unclassified, coverage } = await collectFlows(client3, period, deps2);
+  const prices = await dailyPrices(client3, flows, deps2);
   const flowsUsd = {};
   const flowNotes = {};
   for (const f of flows) {
@@ -4896,8 +4897,8 @@ async function funds(client2, deps) {
   const deposited = known ? directionTotal(flows, flowsUsd, "in") : null;
   const withdrawn = known ? directionTotal(flows, flowsUsd, "out") : null;
   const netInput = deposited === null || withdrawn === null ? null : deposited - withdrawn;
-  const account = await fetchWallet(client2);
-  const overview = await client2.getPrivate("/v5/asset/asset-overview");
+  const account = await fetchWallet(client3);
+  const overview = await client3.getPrivate("/v5/asset/asset-overview");
   const current = { unifiedTotalEquity: account.totalEquity, fundingTotalEquity: fundingTotalEquity(overview), earnTotalEquity: earnView(overview).totalEquity };
   const currentValue = totalUsd(current.unifiedTotalEquity, current.fundingTotalEquity, false, current.earnTotalEquity);
   const counted = flows.filter((f) => f.counted);
@@ -4919,7 +4920,7 @@ async function funds(client2, deps) {
       currentValueUsd: currentValue.value,
       resultUsd: result,
       firstOperationTime: first,
-      days: first === null ? null : Math.floor((deps.now - first) / DAY_MS)
+      days: first === null ? null : Math.floor((deps2.now - first) / DAY_MS)
     },
     computedNotes: {
       flowsUsd: flowNotes,
@@ -4969,21 +4970,21 @@ function renderFunds(r) {
 // src/commands/deliveries.ts
 var DELIVERIES_DEFAULT_DAYS = DEPTH_2Y_DAYS;
 var CATEGORIES = ["option", "linear", "inverse"];
-async function fetchDeliveries(client2, period, deps) {
+async function fetchDeliveries(client3, period, deps2) {
   const views = [];
   const coverage = [];
   for (const category of CATEGORIES) {
     const source = { label: `\u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 ${category}`, path: "/v5/asset/delivery-record", params: { category, limit: "50" }, windowDays: 30, depthDays: DEPTH_2Y_DAYS, depthText: "2 \u043B\u0435\u0442" };
-    const r = await fetchWindowed(client2, source, period, deps);
+    const r = await fetchWindowed(client3, source, period, deps2);
     views.push(...r.rows.map((d) => ({ category, symbol: d.symbol, side: d.side, position: d.position, entryPrice: d.entryPrice ?? "", strike: d.strike, deliveryPrice: d.deliveryPrice, fee: d.fee, deliveryRpl: d.deliveryRpl, deliveryTime: d.deliveryTime })));
     coverage.push(r.coverage);
   }
   views.sort((a, b) => b.deliveryTime - a.deliveryTime);
   return { deliveries: views, coverage };
 }
-async function deliveries(client2, options, deps) {
-  await requireReadOnlyKey(client2);
-  const r = await fetchDeliveries(client2, options.period, deps);
+async function deliveries(client3, options, deps2) {
+  await requireReadOnlyKey(client3);
+  const r = await fetchDeliveries(client3, options.period, deps2);
   const coin = options.coin?.toUpperCase();
   return { period: options.period, coverage: r.coverage, deliveries: coin ? r.deliveries.filter((d) => d.symbol.startsWith(coin)) : r.deliveries };
 }
@@ -5051,11 +5052,11 @@ function toView2(r) {
     cashBalance: r.cashBalance
   };
 }
-async function operations(client2, options, deps) {
-  await requireReadOnlyKey(client2);
+async function operations(client3, options, deps2) {
+  await requireReadOnlyKey(client3);
   const filters = { ...options.type ? { type: options.type } : {}, ...options.currency ? { currency: options.currency } : {} };
   const source = { ...JOURNAL_SOURCE, params: { ...JOURNAL_SOURCE.params, ...filters } };
-  const { rows, coverage } = await fetchWindowed(client2, source, options.period, deps);
+  const { rows, coverage } = await fetchWindowed(client3, source, options.period, deps2);
   const sorted = [...rows].sort((a, b) => Number(b.transactionTime) - Number(a.transactionTime));
   return {
     period: options.period,
@@ -5177,13 +5178,13 @@ var NOTES2 = {
   funding: "\u0421\u0443\u043C\u043C\u0430 funding \u0438\u0437 \u0436\u0443\u0440\u043D\u0430\u043B\u0430 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 \u2014 \u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u043E: \u0444\u0430\u043D\u0434\u0438\u043D\u0433 \u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u0443\u0436\u0435 \u0432\u0445\u043E\u0434\u0438\u0442 \u0432 closedPnl (\u0441\u0432\u0435\u0440\u0435\u043D\u043E \u0432\u0436\u0438\u0432\u0443\u044E 2026-09-27), \u0444\u0430\u043D\u0434\u0438\u043D\u0433 \u043F\u043E \u0435\u0449\u0451 \u043E\u0442\u043A\u0440\u044B\u0442\u044B\u043C \u043F\u043E\u0437\u0438\u0446\u0438\u044F\u043C \u0432 \u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442. \u041F\u043B\u044E\u0441 \u2014 \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u043E, \u043C\u0438\u043D\u0443\u0441 \u2014 \u0443\u043F\u043B\u0430\u0447\u0435\u043D\u043E.",
   fees: "\u0421\u0443\u043C\u043C\u0430 \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0439 \u0438\u0437 \u0436\u0443\u0440\u043D\u0430\u043B\u0430 \u0437\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 \u2014 \u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u043E: \u043E\u043D\u0438 \u0443\u0436\u0435 \u0443\u0447\u0442\u0435\u043D\u044B \u0432 closedPnl \u0438 \u0432 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u0435 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432, \u0432 \u0438\u0442\u043E\u0433 \u043F\u043E\u0432\u0442\u043E\u0440\u043D\u043E \u043D\u0435 \u0432\u0445\u043E\u0434\u044F\u0442.",
   closedOptions: "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0445 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u0434\u0430\u0442\u0435 \u0437\u0430\u043A\u0440\u044B\u0442\u0438\u044F, \u0437\u0430 \u0432\u044B\u0447\u0435\u0442\u043E\u043C \u0432\u0441\u0435\u0445 \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0439, \u0432\u043A\u043B\u044E\u0447\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044E. \u0412 \u043F\u0440\u0435\u0434\u0435\u043B\u0430\u0445 6 \u043C\u0435\u0441\u044F\u0446\u0435\u0432 \u2014 \u0441\u0443\u043C\u043C\u0430 totalPnl \u0431\u0438\u0440\u0436\u0438. \u0413\u043B\u0443\u0431\u0436\u0435 \u2014 \u0438\u0437 \u0436\u0443\u0440\u043D\u0430\u043B\u0430: \u043F\u043E \u043A\u0430\u0436\u0434\u043E\u0439 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 \u0441\u0443\u043C\u043C\u0430 change (\u043F\u0440\u0435\u043C\u0438\u0438, \u0440\u0430\u0441\u0447\u0451\u0442 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438, \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u0438); \u0441\u0432\u0435\u0440\u0435\u043D\u043E \u0441 totalPnl \u0431\u0438\u0440\u0436\u0438 \u0434\u043E \u0446\u0435\u043D\u0442\u0430 (2026-09-27). \u041D\u0435 \u0432\u0438\u0434\u043D\u044B \u043F\u043E\u0437\u0438\u0446\u0438\u0438, \u043E\u0442\u043A\u0440\u044B\u0442\u044B\u0435 \u0434\u043E \u043D\u0430\u0447\u0430\u043B\u0430 \u0436\u0443\u0440\u043D\u0430\u043B\u0430 \u0438 \u0438\u0441\u0442\u0451\u043A\u0448\u0438\u0435 \u0432\u043D\u0435 \u0434\u0435\u043D\u0435\u0433: \u0442\u0430\u043A\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F \u0437\u0430\u043F\u0438\u0441\u0435\u0439 \u043D\u0435 \u043E\u0441\u0442\u0430\u0432\u043B\u044F\u0435\u0442.",
-  total: "closedPerps + closedOptions \u043F\u043E \u0432\u0430\u043B\u044E\u0442\u0435. \u041A\u043E\u043C\u0438\u0441\u0441\u0438\u0438 \u0438 \u0444\u0430\u043D\u0434\u0438\u043D\u0433 \u0443\u0436\u0435 \u0432\u043D\u0443\u0442\u0440\u0438 \u043D\u0438\u0445. \u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0439 \u0443\u0436\u0435 \u0432\u0445\u043E\u0434\u0438\u0442 \u0432 closedOptions. \u0421\u043F\u043E\u0442 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442: \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u0441\u0447\u0438\u0442\u0430\u0435\u0442 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0441\u043F\u043E\u0442\u043E\u0432\u044B\u0445 \u0441\u0434\u0435\u043B\u043E\u043A (\u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u043F\u043E \u0441\u043F\u043E\u0442\u0443 \u043D\u0435\u0442)."
+  total: "closedPerps + closedOptions \u043F\u043E \u0432\u0430\u043B\u044E\u0442\u0435. \u041A\u043E\u043C\u0438\u0441\u0441\u0438\u0438 \u0438 \u0444\u0430\u043D\u0434\u0438\u043D\u0433 \u0443\u0436\u0435 \u0432\u043D\u0443\u0442\u0440\u0438 \u043D\u0438\u0445. \u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0439 \u0443\u0436\u0435 \u0432\u0445\u043E\u0434\u0438\u0442 \u0432 closedOptions. \u0421\u043F\u043E\u0442 \u043D\u0435 \u0432\u0445\u043E\u0434\u0438\u0442: \u0431\u0438\u0440\u0436\u0430 \u043D\u0435 \u0441\u0447\u0438\u0442\u0430\u0435\u0442 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0441\u043F\u043E\u0442\u043E\u0432\u044B\u0445 \u0441\u0434\u0435\u043B\u043E\u043A (\u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439 \u043F\u043E \u0441\u043F\u043E\u0442\u0443 \u043D\u0435\u0442). \u041F\u043E\u043B\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0437\u0430 \u0432\u0441\u0451 \u0432\u0440\u0435\u043C\u044F, \u0432\u043A\u043B\u044E\u0447\u0430\u044F \u0441\u043F\u043E\u0442, \u2014 \u043A\u043E\u043C\u0430\u043D\u0434\u0430 funds."
 };
 var perpSource = (category) => ({ label: `\u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 ${category}`, path: "/v5/position/closed-pnl", params: { category, limit: "100" }, windowDays: 7, depthDays: DEPTH_2Y_DAYS, depthText: "2 \u043B\u0435\u0442" });
 var OPTION_SOURCE = { label: "\u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0435 \u043E\u043F\u0446\u0438\u043E\u043D\u044B", path: "/v5/position/get-closed-positions", params: { category: "option", limit: "100" }, windowDays: 7, depthDays: DEPTH_6M_DAYS, depthText: "6 \u043C\u0435\u0441\u044F\u0446\u0435\u0432" };
 var inPeriod = (t, p) => t >= p.from && t <= p.to;
-function add(map, key, value) {
-  map.set(key, (map.get(key) ?? 0) + value);
+function add(map, key, value2) {
+  map.set(key, (map.get(key) ?? 0) + value2);
 }
 function optionsByCurrency(exchange, positions2) {
   const out = /* @__PURE__ */ new Map();
@@ -5204,27 +5205,27 @@ function currencies(perps, options, journal) {
     return { currency, closedPerps, funding, fees: feesFunding[currency]?.fee ?? 0, closedOptions, total: closedPerps + closedOptions };
   });
 }
-async function pnl(client2, options, deps) {
-  await requireReadOnlyKey(client2);
+async function pnl(client3, options, deps2) {
+  await requireReadOnlyKey(client3);
   const { period } = options;
   const coverage = [];
   const closedPerps = [];
   for (const category of ["linear", "inverse"]) {
-    const r = await fetchWindowed(client2, perpSource(category), period, deps);
+    const r = await fetchWindowed(client3, perpSource(category), period, deps2);
     closedPerps.push(...r.rows.map((p) => ({ category, symbol: p.symbol, side: p.side, closedSize: p.closedSize, avgEntryPrice: p.avgEntryPrice, avgExitPrice: p.avgExitPrice, closedPnl: p.closedPnl, updatedTime: p.updatedTime })));
     coverage.push(r.coverage);
   }
-  const fromExchange = period.from >= deps.now - DEPTH_6M_DAYS * DAY_MS;
-  const opt = fromExchange ? await fetchWindowed(client2, OPTION_SOURCE, period, deps) : null;
+  const fromExchange = period.from >= deps2.now - DEPTH_6M_DAYS * DAY_MS;
+  const opt = fromExchange ? await fetchWindowed(client3, OPTION_SOURCE, period, deps2) : null;
   if (opt) coverage.push(opt.coverage);
-  const delivered = await fetchDeliveries(client2, period, deps);
+  const delivered = await fetchDeliveries(client3, period, deps2);
   coverage.push(...delivered.coverage);
-  const journalPeriod = fromExchange ? period : { from: deps.now - DEPTH_2Y_DAYS * DAY_MS, to: period.to };
-  const journal = await fetchWindowed(client2, JOURNAL_SOURCE, journalPeriod, deps);
-  coverage.push(clampToDepth(period, JOURNAL_SOURCE, deps.now).coverage);
+  const journalPeriod = fromExchange ? period : { from: deps2.now - DEPTH_2Y_DAYS * DAY_MS, to: period.to };
+  const journal = await fetchWindowed(client3, JOURNAL_SOURCE, journalPeriod, deps2);
+  coverage.push(clampToDepth(period, JOURNAL_SOURCE, deps2.now).coverage);
   const inside = journal.rows.filter((r) => inPeriod(Number(r.transactionTime), period));
   const closedOptions = (opt?.rows ?? []).map((o) => ({ ...o })).sort((a, b) => b.closeTime - a.closeTime);
-  const positions2 = fromExchange ? [] : optionPositionsFromJournal(journal.rows, deps.now).filter((p) => p.closeTime !== null && inPeriod(p.closeTime, period));
+  const positions2 = fromExchange ? [] : optionPositionsFromJournal(journal.rows, deps2.now).filter((p) => p.closeTime !== null && inPeriod(p.closeTime, period));
   const excludedCount = positions2.filter((p) => p.status === "openedBefore").length;
   return {
     period,
@@ -5295,14 +5296,14 @@ function toView3(category, e) {
     indexPrice: e.indexPrice
   };
 }
-async function trades(client2, options, deps) {
-  await requireReadOnlyKey(client2);
+async function trades(client3, options, deps2) {
+  await requireReadOnlyKey(client3);
   const views = [];
   const coverage = [];
   for (const category of options.category ? [options.category] : TRADE_CATEGORIES) {
     const params = { category, limit: "100", ...options.symbol ? { symbol: options.symbol } : {} };
     const source = { label: `\u0441\u0434\u0435\u043B\u043A\u0438 ${category}`, path: "/v5/execution/list", params, windowDays: 7, depthDays: DEPTH_2Y_DAYS, depthText: "2 \u043B\u0435\u0442" };
-    const r = await fetchWindowed(client2, source, options.period, deps);
+    const r = await fetchWindowed(client3, source, options.period, deps2);
     views.push(...r.rows.filter((e) => e.execType !== "Funding").map((e) => toView3(category, e)));
     coverage.push(r.coverage);
   }
@@ -5351,18 +5352,18 @@ function resolvePeriod(args, defaultDays, now) {
 }
 
 // src/cli/register-history.ts
-function parseDaysArg(value) {
-  if (!/^\d+$/.test(value) || Number(value) < 1) throw new InvalidArgumentError("\u0447\u0438\u0441\u043B\u043E \u0434\u043D\u0435\u0439 \u2014 \u0446\u0435\u043B\u043E\u0435 \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0443\u043B\u044F, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 30.");
-  return Number(value);
+function parseDaysArg(value2) {
+  if (!/^\d+$/.test(value2) || Number(value2) < 1) throw new InvalidArgumentError("\u0447\u0438\u0441\u043B\u043E \u0434\u043D\u0435\u0439 \u2014 \u0446\u0435\u043B\u043E\u0435 \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0443\u043B\u044F, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 30.");
+  return Number(value2);
 }
-function parseDateArg(value) {
-  const ms = Date.parse(`${value}T00:00:00Z`);
-  const ok = /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(ms) && new Date(ms).toISOString().startsWith(value);
+function parseDateArg(value2) {
+  const ms = Date.parse(`${value2}T00:00:00Z`);
+  const ok = /^\d{4}-\d{2}-\d{2}$/.test(value2) && !Number.isNaN(ms) && new Date(ms).toISOString().startsWith(value2);
   if (!ok) throw new InvalidArgumentError("\u0434\u0430\u0442\u0430 \u0432 \u0444\u043E\u0440\u043C\u0430\u0442\u0435 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 2026-09-01.");
-  return value;
+  return value2;
 }
-function parseCategoryArg(value) {
-  const v = value.toLowerCase();
+function parseCategoryArg(value2) {
+  const v = value2.toLowerCase();
   if (!TRADE_CATEGORIES.includes(v)) throw new InvalidArgumentError("\u043A\u0430\u0442\u0435\u0433\u043E\u0440\u0438\u044F: spot, linear, inverse \u0438\u043B\u0438 option.");
   return v;
 }
@@ -5380,39 +5381,321 @@ function liveDeps() {
 function withPeriod(cmd, defaultDays, text) {
   return cmd.option("--days <n>", `\u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 N \u0434\u043D\u0435\u0439 (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E ${text})`, parseDaysArg).option("--from <date>", "\u0441 \u0434\u0430\u0442\u044B \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414 (UTC)", parseDateArg).option("--to <date>", "\u043F\u043E \u0434\u0430\u0442\u0443 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414 \u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E (UTC)", parseDateArg);
 }
-function print(cmd, value, render) {
+function print(cmd, value2, render) {
   const { json } = cmd.optsWithGlobals();
-  console.log(formatOutput(value, Boolean(json), render));
+  console.log(formatOutput(value2, Boolean(json), render));
 }
 function registerHistoryCommands(program2) {
   withPeriod(program2.command("trades").description("\u0438\u0441\u0442\u043E\u0440\u0438\u044F \u0441\u0434\u0435\u043B\u043E\u043A: \u0446\u0435\u043D\u0430, \u043E\u0431\u044A\u0451\u043C, \u043A\u043E\u043C\u0438\u0441\u0441\u0438\u044F; IV \u0438 \u0431\u0430\u0437\u043E\u0432\u044B\u0439 \u0430\u043A\u0442\u0438\u0432 \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C"), TRADES_DEFAULT_DAYS, "30, \u0434\u043E 2 \u043B\u0435\u0442").option("--category <c>", "spot, linear, inverse \u0438\u043B\u0438 option", parseCategoryArg).option("--symbol <s>", "\u043E\u0434\u0438\u043D \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTCUSDT").action(async (o, cmd) => {
-    const deps = liveDeps();
-    print(cmd, await trades(client(), { period: resolvePeriod(o, TRADES_DEFAULT_DAYS, deps.now), category: o.category, symbol: o.symbol }, deps), renderTrades);
+    const deps2 = liveDeps();
+    print(cmd, await trades(client(), { period: resolvePeriod(o, TRADES_DEFAULT_DAYS, deps2.now), category: o.category, symbol: o.symbol }, deps2), renderTrades);
   });
   withPeriod(program2.command("operations").description("\u0436\u0443\u0440\u043D\u0430\u043B \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0439 \u0441 \u0438\u0442\u043E\u0433\u0430\u043C\u0438 \u043F\u043E \u0442\u0438\u043F\u0430\u043C"), OPERATIONS_DEFAULT_DAYS, "30, \u0434\u043E 2 \u043B\u0435\u0442").option("--type <t>", "\u0442\u0438\u043F \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 TRADE, SETTLEMENT, DELIVERY").option("--currency <c>", "\u0432\u0430\u043B\u044E\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 USDT").action(async (o, cmd) => {
-    const deps = liveDeps();
-    print(cmd, await operations(client(), { period: resolvePeriod(o, OPERATIONS_DEFAULT_DAYS, deps.now), type: o.type, currency: o.currency }, deps), renderOperations);
+    const deps2 = liveDeps();
+    print(cmd, await operations(client(), { period: resolvePeriod(o, OPERATIONS_DEFAULT_DAYS, deps2.now), type: o.type, currency: o.currency }, deps2), renderOperations);
   });
   withPeriod(program2.command("pnl").description("\u0440\u0435\u0430\u043B\u0438\u0437\u043E\u0432\u0430\u043D\u043D\u044B\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442: \u0437\u0430\u043A\u0440\u044B\u0442\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438, \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438, \u0444\u0430\u043D\u0434\u0438\u043D\u0433"), PNL_DEFAULT_DAYS, "\u0432\u0441\u044F \u0433\u043B\u0443\u0431\u0438\u043D\u0430 \u0431\u0438\u0440\u0436\u0438, 2 \u0433\u043E\u0434\u0430").action(
     async (o, cmd) => {
-      const deps = liveDeps();
-      print(cmd, await pnl(client(), { period: resolvePeriod(o, PNL_DEFAULT_DAYS, deps.now) }, deps), renderPnl);
+      const deps2 = liveDeps();
+      print(cmd, await pnl(client(), { period: resolvePeriod(o, PNL_DEFAULT_DAYS, deps2.now) }, deps2), renderPnl);
     }
   );
   withPeriod(program2.command("deliveries").description("\u0438\u0441\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u044F \u043D\u0430 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438: \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442, \u0446\u0435\u043D\u0430 \u0440\u0430\u0441\u0447\u0451\u0442\u0430, \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442"), DELIVERIES_DEFAULT_DAYS, "2 \u0433\u043E\u0434\u0430").option("--coin <coin>", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (o, cmd) => {
-    const deps = liveDeps();
-    print(cmd, await deliveries(client(), { period: resolvePeriod(o, DELIVERIES_DEFAULT_DAYS, deps.now), coin: o.coin }, deps), renderDeliveries);
+    const deps2 = liveDeps();
+    print(cmd, await deliveries(client(), { period: resolvePeriod(o, DELIVERIES_DEFAULT_DAYS, deps2.now), coin: o.coin }, deps2), renderDeliveries);
   });
   program2.command("funds").description("\u043D\u0435\u0442\u0442\u043E-\u0432\u0432\u043E\u0434 \u0441\u0440\u0435\u0434\u0441\u0442\u0432 \u0441 \u043F\u0435\u0440\u0432\u043E\u0439 \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u0438 (2023-11-20), \u0441\u0442\u043E\u0438\u043C\u043E\u0441\u0442\u044C \u0441\u0447\u0451\u0442\u0430 \u0438 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442").action(async (_o, cmd) => {
     print(cmd, await funds(client(), liveDeps()), renderFunds);
   });
 }
 
+// src/catalog/catalog.ts
+var import_node_path3 = __toESM(require("node:path"), 1);
+
+// src/catalog/file-cache.ts
+var import_node_fs = __toESM(require("node:fs"), 1);
+var import_node_path2 = __toESM(require("node:path"), 1);
+function readVersionedCache(filePath, schemaVersion, warn) {
+  if (!import_node_fs.default.existsSync(filePath)) return null;
+  let parsed;
+  try {
+    parsed = JSON.parse(import_node_fs.default.readFileSync(filePath, "utf8"));
+  } catch {
+    warn(`\u041A\u044D\u0448 \u043F\u043E\u0432\u0440\u0435\u0436\u0434\u0451\u043D \u0438 \u0431\u0443\u0434\u0435\u0442 \u043F\u0435\u0440\u0435\u0437\u0430\u043F\u0438\u0441\u0430\u043D: ${filePath}`);
+    return null;
+  }
+  const envelope = parsed;
+  if (!envelope || typeof envelope !== "object" || envelope.schemaVersion !== schemaVersion) return null;
+  return envelope.data;
+}
+function writeVersionedCache(filePath, schemaVersion, data) {
+  import_node_fs.default.mkdirSync(import_node_path2.default.dirname(filePath), { recursive: true });
+  const tmpPath = `${filePath}.tmp-${process.pid}`;
+  import_node_fs.default.writeFileSync(tmpPath, JSON.stringify({ schemaVersion, data }));
+  import_node_fs.default.renameSync(tmpPath, filePath);
+}
+
+// src/catalog/catalog.ts
+var CATALOG_TTL_MS = 864e5;
+var SCHEMA_VERSION = 1;
+function catalogPath(cacheDir) {
+  return import_node_path3.default.join(cacheDir, "instruments.json");
+}
+async function loadCatalog(client3, deps2, refresh = false) {
+  const file = catalogPath(deps2.cacheDir);
+  const cached = refresh ? null : readVersionedCache(file, SCHEMA_VERSION, deps2.warn);
+  if (cached && deps2.now - cached.savedAt < CATALOG_TTL_MS) return { ...cached, fromCache: true };
+  const entries = [...await fetchCategory(client3, "spot"), ...await fetchCategory(client3, "linear"), ...await fetchCategory(client3, "inverse")];
+  writeVersionedCache(file, SCHEMA_VERSION, { savedAt: deps2.now, entries });
+  return { entries, savedAt: deps2.now, fromCache: false };
+}
+async function findSymbol(client3, deps2, symbol) {
+  const wanted = symbol.toUpperCase();
+  const pick = (c) => c.entries.filter((e) => e.symbol === wanted);
+  const catalog = await loadCatalog(client3, deps2);
+  const found = pick(catalog);
+  if (found.length > 0 || !catalog.fromCache) return found;
+  return pick(await loadCatalog(client3, deps2, true));
+}
+async function fetchCategory(client3, category) {
+  const path4 = "/v5/market/instruments-info";
+  const raw = category === "spot" ? (await client3.getPublic(path4, { category })).list : await fetchAllPages((cursor) => {
+    const base = { category, limit: "1000" };
+    return client3.getPublic(path4, cursor ? { ...base, cursor } : base);
+  });
+  return raw.map((i) => ({ symbol: i.symbol, category, baseCoin: i.baseCoin, quoteCoin: i.quoteCoin, contractType: i.contractType ?? "", status: i.status }));
+}
+
+// src/catalog/resolve.ts
+function instrumentNotFound(symbol, category) {
+  const where = category ? ` \u0432 \u0440\u0430\u0437\u0434\u0435\u043B\u0435 ${category}` : "";
+  const option = parseOptionSymbol(symbol);
+  const hint = option ? `\u0414\u043E\u0441\u0442\u0443\u043F\u043D\u044B\u0435 \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u044B \u2014 opt chain ${option.baseCoin} (--expiry ${option.expiryDate}).` : `\u041D\u0430\u0439\u0434\u0438\u0442\u0435 \u0442\u043E\u0447\u043D\u044B\u0439 \u0442\u0438\u043A\u0435\u0440 \u043A\u043E\u043C\u0430\u043D\u0434\u043E\u0439 search, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440: search ${symbol.slice(0, 3)}.`;
+  return new AppError({ code: "APP_INSTRUMENT_NOT_FOUND", userMessage: `\u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442 ${symbol}${where} \u043D\u0430 Bybit \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D. ${hint}` });
+}
+async function resolveCategories(client3, deps2, symbol, category) {
+  if (category) return [category];
+  if (parseOptionSymbol(symbol)) return ["option"];
+  const categories = (await findSymbol(client3, deps2, symbol)).map((e) => e.category);
+  if (categories.length === 0) throw instrumentNotFound(symbol);
+  return categories;
+}
+async function resolveCategory(client3, deps2, symbol, category) {
+  const [first] = await resolveCategories(client3, deps2, symbol, category);
+  return first;
+}
+function badArgument(userMessage) {
+  return new AppError({ code: "APP_BAD_ARGUMENT", userMessage });
+}
+var SYMBOL_REFUSALS = [10001, 110023];
+async function getForSymbol(client3, path4, params, explicit) {
+  try {
+    return await client3.getPublic(path4, params);
+  } catch (err) {
+    const retCode = err instanceof AppError ? err.details?.retCode : void 0;
+    if (retCode !== void 0 && SYMBOL_REFUSALS.includes(retCode)) throw instrumentNotFound(params.symbol ?? "", explicit);
+    throw err;
+  }
+}
+
+// src/commands/history.ts
+var CANDLE_INTERVALS = ["D", "W", "M"];
+var HISTORY_DEFAULT_DAYS = 365;
+var KLINE_LIMIT = 1e3;
+var CANDLE_DAYS = { D: 1, W: 7, M: 31 };
+var isoDay2 = (ms) => new Date(ms).toISOString().slice(0, 10);
+async function history(client3, options, deps2) {
+  const symbol = options.symbol.toUpperCase();
+  if (options.category === "option" || !options.category && parseOptionSymbol(symbol)) {
+    throw badArgument(`\u0421\u0432\u0435\u0447\u0435\u0439 \u043F\u043E \u043E\u043F\u0446\u0438\u043E\u043D\u0430\u043C Bybit \u043D\u0435 \u0434\u0430\u0451\u0442 (kline: \u0442\u043E\u043B\u044C\u043A\u043E spot, linear, inverse). \u0414\u043B\u044F ${symbol} \u0435\u0441\u0442\u044C quote \u0438 opt chain.`);
+  }
+  const category = await resolveCategory(client3, deps2, symbol, options.category);
+  const { interval } = options;
+  const period = { from: options.period.from - options.period.from % DAY_MS, to: options.period.to };
+  const byStart = /* @__PURE__ */ new Map();
+  for (const w of splitWindows(period, KLINE_LIMIT * CANDLE_DAYS[interval])) {
+    const params = { category, symbol, interval, start: String(w.from), end: String(w.to), limit: String(KLINE_LIMIT) };
+    const r = await getForSymbol(client3, "/v5/market/kline", params, options.category);
+    for (const k of r.list) {
+      const start = Number(k[0]);
+      if (start >= period.from && start <= period.to) byStart.set(start, { start, open: k[1], high: k[2], low: k[3], close: k[4], volume: k[5], turnover: k[6] });
+    }
+  }
+  const candles = [...byStart.values()].sort((a, b) => a.start - b.start);
+  const last = candles.at(-1);
+  return { symbol, category, interval, period, candles, boundary: boundary(symbol, period, interval, candles), lastCandleOpen: last !== void 0 && candleEnd(last.start, interval) > deps2.now };
+}
+function boundary(symbol, period, interval, candles) {
+  const first = candles[0];
+  if (!first) return `\u0417\u0430 \u043F\u0435\u0440\u0438\u043E\u0434 ${isoDay2(period.from)} \u2014 ${isoDay2(period.to)} \u0443 \u0431\u0438\u0440\u0436\u0438 \u043D\u0435\u0442 \u0441\u0432\u0435\u0447\u0435\u0439 ${symbol}.`;
+  if (first.start - period.from < CANDLE_DAYS[interval] * DAY_MS) return null;
+  return `\u0411\u0438\u0440\u0436\u0430 \u043E\u0442\u0434\u0430\u0451\u0442 \u0441\u0432\u0435\u0447\u0438 ${symbol} \u0441 ${isoDay2(first.start)}, \u0440\u0430\u043D\u044C\u0448\u0435 \u0434\u0430\u043D\u043D\u044B\u0445 \u043D\u0435\u0442; \u0437\u0430\u043F\u0440\u043E\u0448\u0435\u043D\u043E \u0441 ${isoDay2(period.from)}.`;
+}
+function candleEnd(start, interval) {
+  if (interval === "M") {
+    const d = new Date(start);
+    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1);
+  }
+  return start + CANDLE_DAYS[interval] * DAY_MS;
+}
+var INTERVAL_TEXT = { D: "\u0434\u043D\u0435\u0432\u043D\u044B\u0435", W: "\u043D\u0435\u0434\u0435\u043B\u044C\u043D\u044B\u0435", M: "\u043C\u0435\u0441\u044F\u0447\u043D\u044B\u0435" };
+function renderHistory(r) {
+  const rows = r.candles.map((c) => [isoDay2(c.start), c.open, c.high, c.low, c.close, c.volume]);
+  return [
+    `${r.symbol} (${r.category}), \u0441\u0432\u0435\u0447\u0438 ${INTERVAL_TEXT[r.interval]}, ${isoDay2(r.period.from)} \u2014 ${isoDay2(r.period.to)} (UTC)`,
+    ...r.boundary ? [r.boundary] : [],
+    ...rows.length ? [renderTable(["\u041D\u0430\u0447\u0430\u043B\u043E UTC", "\u041E\u0442\u043A\u0440\u044B\u0442\u0438\u0435", "\u041C\u0430\u043A\u0441", "\u041C\u0438\u043D", "\u0417\u0430\u043A\u0440\u044B\u0442\u0438\u0435", "\u041E\u0431\u044A\u0451\u043C"], rows)] : [],
+    ...r.lastCandleOpen ? ["\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0441\u0432\u0435\u0447\u0430 \u0435\u0449\u0451 \u043D\u0435 \u0437\u0430\u043A\u0440\u044B\u0442\u0430: \u0435\u0451 \u0437\u0430\u043A\u0440\u044B\u0442\u0438\u0435 \u2014 \u043F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0446\u0435\u043D\u0430."] : []
+  ].join("\n");
+}
+
+// src/commands/instrument.ts
+async function instrument(client3, options, deps2) {
+  const symbol = options.symbol.toUpperCase();
+  const cards = [];
+  for (const category of await resolveCategories(client3, deps2, symbol, options.category)) {
+    const r = await getForSymbol(client3, "/v5/market/instruments-info", { category, symbol }, options.category);
+    for (const info of r.list) cards.push({ category, info });
+  }
+  if (cards.length === 0) throw instrumentNotFound(symbol, options.category);
+  return { symbol, cards };
+}
+function flatten(info, prefix = "") {
+  return Object.entries(info).flatMap(([key, v]) => {
+    const name = prefix + key;
+    if (v !== null && typeof v === "object" && !Array.isArray(v)) return flatten(v, `${name}.`);
+    if ((key === "launchTime" || key === "deliveryTime") && typeof v === "string" && v !== "0") return [[name, `${v} (${new Date(Number(v)).toISOString().slice(0, 16).replace("T", " ")} UTC)`]];
+    return [[name, v === null || v === "" ? "\u2014" : String(v)]];
+  });
+}
+function renderInstrument(r) {
+  return r.cards.map((c) => [`${r.symbol} (${c.category}):`, renderTable(["\u041F\u043E\u043B\u0435", "\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435"], flatten(c.info))].join("\n")).join("\n\n");
+}
+
+// src/commands/orderbook.ts
+var ORDERBOOK_DEFAULT_DEPTH = 25;
+var ORDERBOOK_MAX_DEPTH = 1e3;
+var ORDERBOOK_OPTION_MAX_DEPTH = 25;
+async function orderbook(client3, options, deps2) {
+  const symbol = options.symbol.toUpperCase();
+  const category = await resolveCategory(client3, deps2, symbol, options.category);
+  const depth = options.depth ?? ORDERBOOK_DEFAULT_DEPTH;
+  if (category === "option" && depth > ORDERBOOK_OPTION_MAX_DEPTH) throw badArgument(`\u0421\u0442\u0430\u043A\u0430\u043D \u043E\u043F\u0446\u0438\u043E\u043D\u0430 \u0443 Bybit \u043D\u0435 \u0433\u043B\u0443\u0431\u0436\u0435 ${ORDERBOOK_OPTION_MAX_DEPTH} \u0443\u0440\u043E\u0432\u043D\u0435\u0439.`);
+  const r = await getForSymbol(client3, "/v5/market/orderbook", { category, symbol, limit: String(depth) }, options.category);
+  if (Array.isArray(r)) throw instrumentNotFound(symbol, category);
+  return { symbol, category, depth, bids: r.b, asks: r.a, ts: r.ts };
+}
+function renderOrderbook(r) {
+  const asks = [...r.asks].reverse().map(([price, size]) => ["\u043F\u0440\u043E\u0434\u0430\u0436\u0430", price, size]);
+  const bids = r.bids.map(([price, size]) => ["\u043F\u043E\u043A\u0443\u043F\u043A\u0430", price, size]);
+  return [
+    `${r.symbol} (${r.category}), \u0434\u043E ${r.depth} \u0443\u0440\u043E\u0432\u043D\u0435\u0439, ${new Date(r.ts).toISOString().slice(0, 19).replace("T", " ")} UTC`,
+    asks.length + bids.length ? renderTable(["\u0421\u0442\u043E\u0440\u043E\u043D\u0430", "\u0426\u0435\u043D\u0430", "\u041E\u0431\u044A\u0451\u043C"], [...asks, ...bids]) : "\u0421\u0442\u0430\u043A\u0430\u043D \u043F\u0443\u0441\u0442: \u0437\u0430\u044F\u0432\u043E\u043A \u043D\u0435\u0442."
+  ].join("\n");
+}
+
+// src/commands/quote.ts
+async function quote(client3, options, deps2) {
+  const symbol = options.symbol.toUpperCase();
+  const quotes = [];
+  for (const category of await resolveCategories(client3, deps2, symbol, options.category)) {
+    const r = await getForSymbol(client3, "/v5/market/tickers", { category, symbol }, options.category);
+    for (const ticker of r.list) quotes.push({ category, ticker });
+  }
+  if (quotes.length === 0) throw instrumentNotFound(symbol, options.category);
+  return { symbol, quotes };
+}
+var CONTRACT = [["lastPrice", "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F"], ["markPrice", "\u041C\u0430\u0440\u043A\u0438\u0440\u043E\u0432\u043A\u0430"], ["indexPrice", "\u0418\u043D\u0434\u0435\u043A\u0441"], ["bid1Price", "\u041F\u043E\u043A\u0443\u043F\u043A\u0430"], ["ask1Price", "\u041F\u0440\u043E\u0434\u0430\u0436\u0430"], ["price24hPcnt", "\u0418\u0437\u043C. 24\u0447 (\u0434\u043E\u043B\u044F)"], ["highPrice24h", "\u041C\u0430\u043A\u0441 24\u0447"], ["lowPrice24h", "\u041C\u0438\u043D 24\u0447"], ["volume24h", "\u041E\u0431\u044A\u0451\u043C 24\u0447"], ["turnover24h", "\u041E\u0431\u043E\u0440\u043E\u0442 24\u0447"], ["openInterest", "\u041E\u0442\u043A\u0440\u044B\u0442\u044B\u0439 \u0438\u043D\u0442\u0435\u0440\u0435\u0441"], ["fundingRate", "\u0424\u0430\u043D\u0434\u0438\u043D\u0433"], ["nextFundingTime", "\u0421\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0439 \u0444\u0430\u043D\u0434\u0438\u043D\u0433"]];
+var FIELDS = {
+  spot: [["lastPrice", "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F"], ["bid1Price", "\u041F\u043E\u043A\u0443\u043F\u043A\u0430"], ["ask1Price", "\u041F\u0440\u043E\u0434\u0430\u0436\u0430"], ["price24hPcnt", "\u0418\u0437\u043C. 24\u0447 (\u0434\u043E\u043B\u044F)"], ["highPrice24h", "\u041C\u0430\u043A\u0441 24\u0447"], ["lowPrice24h", "\u041C\u0438\u043D 24\u0447"], ["volume24h", "\u041E\u0431\u044A\u0451\u043C 24\u0447"], ["turnover24h", "\u041E\u0431\u043E\u0440\u043E\u0442 24\u0447"]],
+  linear: CONTRACT,
+  inverse: CONTRACT,
+  option: [["lastPrice", "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F"], ["markPrice", "\u041C\u0430\u0440\u043A\u0438\u0440\u043E\u0432\u043A\u0430"], ["bid1Price", "\u041F\u043E\u043A\u0443\u043F\u043A\u0430"], ["ask1Price", "\u041F\u0440\u043E\u0434\u0430\u0436\u0430"], ["markIv", "IV \u043C\u0430\u0440\u043A\u0438\u0440\u043E\u0432\u043A\u0438 (\u0434\u043E\u043B\u044F)"], ["bid1Iv", "IV \u043F\u043E\u043A\u0443\u043F\u043A\u0438"], ["ask1Iv", "IV \u043F\u0440\u043E\u0434\u0430\u0436\u0438"], ["underlyingPrice", "\u0411\u0430\u0437\u043E\u0432\u044B\u0439 \u0430\u043A\u0442\u0438\u0432"], ["delta", "\u0414\u0435\u043B\u044C\u0442\u0430"], ["gamma", "\u0413\u0430\u043C\u043C\u0430"], ["vega", "\u0412\u0435\u0433\u0430"], ["theta", "\u0422\u0435\u0442\u0430"], ["volume24h", "\u041E\u0431\u044A\u0451\u043C 24\u0447"], ["openInterest", "\u041E\u0442\u043A\u0440\u044B\u0442\u044B\u0439 \u0438\u043D\u0442\u0435\u0440\u0435\u0441"]]
+};
+var TITLE = { spot: "\u0441\u043F\u043E\u0442", linear: "\u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0439 / \u0444\u044C\u044E\u0447\u0435\u0440\u0441 USDT, USDC", inverse: "\u0438\u043D\u0432\u0435\u0440\u0441\u043D\u044B\u0439", option: "\u043E\u043F\u0446\u0438\u043E\u043D" };
+function value(field, raw) {
+  if (raw === void 0) return "\u2014";
+  if (field === "nextFundingTime" && raw !== "" && raw !== "0") return `${new Date(Number(raw)).toISOString().slice(0, 16).replace("T", " ")} UTC`;
+  return orDash(raw);
+}
+function renderQuote(r) {
+  return r.quotes.map((q) => [`${r.symbol} \u2014 ${TITLE[q.category]}:`, renderTable(["\u041F\u043E\u043B\u0435", "\u0417\u043D\u0430\u0447\u0435\u043D\u0438\u0435"], FIELDS[q.category].map(([f, label]) => [label, value(f, q.ticker[f])]))].join("\n")).join("\n\n");
+}
+
+// src/commands/search.ts
+var CATEGORY_ORDER = ["spot", "linear", "inverse"];
+var TYPES = {
+  LinearPerpetual: "\u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0439",
+  LinearFutures: "\u0444\u044C\u044E\u0447\u0435\u0440\u0441",
+  InversePerpetual: "\u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0439 \u0438\u043D\u0432\u0435\u0440\u0441\u043D\u044B\u0439",
+  InverseFutures: "\u0444\u044C\u044E\u0447\u0435\u0440\u0441 \u0438\u043D\u0432\u0435\u0440\u0441\u043D\u044B\u0439"
+};
+var TEXT_LIMIT = 50;
+function rank(e, q) {
+  if (e.symbol === q) return 0;
+  if (e.baseCoin === q) return 1;
+  return e.symbol.includes(q) || e.baseCoin.includes(q) ? 2 : null;
+}
+async function search(client3, query, deps2) {
+  const q = query.trim().toUpperCase();
+  const catalog = await loadCatalog(client3, deps2);
+  const ranked = catalog.entries.flatMap((e) => {
+    const r = rank(e, q);
+    return r === null ? [] : [{ e, r }];
+  });
+  ranked.sort((a, b) => a.r - b.r || CATEGORY_ORDER.indexOf(a.e.category) - CATEGORY_ORDER.indexOf(b.e.category) || (a.e.symbol < b.e.symbol ? -1 : a.e.symbol > b.e.symbol ? 1 : 0));
+  const matches = ranked.map(({ e }) => ({ symbol: e.symbol, category: e.category, type: TYPES[e.contractType] ?? "\u0441\u043F\u043E\u0442", baseCoin: e.baseCoin, quoteCoin: e.quoteCoin, status: e.status }));
+  const coins = await client3.getPublic("/v5/market/option-base-coins");
+  return { query: q, matches, options: coins.list.filter((c) => c.baseCoin.includes(q)), catalogSavedAt: catalog.savedAt };
+}
+function renderSearch(r) {
+  if (r.matches.length === 0 && r.options.length === 0) return `\u041D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E \u043F\u043E \xAB${r.query}\xBB. \u0423\u0442\u043E\u0447\u043D\u0438\u0442\u0435 \u0442\u0438\u043A\u0435\u0440: BTC, BTCUSDT, SOL. \u041D\u0430\u0437\u0432\u0430\u043D\u0438\u0439 \u043C\u043E\u043D\u0435\u0442 \u0443 Bybit \u043D\u0435\u0442, \u0442\u043E\u043B\u044C\u043A\u043E \u0442\u0438\u043A\u0435\u0440\u044B.`;
+  const rows = r.matches.slice(0, TEXT_LIMIT).map((m) => [m.symbol, m.type, m.category, m.baseCoin, m.quoteCoin, m.status]);
+  const more = r.matches.length - rows.length;
+  return [
+    ...rows.length ? [renderTable(["\u0422\u0438\u043A\u0435\u0440", "\u0422\u0438\u043F", "\u0420\u0430\u0437\u0434\u0435\u043B", "\u041C\u043E\u043D\u0435\u0442\u0430", "\u041A\u043E\u0442\u0438\u0440\u0443\u0435\u0442\u0441\u044F \u0432", "\u0421\u0442\u0430\u0442\u0443\u0441"], rows)] : [],
+    ...more > 0 ? [`\u0418 \u0435\u0449\u0451 ${more}, \u043F\u043E\u043B\u043D\u044B\u0439 \u0441\u043F\u0438\u0441\u043E\u043A \u2014 \u0432 --json.`] : [],
+    ...r.options.map((o) => `${o.baseCoin} \u2014 \u043E\u043F\u0446\u0438\u043E\u043D\u044B${o.hasSymbol ? "" : " (\u0441\u0435\u0439\u0447\u0430\u0441 \u0431\u0435\u0437 \u0442\u043E\u0440\u0433\u0443\u0435\u043C\u044B\u0445 \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u043E\u0432)"}: \u0434\u0430\u0442\u044B \u2014 opt expiries ${o.baseCoin}, \u0434\u043E\u0441\u043A\u0430 \u2014 opt chain ${o.baseCoin}.`),
+    `\u0421\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A \u043E\u0442 ${new Date(r.catalogSavedAt).toISOString().slice(0, 16).replace("T", " ")} UTC.`
+  ].join("\n");
+}
+
+// src/cli/register-market.ts
+function parseIntervalArg(value2) {
+  const v = value2.toUpperCase();
+  if (!CANDLE_INTERVALS.includes(v)) throw new InvalidArgumentError("\u0438\u043D\u0442\u0435\u0440\u0432\u0430\u043B \u0441\u0432\u0435\u0447\u0435\u0439: D (\u0434\u0435\u043D\u044C), W (\u043D\u0435\u0434\u0435\u043B\u044F) \u0438\u043B\u0438 M (\u043C\u0435\u0441\u044F\u0446).");
+  return v;
+}
+function parseDepthArg(value2) {
+  const n = Number(value2);
+  if (!/^\d+$/.test(value2) || n < 1 || n > ORDERBOOK_MAX_DEPTH) throw new InvalidArgumentError(`\u0433\u043B\u0443\u0431\u0438\u043D\u0430 \u0441\u0442\u0430\u043A\u0430\u043D\u0430 \u2014 \u0446\u0435\u043B\u043E\u0435 \u043E\u0442 1 \u0434\u043E ${ORDERBOOK_MAX_DEPTH}.`);
+  return n;
+}
+var client2 = () => new BybitClient({ baseUrl: resolveBaseUrl(process.env) });
+var deps = () => ({ cacheDir: CACHE_DIR, now: Date.now(), warn: (line) => process.stderr.write(`${line}
+`) });
+function print2(cmd, value2, render) {
+  const { json } = cmd.optsWithGlobals();
+  console.log(formatOutput(value2, Boolean(json), render));
+}
+var CATEGORY_HELP = "spot, linear, inverse \u0438\u043B\u0438 option (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E \u2014 \u043F\u043E \u0441\u043F\u0440\u0430\u0432\u043E\u0447\u043D\u0438\u043A\u0443)";
+function registerMarketCommands(program2) {
+  program2.command("quote").description("\u043A\u043E\u0442\u0438\u0440\u043E\u0432\u043A\u0430; \u0442\u0438\u043A\u0435\u0440 \u0438\u0437 \u043D\u0435\u0441\u043A\u043E\u043B\u044C\u043A\u0438\u0445 \u0440\u0430\u0437\u0434\u0435\u043B\u043E\u0432 \u2014 \u043F\u043E \u043A\u0430\u0436\u0434\u043E\u043C\u0443").argument("<symbol>", "\u0442\u0438\u043A\u0435\u0440, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTCUSDT").option("--category <c>", CATEGORY_HELP, parseCategoryArg).action(async (symbol, o, cmd) => print2(cmd, await quote(client2(), { symbol, ...o }, deps()), renderQuote));
+  program2.command("history").description("\u0441\u0432\u0435\u0447\u0438: \u0434\u043D\u0435\u0432\u043D\u044B\u0435, \u043D\u0435\u0434\u0435\u043B\u044C\u043D\u044B\u0435, \u043C\u0435\u0441\u044F\u0447\u043D\u044B\u0435; \u043F\u0440\u0438 \u0441\u043F\u043E\u0442\u0435 \u0438 \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u043E\u043C \u2014 \u0441\u043F\u043E\u0442").argument("<symbol>", "\u0442\u0438\u043A\u0435\u0440, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTCUSDT").option("--category <c>", CATEGORY_HELP, parseCategoryArg).option("--interval <i>", "D, W \u0438\u043B\u0438 M (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E D)", parseIntervalArg).option("--days <n>", `\u043F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 N \u0434\u043D\u0435\u0439 (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E ${HISTORY_DEFAULT_DAYS}, \u0434\u043E 3 \u043B\u0435\u0442 \u0438 \u0433\u043B\u0443\u0431\u0436\u0435)`, parseDaysArg).option("--from <date>", "\u0441 \u0434\u0430\u0442\u044B \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414 (UTC)", parseDateArg).option("--to <date>", "\u043F\u043E \u0434\u0430\u0442\u0443 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414 \u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E (UTC)", parseDateArg).action(async (symbol, o, cmd) => {
+    const d = deps();
+    const period = resolvePeriod(o, HISTORY_DEFAULT_DAYS, d.now);
+    print2(cmd, await history(client2(), { symbol, category: o.category, interval: o.interval ?? "D", period }, d), renderHistory);
+  });
+  program2.command("orderbook").description("\u0441\u0442\u0430\u043A\u0430\u043D; \u043F\u0440\u0438 \u0441\u043F\u043E\u0442\u0435 \u0438 \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u043E\u043C \u2014 \u0441\u043F\u043E\u0442").argument("<symbol>", "\u0442\u0438\u043A\u0435\u0440, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTCUSDT").option("--category <c>", CATEGORY_HELP, parseCategoryArg).option("--depth <n>", "\u0443\u0440\u043E\u0432\u043D\u0435\u0439 \u043D\u0430 \u0441\u0442\u043E\u0440\u043E\u043D\u0443 (\u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E 25, \u0443 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043D\u0435 \u0431\u043E\u043B\u044C\u0448\u0435 25)", parseDepthArg).action(async (symbol, o, cmd) => print2(cmd, await orderbook(client2(), { symbol, ...o }, deps()), renderOrderbook));
+  program2.command("instrument").description("\u043A\u0430\u0440\u0442\u043E\u0447\u043A\u0430 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430: \u0441\u0442\u0430\u0442\u0443\u0441, \u0448\u0430\u0433\u0438 \u0446\u0435\u043D\u044B \u0438 \u043A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u0430, \u043F\u043B\u0435\u0447\u043E, \u0434\u0430\u0442\u044B").argument("<symbol>", "\u0442\u0438\u043A\u0435\u0440, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTCUSDT").option("--category <c>", CATEGORY_HELP, parseCategoryArg).action(async (symbol, o, cmd) => print2(cmd, await instrument(client2(), { symbol, ...o }, deps()), renderInstrument));
+  program2.command("search").description("\u043F\u043E\u0438\u0441\u043A \u043F\u043E \u0442\u0438\u043A\u0435\u0440\u0443: \u0441\u043F\u043E\u0442, \u0431\u0435\u0441\u0441\u0440\u043E\u0447\u043D\u044B\u0435, \u0444\u044C\u044E\u0447\u0435\u0440\u0441\u044B; \u043E\u043F\u0446\u0438\u043E\u043D\u044B \u2014 \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0435").argument("<query>", "\u0447\u0430\u0441\u0442\u044C \u0442\u0438\u043A\u0435\u0440\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 sol").action(async (query, _o, cmd) => print2(cmd, await search(client2(), query, deps()), renderSearch));
+}
+
 // src/options/instruments.ts
-function fetchOptionInstruments(client2, baseCoin) {
+function fetchOptionInstruments(client3, baseCoin) {
   const base = { category: "option", baseCoin, limit: "1000" };
   return fetchAllPages(
-    (cursor) => client2.getPublic("/v5/market/instruments-info", cursor ? { ...base, cursor } : base)
+    (cursor) => client3.getPublic("/v5/market/instruments-info", cursor ? { ...base, cursor } : base)
   );
 }
 function utcDate(ms) {
@@ -5483,11 +5766,11 @@ function pickExpiry(rows, expiry, now, notes) {
 function applyFilters(rows, o) {
   return rows.filter((r) => !o.type || r.optionsType === o.type).filter((r) => o.minStrike === void 0 || r.computed.strike >= o.minStrike).filter((r) => o.maxStrike === void 0 || r.computed.strike <= o.maxStrike).sort((a, b) => a.computed.strike - b.computed.strike || (a.optionsType === "Call" ? -1 : 1));
 }
-async function optChain(client2, options) {
+async function optChain(client3, options) {
   const baseCoin = options.coin.toUpperCase();
   const now = options.now ?? Date.now();
-  const { list: tickers } = await client2.getPublic("/v5/market/tickers", { category: "option", baseCoin });
-  const instruments = await fetchOptionInstruments(client2, baseCoin);
+  const { list: tickers } = await client3.getPublic("/v5/market/tickers", { category: "option", baseCoin });
+  const instruments = await fetchOptionInstruments(client3, baseCoin);
   const notes = [];
   const all = joinRows(tickers, instruments, notes);
   const available = [...new Set(instruments.filter((i) => Number(i.deliveryTime) > now).map((i) => utcDate(i.deliveryTime)))].sort();
@@ -5529,8 +5812,8 @@ function renderOptChain(r) {
 }
 
 // src/commands/opt-expiries.ts
-async function optExpiries(client2, options = {}) {
-  const instruments = await fetchOptionInstruments(client2, options.coin?.toUpperCase() ?? "All");
+async function optExpiries(client3, options = {}) {
+  const instruments = await fetchOptionInstruments(client3, options.coin?.toUpperCase() ?? "All");
   const groups = /* @__PURE__ */ new Map();
   for (const i of instruments) {
     const key = `${i.baseCoin}|${i.deliveryTime}`;
@@ -5554,11 +5837,11 @@ var SOURCE_NOTES = [
   "Gamma, Vega, Theta \u2014 \u0438\u0437 coin-greeks; \u043D\u0430 \u0436\u0438\u0432\u043E\u043C \u0441\u0447\u0451\u0442\u0435 \u0440\u0430\u0432\u043D\u044B \u0441\u0443\u043C\u043C\u0435 \u0433\u0440\u0435\u043A\u043E\u0432 \u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0445 \u043F\u043E\u0437\u0438\u0446\u0438\u0439.",
   "\u0412\u0441\u0435 \u0437\u043D\u0430\u0447\u0435\u043D\u0438\u044F \u0441\u044B\u0440\u044B\u0435, \u043F\u043E\u043B\u0443\u0447\u0435\u043D\u044B \u043E\u0442 \u0431\u0438\u0440\u0436\u0438; \u0441\u043A\u0438\u043B\u043B \u0438\u0445 \u043D\u0435 \u043F\u0435\u0440\u0435\u0441\u0447\u0438\u0442\u044B\u0432\u0430\u0435\u0442."
 ];
-async function optGreeks(client2, options = {}) {
-  await requireReadOnlyKey(client2);
+async function optGreeks(client3, options = {}) {
+  await requireReadOnlyKey(client3);
   const coin = options.coin?.toUpperCase();
-  const greeks = await client2.getPrivate("/v5/asset/coin-greeks", coin ? { baseCoin: coin } : {});
-  const { result: assets } = await client2.getPrivate("/v5/account/option-asset-info");
+  const greeks = await client3.getPrivate("/v5/asset/coin-greeks", coin ? { baseCoin: coin } : {});
+  const { result: assets } = await client3.getPrivate("/v5/account/option-asset-info");
   const deltas = new Map(assets.filter((a) => !coin || a.coin === coin).map((a) => [a.coin, a.totalDelta]));
   const byCoin = new Map(greeks.list.map((g) => [g.baseCoin, g]));
   const notes = [...SOURCE_NOTES];
@@ -5627,14 +5910,14 @@ function toCoin(a, accountMM) {
     computedNotes: { shareOfAccountMM: share === null ? "accountMM \u0440\u0430\u0432\u0435\u043D \u043D\u0443\u043B\u044E \u0438\u043B\u0438 \u043F\u0443\u0441\u0442: \u0434\u043E\u043B\u044F \u043D\u0435 \u0432\u044B\u0447\u0438\u0441\u043B\u0435\u043D\u0430." : SHARE_NOTE, optionLoss: losses.note }
   };
 }
-async function optMargin(client2) {
-  await requireReadOnlyKey(client2);
-  const { marginMode } = await client2.getPrivate("/v5/account/info");
+async function optMargin(client3) {
+  await requireReadOnlyKey(client3);
+  const { marginMode } = await client3.getPrivate("/v5/account/info");
   if (marginMode !== "PORTFOLIO_MARGIN") {
     const note = `\u0420\u0435\u0436\u0438\u043C \u043C\u0430\u0440\u0436\u0438 ${marginMode}, \u043D\u0435 Portfolio Margin: \u043C\u0430\u0440\u0436\u0430 \u0441\u0447\u0438\u0442\u0430\u0435\u0442\u0441\u044F \u043F\u043E \u043A\u0430\u0436\u0434\u043E\u0439 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 \u2014 \u0441\u043C. \u043A\u043E\u043C\u0430\u043D\u0434\u0443 positions (positionIM, positionMM).`;
     return { marginMode, account: null, coins: [], notes: [note] };
   }
-  const pm = await client2.getPrivate("/v5/asset/portfolio-margin");
+  const pm = await client3.getPrivate("/v5/asset/portfolio-margin");
   const { equity, marginBalance, accountIM, accountMM, accountIMRate, accountMMRate } = pm.wallet;
   const account = { equity, marginBalance, accountIM, accountMM, accountIMRate, accountMMRate };
   return { marginMode, account, coins: pm.assetPnlRange.map((a) => toCoin(a, Number(accountMM))), notes: [METHOD_NOTE] };
@@ -5674,10 +5957,10 @@ var DAY_MS3 = 864e5;
 var CONTRACT_NOTE = "\u0420\u0430\u0437\u043E\u0431\u0440\u0430\u043D\u043E \u0438\u0437 \u0441\u0438\u043C\u0432\u043E\u043B\u0430 \u043F\u043E \u0444\u043E\u0440\u043C\u0430\u0442\u0443 Bybit (enum symbol): \u043C\u043E\u043D\u0435\u0442\u0430-\u0414\u0414\u041C\u041C\u041C\u0413\u0413-\u0441\u0442\u0440\u0430\u0439\u043A-C/P[-\u0440\u0430\u0441\u0447\u0451\u0442\u043D\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430]; \u0431\u0435\u0437 \u0441\u0443\u0444\u0444\u0438\u043A\u0441\u0430 \u2014 USDC.";
 var DAYS_NOTE = "(deliveryTime \u0438\u0437 instruments-info \u2212 \u0442\u0435\u043A\u0443\u0449\u0435\u0435 \u0432\u0440\u0435\u043C\u044F) / 86 400 000, \u0434\u0440\u043E\u0431\u043D\u044B\u0435 \u0441\u0443\u0442\u043A\u0438, \u043E\u043A\u0440\u0443\u0433\u043B\u0435\u043D\u0438\u0435 \u0434\u043E 0.01.";
 var GREEKS_NOTE = "\u0413\u0440\u0435\u043A\u0438 \u2014 \u0441\u044B\u0440\u044B\u0435 \u043F\u043E\u043B\u044F position/list: \u043D\u0430 \u0432\u0441\u044E \u043F\u043E\u0437\u0438\u0446\u0438\u044E, \u0441 \u0443\u0447\u0451\u0442\u043E\u043C \u0441\u0442\u043E\u0440\u043E\u043D\u044B (\u0443 \u043F\u0440\u043E\u0434\u0430\u043D\u043D\u043E\u0439 \u043F\u043E\u0437\u0438\u0446\u0438\u0438 \u0437\u043D\u0430\u043A \u043E\u0431\u0440\u0430\u0442\u043D\u044B\u0439).";
-function fetchOptionPositions(client2) {
+function fetchOptionPositions(client3) {
   const base = { category: "option", limit: "200" };
   return fetchAllPages(
-    (cursor) => client2.getPrivate("/v5/position/list", cursor ? { ...base, cursor } : base)
+    (cursor) => client3.getPrivate("/v5/position/list", cursor ? { ...base, cursor } : base)
   );
 }
 function toView4(p, deliveryTime, now) {
@@ -5702,11 +5985,11 @@ function toView4(p, deliveryTime, now) {
     }
   };
 }
-async function optPositions(client2, options = {}) {
-  await requireReadOnlyKey(client2);
-  const raw = await fetchOptionPositions(client2);
+async function optPositions(client3, options = {}) {
+  await requireReadOnlyKey(client3);
+  const raw = await fetchOptionPositions(client3);
   if (raw.length === 0) return { positions: [] };
-  const delivery = new Map((await fetchOptionInstruments(client2, "All")).map((i) => [i.symbol, i.deliveryTime]));
+  const delivery = new Map((await fetchOptionInstruments(client3, "All")).map((i) => [i.symbol, i.deliveryTime]));
   const now = options.now ?? Date.now();
   return { positions: raw.map((p) => toView4(p, delivery.get(p.symbol) ?? "", now)) };
 }
@@ -5738,36 +6021,36 @@ function renderOptPositions(r) {
 }
 
 // src/cli/register-options.ts
-function parseExpiryArg(value) {
-  const ms = Date.parse(`${value}T00:00:00Z`);
-  const ok = /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(ms) && new Date(ms).toISOString().startsWith(value);
+function parseExpiryArg(value2) {
+  const ms = Date.parse(`${value2}T00:00:00Z`);
+  const ok = /^\d{4}-\d{2}-\d{2}$/.test(value2) && !Number.isNaN(ms) && new Date(ms).toISOString().startsWith(value2);
   if (!ok) throw new InvalidArgumentError("\u0434\u0430\u0442\u0430 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u0432 \u0444\u043E\u0440\u043C\u0430\u0442\u0435 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 2026-10-30.");
-  return value;
+  return value2;
 }
-function parseTypeArg(value) {
-  const v = value.toLowerCase();
+function parseTypeArg(value2) {
+  const v = value2.toLowerCase();
   if (v === "call") return "Call";
   if (v === "put") return "Put";
   throw new InvalidArgumentError("\u0442\u0438\u043F \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442\u0430: call \u0438\u043B\u0438 put.");
 }
-function parseStrikeArg(value) {
-  const n = Number(value);
-  if (value.trim() === "" || !Number.isFinite(n)) throw new InvalidArgumentError("\u0441\u0442\u0440\u0430\u0439\u043A \u2014 \u0447\u0438\u0441\u043B\u043E, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 60000 \u0438\u043B\u0438 0.85.");
+function parseStrikeArg(value2) {
+  const n = Number(value2);
+  if (value2.trim() === "" || !Number.isFinite(n)) throw new InvalidArgumentError("\u0441\u0442\u0440\u0430\u0439\u043A \u2014 \u0447\u0438\u0441\u043B\u043E, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 60000 \u0438\u043B\u0438 0.85.");
   return n;
 }
 var accountClient = () => new BybitClient({ credentials: loadCredentials(process.env), baseUrl: resolveBaseUrl(process.env) });
 var marketClient = () => new BybitClient({ baseUrl: resolveBaseUrl(process.env) });
-function print2(cmd, value, render) {
+function print3(cmd, value2, render) {
   const { json } = cmd.optsWithGlobals();
-  console.log(formatOutput(value, Boolean(json), render));
+  console.log(formatOutput(value2, Boolean(json), render));
 }
 function registerOptionCommands(program2) {
   const opt = program2.command("opt").description("\u043E\u043F\u0446\u0438\u043E\u043D\u044B: \u043F\u043E\u0437\u0438\u0446\u0438\u0438, \u0433\u0440\u0435\u043A\u0438, \u043C\u0430\u0440\u0436\u0430, \u0434\u043E\u0441\u043A\u0430, \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438");
-  opt.command("positions").description("\u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438: \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442, \u0434\u043D\u0438 \u0434\u043E \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438, \u0433\u0440\u0435\u043A\u0438").action(async (_o, cmd) => print2(cmd, await optPositions(accountClient()), renderOptPositions));
-  opt.command("greeks").description("\u043D\u0435\u0442\u0442\u043E-\u0433\u0440\u0435\u043A\u0438 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u0431\u0430\u0437\u043E\u0432\u043E\u0439 \u043C\u043E\u043D\u0435\u0442\u0435").option("--coin <coin>", "\u043E\u0434\u043D\u0430 \u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (o, cmd) => print2(cmd, await optGreeks(accountClient(), o), renderOptGreeks));
-  opt.command("margin").description("\u043C\u0430\u0440\u0436\u0430 Portfolio Margin \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0430\u043C \u0438 \u0432\u043A\u043B\u0430\u0434 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u0432 \u0445\u0443\u0434\u0448\u0438\u0439 \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0439").action(async (_o, cmd) => print2(cmd, await optMargin(accountClient()), renderOptMargin));
-  opt.command("chain").description("\u0434\u043E\u0441\u043A\u0430 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0435; \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E \u0431\u043B\u0438\u0436\u0430\u0439\u0448\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F").argument("<coin>", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").option("--expiry <date>", "\u0434\u0430\u0442\u0430 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414", parseExpiryArg).option("--type <type>", "call \u0438\u043B\u0438 put", parseTypeArg).option("--min-strike <n>", "\u0441\u0442\u0440\u0430\u0439\u043A \u043E\u0442 (\u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E)", parseStrikeArg).option("--max-strike <n>", "\u0441\u0442\u0440\u0430\u0439\u043A \u0434\u043E (\u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E)", parseStrikeArg).action(async (coin, o, cmd) => print2(cmd, await optChain(marketClient(), { ...o, coin }), renderOptChain));
-  opt.command("expiries").description("\u0434\u0430\u0442\u044B \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438; \u0431\u0435\u0437 \u043C\u043E\u043D\u0435\u0442\u044B \u2014 \u043F\u043E \u0432\u0441\u0435\u043C \u043C\u043E\u043D\u0435\u0442\u0430\u043C").argument("[coin]", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (coin, _o, cmd) => print2(cmd, await optExpiries(marketClient(), { coin }), renderOptExpiries));
+  opt.command("positions").description("\u043E\u043F\u0446\u0438\u043E\u043D\u043D\u044B\u0435 \u043F\u043E\u0437\u0438\u0446\u0438\u0438: \u043A\u043E\u043D\u0442\u0440\u0430\u043A\u0442, \u0434\u043D\u0438 \u0434\u043E \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438, \u0433\u0440\u0435\u043A\u0438").action(async (_o, cmd) => print3(cmd, await optPositions(accountClient()), renderOptPositions));
+  opt.command("greeks").description("\u043D\u0435\u0442\u0442\u043E-\u0433\u0440\u0435\u043A\u0438 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u0431\u0430\u0437\u043E\u0432\u043E\u0439 \u043C\u043E\u043D\u0435\u0442\u0435").option("--coin <coin>", "\u043E\u0434\u043D\u0430 \u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (o, cmd) => print3(cmd, await optGreeks(accountClient(), o), renderOptGreeks));
+  opt.command("margin").description("\u043C\u0430\u0440\u0436\u0430 Portfolio Margin \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0430\u043C \u0438 \u0432\u043A\u043B\u0430\u0434 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u0432 \u0445\u0443\u0434\u0448\u0438\u0439 \u0441\u0446\u0435\u043D\u0430\u0440\u0438\u0439").action(async (_o, cmd) => print3(cmd, await optMargin(accountClient()), renderOptMargin));
+  opt.command("chain").description("\u0434\u043E\u0441\u043A\u0430 \u043E\u043F\u0446\u0438\u043E\u043D\u043E\u0432 \u043F\u043E \u043C\u043E\u043D\u0435\u0442\u0435; \u043F\u043E \u0443\u043C\u043E\u043B\u0447\u0430\u043D\u0438\u044E \u0431\u043B\u0438\u0436\u0430\u0439\u0448\u0430\u044F \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u044F").argument("<coin>", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").option("--expiry <date>", "\u0434\u0430\u0442\u0430 \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438 \u0413\u0413\u0413\u0413-\u041C\u041C-\u0414\u0414", parseExpiryArg).option("--type <type>", "call \u0438\u043B\u0438 put", parseTypeArg).option("--min-strike <n>", "\u0441\u0442\u0440\u0430\u0439\u043A \u043E\u0442 (\u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E)", parseStrikeArg).option("--max-strike <n>", "\u0441\u0442\u0440\u0430\u0439\u043A \u0434\u043E (\u0432\u043A\u043B\u044E\u0447\u0438\u0442\u0435\u043B\u044C\u043D\u043E)", parseStrikeArg).action(async (coin, o, cmd) => print3(cmd, await optChain(marketClient(), { ...o, coin }), renderOptChain));
+  opt.command("expiries").description("\u0434\u0430\u0442\u044B \u044D\u043A\u0441\u043F\u0438\u0440\u0430\u0446\u0438\u0438; \u0431\u0435\u0437 \u043C\u043E\u043D\u0435\u0442\u044B \u2014 \u043F\u043E \u0432\u0441\u0435\u043C \u043C\u043E\u043D\u0435\u0442\u0430\u043C").argument("[coin]", "\u0431\u0430\u0437\u043E\u0432\u0430\u044F \u043C\u043E\u043D\u0435\u0442\u0430, \u043D\u0430\u043F\u0440\u0438\u043C\u0435\u0440 BTC").action(async (coin, _o, cmd) => print3(cmd, await optExpiries(marketClient(), { coin }), renderOptExpiries));
 }
 
 // src/cli/register-session.ts
@@ -5775,8 +6058,8 @@ function registerSessionCommands(program2) {
   const session = program2.command("session").description("\u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0435 \u0434\u043E\u0441\u0442\u0443\u043F\u0430 \u043A \u0431\u0438\u0440\u0436\u0435");
   session.command("status").description("\u043A\u043B\u044E\u0447, \u043F\u0440\u0430\u0432\u0430, \u043E\u043A\u0440\u0443\u0436\u0435\u043D\u0438\u0435, \u0447\u0430\u0441\u044B, \u0441\u0432\u044F\u0437\u044C \u0441 \u0431\u0438\u0440\u0436\u0435\u0439").action(async (_opts, cmd) => {
     const { json } = cmd.optsWithGlobals();
-    const client2 = new BybitClient({ credentials: readCredentials(process.env), baseUrl: resolveBaseUrl(process.env) });
-    const status = await sessionStatus(client2, Date.now);
+    const client3 = new BybitClient({ credentials: readCredentials(process.env), baseUrl: resolveBaseUrl(process.env) });
+    const status = await sessionStatus(client3, Date.now);
     console.log(formatOutput(status, Boolean(json), renderSessionStatus));
   });
 }
@@ -5788,6 +6071,7 @@ function buildProgram() {
   registerAccountCommands(program2);
   registerOptionCommands(program2);
   registerHistoryCommands(program2);
+  registerMarketCommands(program2);
   return program2;
 }
 

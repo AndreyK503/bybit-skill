@@ -145,3 +145,11 @@ describe('pnl review fixes', () => {
     expect(r.computed.currencies.find((c) => c.currency === 'ETH')?.closedPerps ?? 0).toBe(0);
   });
 });
+
+describe('pnl and spot (decision 2026-09-28)', () => {
+  it('total note says spot is not included and points to funds for the all-time result', async () => {
+    const { r } = await run();
+    expect(r.computedNotes.total).toContain('Спот не входит');
+    expect(r.computedNotes.total).toContain('funds');
+  });
+});
